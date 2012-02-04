@@ -1,0 +1,5 @@
+C Implementation of NTRUEncrypt
+
+Supported Platforms:
+  libntru has only been tested on Linux so far.
+  It won't work on Windows without modifications because it uses /dev/random.
