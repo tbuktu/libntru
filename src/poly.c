@@ -12,7 +12,8 @@ int ntru_num_bits(int n) {
 }
 
 int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int)) {
-    int i;
+    int coeffs[N];
+    memset(&coeffs, 0, N * sizeof coeffs[0]);
 
     int rand_len = num_ones + num_neg_ones + 10;
     unsigned rand_data[rand_len];   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
@@ -21,18 +22,30 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
     int r_idx = 0;   /* index into rand_data */
 
     int bits = ntru_num_bits(N);
-    for (i=0; i<num_ones; i++) {
+    int i = 0;
+    while (i < num_ones) {
         int r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
         r_idx++;
-        poly->ones[i] = r;
+        if (r<N && !coeffs[r]) {
+            poly->ones[i] = r;
+            coeffs[r] = 1;
+            i++;
+        }
+        /* refill rand_data if we run out */
+        else if (r_idx >= rand_len) {
+            if (!rng(rand_data, rand_len))
+                return 0;
+            r_idx = 0;
+        }
     }
 
     i = 0;
     while (i < num_neg_ones) {
         int r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
         r_idx++;
-        if (poly->ones[r] == 0) {
+        if (r<N && !coeffs[r]) {
             poly->neg_ones[i] = r;
+            coeffs[r] = -1;
             i++;
         }
         /* refill rand_data if we run out */
@@ -43,7 +56,7 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
         }
     }
 
-    poly->N = 1<<bits;
+    poly->N = N;
     poly->num_ones = num_ones;
     poly->num_neg_ones = num_neg_ones;
 
@@ -90,9 +103,12 @@ int ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
     c->N = N;
 
     int i, k;
-    for (k=0; k<N; k++)
+    for (k=0; k<N; k++) {
+        int ck = 0;
         for (i=0; i<N; i++)
-            c->coeffs[k] += b->coeffs[i] * a->coeffs[(N+k-i)%N];
+            ck += b->coeffs[i] * a->coeffs[(N+k-i)%N];
+        c->coeffs[k] = ck;
+    }
 
     return 1;
 }
@@ -120,7 +136,8 @@ int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
     if (N != b->N)
         return 0;
     c->N = N;
-    
+    memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
+
     int i;
     for (i=0; i<b->num_ones; i++) {
         int j = N - 1 - b->ones[i];
@@ -147,8 +164,25 @@ int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
     return 1;
 }
 
+int ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
+    int N = a->N;
+    if (N != b->N)
+        return 0;
+    c->N = N;
+    memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
+
+    NtruIntPoly temp;
+    ntru_mult_tern(a, &b->f1, &temp);
+    ntru_mult_tern(&temp, &b->f2, c);
+    NtruIntPoly f3a;
+    ntru_mult_tern(a, &b->f3, &f3a);
+    ntru_add_int(c, &f3a);
+
+    return 1;
+}
+
 void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
-    memset(&b->coeffs, 0, a->N);
+    memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
     int i;
     for (i=0; i<a->num_ones; i++)
         b->coeffs[a->ones[i]] = 1;
@@ -159,6 +193,8 @@ void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
 }
 
 void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b) {
+    memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
+    b->N = a->N;
     NtruIntPoly c;
     ntru_tern_to_int(&a->f1, &c);
     ntru_mult_tern(&c, &a->f2, b);
@@ -179,8 +215,10 @@ void ntru_mult_2(NtruIntPoly *a, int modulus) {
 
 NtruIntPoly *ntru_zero_poly(int n) {
     NtruIntPoly *poly = calloc(1, sizeof *poly);
-    if (poly)
+    if (poly) {
         poly->N = n;
+        memset(&poly->coeffs, 0, n * sizeof poly->coeffs[0]);
+    }
     return poly;
 }
 
@@ -198,6 +236,28 @@ void ntru_mod(NtruIntPoly *p, int modulus) {
     else
         for (i=0; i<p->N; i++)
             p->coeffs[i] %= modulus;
+}
+
+void ntru_mod_center(NtruIntPoly *p, int modulus) {
+    int i;
+    if (modulus == 2048)
+        for (i=0; i<p->N; i++) {
+            int c = p->coeffs[i] & 2047;
+            if (c & 1024)
+                c -= 2048;
+            p->coeffs[i] = c;
+        }
+    else {
+        int m2 = modulus / 2;
+        for (i=0; i<p->N; i++) {
+            int c = p->coeffs[i] % modulus;
+            if (c < -m2)
+                c += modulus;
+            if (c > m2)
+                c -= modulus;
+            p->coeffs[i] = c;
+        }
+    }
 }
 
 void ntru_mod2(NtruIntPoly *p) {
@@ -229,6 +289,17 @@ int ntru_deg(NtruIntPoly *p) {
     return deg;
 }
 
+void ntru_clear_tern(NtruTernPoly *p) {
+    memset(&p->ones, 0, p->num_ones * sizeof p->ones[0]);
+    memset(&p->neg_ones, 0, p->num_neg_ones * sizeof p->neg_ones[0]);
+}
+
+void ntru_clear_int(NtruIntPoly *p) {
+    int i;
+    for (i=0; i<p->N; i++)
+        p->coeffs[i] = 0;
+}
+
 void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, int q) {
     int v = 2;
     NtruIntPoly temp, temp2, temp3;
@@ -243,7 +314,9 @@ void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, int q) {
     }
 }
 
+
 int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
+    int invertible;
     int i;
     int N = a->N;
     int k = 0;
@@ -251,32 +324,35 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
     b->coeffs[0] = 1;
     NtruIntPoly *c = ntru_zero_poly(N+1);
     NtruIntPoly *f = ntru_clone(a);
+    f->coeffs[f->N] = 0;   /* index N wasn't cloned */
     f->N++;   /* add one coefficient for a total of N+1 */
     ntru_mod2(f);
-    // set g(x) = x^N − 1
+    /* set g(x) = x^N − 1 */
     NtruIntPoly *g = ntru_zero_poly(N+1);
     g->coeffs[0] = 1;
     g->coeffs[N] = 1;
     for (;;) {
         while (f->coeffs[0] == 0) {
             for (i=1; i<=N; i++) {
-                f->coeffs[i-1] = f->coeffs[i];   // f(x) = f(x) / x
-                c->coeffs[N+1-i] = c->coeffs[N-i];   // c(x) = c(x) * x
+                f->coeffs[i-1] = f->coeffs[i];   /* f(x) = f(x) / x */
+                c->coeffs[N+1-i] = c->coeffs[N-i];   /* c(x) = c(x) * x */
             }
             f->coeffs[N] = 0;
             c->coeffs[0] = 0;
             k++;
-            if (ntru_equals0(f))
-                return 0;   // not invertible
+            if (ntru_equals0(f)) {
+                invertible = 0;
+                goto done;
+            }
         }
         if (ntru_equals1(f))
             break;
         if (ntru_deg(f) < ntru_deg(g)) {
-            // exchange f and g
+            /* exchange f and g */
             NtruIntPoly *temp = f;
             f = g;
             g = temp;
-            // exchange b and c
+            /* exchange b and c */
             temp = b;
             b = c;
             c = temp;
@@ -285,10 +361,14 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
         ntru_add_int_mod(b, c, 2);
     }
     
-    if (b->coeffs[N] != 0)
-        return 0;
-    // Fq(x) = x^(N-k) * b(x)
-    memset(&Fq->coeffs, 0, N);
+    if (b->coeffs[N] != 0) {
+        invertible = 0;
+        goto done;
+    }
+    invertible = 1;
+
+    /* Fq(x) = x^(N-k) * b(x) */
+    memset(&Fq->coeffs, 0, N * sizeof Fq->coeffs[0]);
     Fq->N = N;
     int j = 0;
     k %= N;
@@ -299,13 +379,15 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
         Fq->coeffs[j] = b->coeffs[i];
     }
 
+    ntru_mod2_to_modq(a, Fq, q);
+
+done:
     free(b);
     free(c);
     free(f);
     free(g);
 
-    ntru_mod2_to_modq(a, Fq, q);
-    return 1;
+    return invertible;
 }
 
 int dev_random(unsigned rand_data[], int len) {

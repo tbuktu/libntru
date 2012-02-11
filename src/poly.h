@@ -1,4 +1,7 @@
-#define NTRU_MAX_N 1499
+#ifndef POLY_H
+#define POLY_H
+
+#define NTRU_MAX_N 1500   /* must be one higher than the maximum #coeffs */
 #define NTRU_MAX_ONES 248
 
 /** A polynomial with integer coefficients. */
@@ -24,6 +27,20 @@ typedef struct NtruProdPoly {
     int N;
     NtruTernPoly f1, f2, f3;
 } NtruProdPoly;
+
+/**
+ * @brief Random ternary polynomial
+ *
+ * Generates a random ternary polynomial.
+ *
+ * @param N the number of coefficients; must be NTRU_MAX_N or less
+ * @param num_ones number of ones
+ * @param num_neg_ones number of negative ones
+ * @param poly output parameter; a pointer to store the new polynomial
+ * @param rng a pointer to a function that takes an array and an array size, and fills the array
+              with random data. See dev_random() and dev_urandom().
+ */
+int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int));
 
 /**
  * @brief Random product-form polynomial
@@ -52,6 +69,29 @@ void ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, Ntr
 void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b);
 
 /**
+ * @brief Addition of two polynomials
+ *
+ * Adds a NtruIntPoly to another.
+ * The polynomial b must not have more coefficients than a.
+ *
+ * @param a input and output parameter; coefficients are overwritten
+ * @param b a polynomial to add to the polynomial a
+ */
+void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b);
+
+/**
+ * @brief Addition of two polynomials with a modulus
+ *
+ * Adds a NtruIntPoly to another, taking the coefficient values modulo an int.
+ * The polynomial b must not have more coefficients than a.
+ *
+ * @param a input and output parameter; coefficients are overwritten
+ * @param b a polynomial to add to the polynomial a
+ * @param modulus the modulus to apply to the coefficients of c
+ */
+void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus);
+
+/**
  * @brief Product-form to general polynomial
  *
  * Converts a NtruProdPoly to an equivalent NtruIntPoly.
@@ -73,6 +113,19 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b);
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
 int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
+
+/**
+ * @brief General polynomial by product-form polynomial multiplication
+ *
+ * Multiplies a NtruIntPoly by a NtruProdPoly. The number of coefficients
+ * must be the same for both polynomials.
+ *
+ * @param a a general polynomial
+ * @param b a product-form polynomial
+ * @param c output parameter; a pointer to store the new polynomial
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+int ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c);
 
 /**
  * @brief Multiplies a polynomial by a factor
@@ -122,6 +175,17 @@ int ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, int modulu
 void ntru_mod(NtruIntPoly *p, int modulus);
 
 /**
+ * @brief Reduction modulo an int, centered
+ *
+ * Reduces the coefficients of an NtruIntPoly modulo an int such that
+ * -q/2 <= p->coeffs[i] < q/2 for all coefficients.
+ *
+ * @param p input and output parameter; coefficients are overwritten
+ * @param modulus the modulus to apply to the coefficients of c
+ */
+void ntru_mod_center(NtruIntPoly *p, int modulus);
+
+/**
  * @brief Equality with one
  *
  * Tests if p(x) = 1
@@ -130,6 +194,24 @@ void ntru_mod(NtruIntPoly *p, int modulus);
  * @return 1 iff all coefficients are equal to zero, except for the lowest coefficient which must equal 1
  */
 int ntru_equals1(NtruIntPoly *p);
+
+/**
+ * @brief Erases a ternary polynomial
+ *
+ * Overwrites all coefficients of a ternary polynomial with zeros.
+ *
+ * @param p a polynomial
+ */
+void ntru_clear_tern(NtruTernPoly *p);
+
+/**
+ * @brief Erases a general polynomial
+ *
+ * Overwrites all coefficients of a polynomial with zeros.
+ *
+ * @param p a polynomial
+ */
+void ntru_clear_int(NtruIntPoly *p);
 
 /**
  * @brief Inverse modulo q
@@ -167,3 +249,5 @@ int dev_random(unsigned rand_data[], int len);
  * @return 0 for error, 1 otherwise
  */
 int dev_urandom(unsigned rand_data[], int len);
+
+#endif   /* POLY_H */
