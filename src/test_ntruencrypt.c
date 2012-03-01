@@ -17,7 +17,7 @@ void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, int q) {
 }
 
 int test_keygen() {
-    NtruEncParams params = APR2011_439_FAST;
+    struct NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
     int valid = ntru_gen_key_pair(params, &kp, dev_urandom);
 

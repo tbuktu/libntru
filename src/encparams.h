@@ -1,5 +1,19 @@
+#ifndef ENCPARAMS_H
+#define ENCPARAMS_H
+
+#include "hash.h"
+
+/* max hash output length in bytes */
+#define NTRU_MAX_HASH_LEN 64
+
+/** upper limit for the parameter c in NtruEncParams */
+#define NTRU_MAX_C 32
+
+/** max length of a bit string in bytes */
+#define NTRU_MAX_BIT_STR_LEN (NTRU_MAX_HASH_LEN * (NTRU_MAX_C+1))
+
 /* A set of parameters for NtruEncrypt */
-typedef struct NtruEncParams {
+struct NtruEncParams {
     /* number of polynomial coefficients */
     int N;
 
@@ -54,34 +68,40 @@ typedef struct NtruEncParams {
      */
     int sparse;
 
-    /* e.g. "SHA-256" */
-    char *hash_alg;
-} NtruEncParams;
+    /* hash function, e.g. ntru_sha256 */
+    void (*hash)(char[], int, char[]);
+
+    /* output length of the hash function */
+    int hlen;
+};
+extern struct NtruEncParams NtruEncParams;
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is optimized for key size.
  */
-NtruEncParams EES1087EP2_FAST = {1087, 2048, 8, 8, 8, 120, 256, 13, 25, 14, 1, {0, 6, 3}, 1, "SHA-512"};
+#define EES1087EP2_FAST {1087, 2048, 8, 8, 8, 120, 256, 13, 25, 14, 1, {0, 6, 3}, 1, ntru_sha512, 64}
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is a tradeoff between key size and encryption/decryption speed.
  */
-NtruEncParams EES1171EP1_FAST = {1171, 2048, 8, 7, 7, 106, 256, 13, 20, 15, 1, {0, 6, 4}, 1, "SHA-512"};
+#define EES1171EP1_FAST {1171, 2048, 8, 7, 7, 106, 256, 13, 20, 15, 1, {0, 6, 4}, 1, ntru_sha512, 64}
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is optimized for encryption/decryption speed.
  */
-NtruEncParams EES1499EP1_FAST = {1499, 2048, 7, 6, 6, 79, 256, 13, 17, 19, 1, {0, 6, 5}, 1, "SHA-512"};
+#define EES1499EP1_FAST = {1499, 2048, 7, 6, 6, 79, 256, 13, 17, 19, 1, {0, 6, 5}, 1, ntru_sha512, 64}
 
 /*
  * A parameter set that gives 128 bits of security.
  */
-NtruEncParams APR2011_439_FAST = {439, 2048, 9, 8, 5, 130, 128, 9, 32, 9, 1, {0, 7, 101}, 1, "SHA-256"};
+#define APR2011_439_FAST {439, 2048, 9, 8, 5, 130, 128, 9, 32, 9, 1, {0, 7, 101}, 1, ntru_sha256, 32}
 
 /*
  * A parameter set that gives 256 bits of security.
  */
-NtruEncParams APR2011_743_FAST = {743, 2048, 11, 11, 15, 220, 256, 10, 27, 14, 1, {0, 7, 105}, 0, "SHA-512"};
+#define APR2011_743_FAST {743, 2048, 11, 11, 15, 220, 256, 10, 27, 14, 1, {0, 7, 105}, 0, ntru_sha512, 64}
+
+#endif   /* ENCPARAMS_H */

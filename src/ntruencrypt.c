@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "ntruencrypt.h"
 
-int ntru_gen_key_pair(NtruEncParams params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int)) {
+int ntru_gen_key_pair(struct NtruEncParams params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int)) {
     int N = params.N;
     int q = params.q;
     int df1 = params.df1;

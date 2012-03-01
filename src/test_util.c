@@ -25,6 +25,15 @@ int equals_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
     return 1;
 }
 
+int equals_arr(char *arr1, char *arr2, int len) {
+    int i;
+    for (i=0; i<len; i++)
+        if (arr1[i] != arr2[i])
+            return 0;
+
+    return 1;
+}
+
 int rand_int(int N, int pow2q, NtruIntPoly *poly, int (*rng)(unsigned[], int)) {
     unsigned rand_data[N];
     if (!rng(rand_data, N))
