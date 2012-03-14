@@ -35,14 +35,14 @@ struct NtruEncParams {
      */
     int df3;
 
-    /* number of random bits to prepend to the message */
-    int db;
-
     /*
      * minimum acceptable number of -1's, 0's, and 1's in the polynomial m'
      * in the last encryption step
      */
     int dm0;
+
+    /* number of random bits to prepend to the message */
+    int db;
 
     /* a parameter for the Index Generation Function */
     int c;
