@@ -43,10 +43,13 @@ int ntru_leading(NtruBitStr *a, int num_bits) {
     int sum = a->buf[start_byte] >> start_bit_in_byte;
     int shift = 8 - start_bit_in_byte;
     int i;
-    for (i=start_byte+1; i<a->num_bytes; i++) {
+    for (i=start_byte+1; i<a->num_bytes-1; i++) {
         sum |= a->buf[i] << shift;
         shift += 8;
     }
+    int final_bits = num_bits - shift;   /* #bits in the final byte */
+    int afin = a->buf[a->num_bytes-1];
+    sum |= (afin & ((1<<final_bits)-1)) << shift;
 
     return sum;
 }
