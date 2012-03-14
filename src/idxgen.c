@@ -2,14 +2,14 @@
 #include <string.h>
 #include "idxgen.h"
 
-void ntru_IGF_init(char *seed, int seed_len, struct NtruEncParams *params, void (*hash)(char[], int, char[]), NtruIGFState *s) {
+void ntru_IGF_init(char *seed, int seed_len, struct NtruEncParams *params, NtruIGFState *s) {
     s->Z = seed;
     s->zlen = seed_len;
     s->N = params->N;
     s->c = params->c;
     s->hlen = params->hlen;
     s->rem_len = params->min_calls_r * 8 * s->hlen;
-    s->hash = hash;
+    s->hash = params->hash;
     s->counter = 0;
 
     s->buf.num_bytes = 0;
@@ -22,7 +22,7 @@ void ntru_IGF_init(char *seed, int seed_len, struct NtruEncParams *params, void 
         char hash_inp[inp_len];
         memcpy(&hash_inp, (char*)s->Z, s->zlen);
         memcpy((char*)&hash_inp + s->zlen, &s->counter, sizeof s->counter);
-        hash((char*)&hash_inp, inp_len, (char*)&H);
+        s->hash((char*)&hash_inp, inp_len, (char*)&H);
 
         ntru_append(&s->buf, (unsigned char*)&H, s->hlen);
         s->counter++;

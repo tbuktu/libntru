@@ -3,10 +3,7 @@
 #include <math.h>
 #include "encparams.h"
 #include "idxgen.h"
-#include "hash.h"
 #include "test_util.h"
-
-#include <string.h>
 
 /** number of calls to IGF */
 #define NUM_ITER 1000
@@ -27,7 +24,7 @@ int test_idxgen() {
     struct NtruEncParams params = APR2011_743_FAST;
     double avg = 0;
     NtruIGFState s;
-    ntru_IGF_init(seed, sizeof seed, &params, params.hash, &s);
+    ntru_IGF_init(seed, sizeof seed, &params, &s);
     int idx;
     for (i=0; i<NUM_ITER; i++) {
         ntru_IGF_next(&s, &idx);

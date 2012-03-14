@@ -27,10 +27,9 @@ typedef struct NtruIGFState {
  * @param seed
  * @param seed_len
  * @param params
- * @param hash
  * @param s
  */
-void ntru_IGF_init(char *seed, int seed_len, struct NtruEncParams *params, void (*hash)(char[], int, char[]), NtruIGFState *s);
+void ntru_IGF_init(char *seed, int seed_len, struct NtruEncParams *params, NtruIGFState *s);
 
 /**
  * @brief IGF next index
