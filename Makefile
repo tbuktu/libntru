@@ -3,8 +3,16 @@ CFLAGS=-g -Wall
 LDFLAGS=-lcrypto
 SRC=src
 
+# Use -install_name on Mac OS, -soname everywhere else
+UNAME := $(shell uname)
+ifeq ($(UNAME), Darwin)
+	SONAME=-install_name
+else
+	SONAME=-soname
+endif
+
 lib: ntruencrypt.o poly.o hash.o idxgen.o bitstring.o mgf.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared -Wl,-soname,libntru.so -o libntru.so \
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -Wl,$(SONAME),libntru.so -o libntru.so \
 	ntruencrypt.o poly.o hash.o bitstring.o idxgen.o mgf.o
 
 test: lib test_util.o test_poly.o test_ntruencrypt.o test_idxgen.o
