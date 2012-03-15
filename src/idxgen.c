@@ -58,7 +58,9 @@ void ntru_IGF_next(NtruIGFState *s, int *i) {
         *i = ntru_leading(&s->buf, c);   /* assume c<32 */
         ntru_truncate(&s->buf, c);
         s->rem_len -= c;
-        if (*i < (1<<c)-((1<<c)%N))
+        if (*i < (1<<c)-((1<<c)%N)) {
+            *i %= N;
             return;
+        }
     }
 }
