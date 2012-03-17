@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "poly.h"
+#include "err.h"
 
 int ntru_num_bits(int n) {
     int b = 1;
@@ -88,6 +89,12 @@ void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
     int i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) % modulus;
+}
+
+void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b) {
+    int i;
+    for (i=0; i<b->N; i++)
+        a->coeffs[i] -= b->coeffs[i];
 }
 
 void ntru_sub_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
@@ -201,6 +208,92 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b) {
     ntru_add_tern(b, &a->f3);
 }
 
+void ntru_to_arr(NtruIntPoly *p, int q, char *a) {
+    int bits_coeff = 0;
+    while (q > 1) {
+        q /= 2;
+        bits_coeff++;
+    }
+
+    int bit_idx = 0;
+    int byte_idx = 0;
+    int i, j;
+    a[0] = 0;
+    for (i=0; i<p->N; i++)
+        for (j=0; j<bits_coeff; j++) {
+            int curr_bit = (p->coeffs[i] >> j) & 1;
+            a[byte_idx] |= curr_bit << bit_idx;
+            if (bit_idx == 7) {
+                bit_idx = 0;
+                byte_idx++;
+                a[byte_idx] = 0;
+            }
+            else
+                bit_idx++;
+        }
+}
+
+void ntru_to_arr4(NtruIntPoly *p, char *arr) {
+    int i = 0;
+    while (i < p->N-3) {
+        int c0 = p->coeffs[i] & 3;
+        int c1 = p->coeffs[i+1] & 3;
+        int c2 = p->coeffs[i+2] & 3;
+        int c3 = p->coeffs[i+3] & 3;
+        int d = c0 + (c1<<2) + (c2<<4) + (c3<<6);
+        arr[i/4] = d;
+        i += 4;
+    }
+
+    // handle the last 0 to 3 coefficients
+    if (i >= p->N)
+        return;
+    int last = i / 4;
+    arr[last] = p->coeffs[i] & 3;
+    i++;
+
+    if (i >= p->N)
+        return;
+    arr[last] |= (p->coeffs[i]&3) << 2;
+    i++;
+
+    if (i >= p->N)
+        return;
+    arr[last] |= (p->coeffs[i]&3) << 4;
+    i++;
+
+    if (i >= p->N)
+        return;
+    arr[last] |= (p->coeffs[i]&3) << 6;
+}
+
+int get_bit(char *arr, int bit_idx) {
+    int byte_idx = bit_idx / 8;
+    int arr_elem = arr[byte_idx];
+    return (arr_elem >> (bit_idx%8)) & 1;
+}
+
+void ntru_from_arr(char *arr, int arr_len, int N, int q, NtruIntPoly *p) {
+    p->N = N;
+    memset(&p->coeffs, 0, N * sizeof p->coeffs[0]);
+
+    int bits_coeff = 0;
+    while (q > 1) {
+        q /= 2;
+        bits_coeff++;
+    }
+
+    int num_bits = N * bits_coeff;
+    int coeff_idx = 0;
+    int bit_idx = 0;
+    for (bit_idx=0; bit_idx<num_bits; bit_idx++) {
+        if (bit_idx>0 && bit_idx%bits_coeff==0)
+            coeff_idx++;
+        int bit = get_bit(arr, bit_idx);
+        p->coeffs[coeff_idx] += bit << (bit_idx%bits_coeff);
+    }
+}
+
 void ntru_mult_fac(NtruIntPoly *a, int factor) {
     int i;
     for (i=0; i<a->N; i++)
@@ -236,6 +329,18 @@ void ntru_mod(NtruIntPoly *p, int modulus) {
     else
         for (i=0; i<p->N; i++)
             p->coeffs[i] %= modulus;
+}
+
+void ntru_mod3(NtruIntPoly *p) {
+    int i;
+    for (i=0; i<p->N; i++) {
+        int c = p->coeffs[i] % 3;
+        if (c > 1)
+            c = -1;
+        if (c < -1)
+            c = 1;
+        p->coeffs[i] = c;
+    }
 }
 
 void ntru_mod_center(NtruIntPoly *p, int modulus) {
@@ -282,11 +387,32 @@ int ntru_equals1(NtruIntPoly *p) {
     return p->coeffs[0] == 1;
 }
 
+int ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
+    if (a->N != b->N)
+        return 0;
+
+    int i;
+    for (i=0; i<a->N; i++)
+        if (a->coeffs[i] != b->coeffs[i])
+            return 0;
+
+    return 1;
+}
+
 int ntru_deg(NtruIntPoly *p) {
     int deg = p->N - 1;
     while (deg>0 && p->coeffs[deg]==0)
         deg--;
     return deg;
+}
+
+int ntru_count(NtruIntPoly *p, int value) {
+    int count = 0;
+    int i;
+    for (i=0; i<p->N; i++)
+        if (p->coeffs[i] == value)
+            count++;
+    return count;
 }
 
 void ntru_clear_tern(NtruTernPoly *p) {
@@ -321,14 +447,22 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
     int N = a->N;
     int k = 0;
     NtruIntPoly *b = ntru_zero_poly(N+1);
+    if (!b)
+        return NTRU_ERR_OUT_OF_MEMORY;
     b->coeffs[0] = 1;
     NtruIntPoly *c = ntru_zero_poly(N+1);
+    if (!c)
+        return NTRU_ERR_OUT_OF_MEMORY;
     NtruIntPoly *f = ntru_clone(a);
+    if (!f)
+        return NTRU_ERR_OUT_OF_MEMORY;
     f->coeffs[f->N] = 0;   /* index N wasn't cloned */
     f->N++;   /* add one coefficient for a total of N+1 */
     ntru_mod2(f);
     /* set g(x) = x^N − 1 */
     NtruIntPoly *g = ntru_zero_poly(N+1);
+    if (!g)
+        return NTRU_ERR_OUT_OF_MEMORY;
     g->coeffs[0] = 1;
     g->coeffs[N] = 1;
     for (;;) {

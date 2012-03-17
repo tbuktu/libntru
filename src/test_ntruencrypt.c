@@ -1,3 +1,4 @@
+#include "string.h"
 #include "test_ntruencrypt.h"
 #include "test_util.h"
 #include "ntruencrypt.h"
@@ -35,12 +36,34 @@ int test_keygen() {
     /* decrypt and verify */
     NtruIntPoly c;
     decrypt_poly(&e, &kp.priv.t, &c, params.q);
-    valid &= equals_int(&m_int, &c);
+    valid &= ntru_equals_int(&m_int, &c);
 
     print_result("test_keygen", valid);
     return valid;
 }
 
+int test_encr_decr() {
+    struct NtruEncParams params = APR2011_743_FAST;
+    NtruEncKeyPair kp;
+    int valid = ntru_gen_key_pair(params, &kp, dev_urandom);
+
+    int enc_len = ntru_enc_len(&params);
+    char plain[19];
+    strcpy(plain, "test message 12345");
+    int plain_len = strlen(plain);
+    char encrypted[enc_len];
+    valid &= ntru_encrypt((char*)&plain, plain_len, &kp.pub, &params, dev_urandom, (char*)&encrypted) == 0;
+    char decrypted[plain_len];
+    int dec_len;
+    valid &= ntru_decrypt((char*)&encrypted, &kp, &params, (unsigned char*)&decrypted, &dec_len) == 0;
+    valid &= equals_arr((unsigned char*)&plain, (unsigned char*)&decrypted, plain_len);
+
+    print_result("test_encr_decr", valid);
+    return valid;
+}
+
 int test_ntruencrypt() {
-    return test_keygen();
+    int valid = test_keygen();
+    valid &= test_encr_decr();
+    return valid;
 }

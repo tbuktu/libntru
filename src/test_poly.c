@@ -1,7 +1,8 @@
-#include "poly.h"
-#include "test_util.h"
-
 #include <stdio.h>
+#include "poly.h"
+#include "ntruencrypt.h"
+#include "encparams.h"
+#include "test_util.h"
 
 /** tests ntru_mult_int() and ntru_mult_int_mod() */
 int test_mult_int() {
@@ -13,7 +14,7 @@ int test_mult_int() {
     NtruIntPoly c1;
     ntru_mult_int_mod(&a1, &b1, &c1, 32);
     NtruIntPoly c1_exp = {11, {3, 25, -10, 21, 10, 7, 6, 7, 5, 29, -7}};
-    valid &= equals_int(&c1_exp, &c1);
+    valid &= ntru_equals_int(&c1_exp, &c1);
 
     /* multiplication without a modulus */
     NtruIntPoly a2 = {11, {1, 1, 0, 0, -1, -1, 0, 0, -1, 0, 1}};
@@ -21,7 +22,7 @@ int test_mult_int() {
     NtruIntPoly c2;
     ntru_mult_int(&a2, &b2, &c2);
     NtruIntPoly c2_exp = {11, {0, -13, 15, -12, -26, -39, 2, 17, 13, 17, 26}};
-    valid &= equals_int(&c2_exp, &c2);
+    valid &= ntru_equals_int(&c2_exp, &c2);
 
     /* mult_mod should give the same result as mult followed by mod */
     NtruIntPoly a3 = {11, {1, 0, -1, 1, 0, 1, 1, 1, -1, 1, -1}};
@@ -48,7 +49,7 @@ int test_mult_tern() {
     ntru_tern_to_int(&a, &a_int);
     NtruIntPoly c_int;
     ntru_mult_int(&a_int, &b, &c_int);
-    valid &= equals_int(&c_tern, &c_int);
+    valid &= ntru_equals_int(&c_tern, &c_int);
 
     print_result("test_mult_tern", valid);
     return valid;
@@ -69,25 +70,17 @@ int test_mult_prod() {
         ntru_prod_to_int(&a, &a_int);
         NtruIntPoly c_int;
         ntru_mult_int(&a_int, &b, &c_int);
-        valid &= equals_int(&c_prod, &c_int);
+        valid &= ntru_equals_int(&c_prod, &c_int);
     }
 
     print_result("test_mult_prod", valid);
     return valid;
 }
 
-void ensure_positive(NtruIntPoly *p, int modulus) {
-    int i;
-    for (i=0; i<p->N; i++)
-        while (p->coeffs[i] < 0)
-            p->coeffs[i] += modulus;
-}
-
 int verify_inverse(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
     NtruIntPoly c;
     ntru_mult_int_mod(a, b, &c, modulus);
     ntru_mod(&c, modulus);
-    ensure_positive(&c, modulus);
     return ntru_equals1(&c);
 }
 
@@ -101,7 +94,7 @@ int test_inv() {
     int invertible = ntru_invert(&a1, 32, &b1);
     NtruIntPoly b_exp = {11, {5, -23, 6, 16, 4, 15, 16, -10, -12, -14, -2}};
     valid &= invertible;
-    valid &= equals_int(&b_exp, &b1);
+    valid &= ntru_equals_int(&b_exp, &b1);
     valid &= verify_inverse(&a1, &b1, 32);
 
     /* test 3 random polynomials */
@@ -128,11 +121,27 @@ int test_inv() {
     return valid;
 }
 
+int test_arr() {
+    struct NtruEncParams params = APR2011_439_FAST;
+    char a[ntru_enc_len(&params)];
+    NtruIntPoly p1;
+    int valid = rand_int(params.N, 11, &p1, dev_urandom);
+    ntru_to_arr(&p1, params.q, a);
+
+    NtruIntPoly p2;
+    ntru_from_arr(a, sizeof a, params.N, params.q, &p2);
+
+    valid &= equals_int(&p1, &p2);
+    print_result("test_arr", valid);
+    return valid;
+}
+
 int test_poly() {
     int valid = 1;
     valid &= test_mult_int();
     valid &= test_mult_tern();
     valid &= test_mult_prod();
     valid &= test_inv();
+    valid &= test_arr();
     return valid;
 }
