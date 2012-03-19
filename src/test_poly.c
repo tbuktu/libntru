@@ -123,13 +123,13 @@ int test_inv() {
 
 int test_arr() {
     struct NtruEncParams params = APR2011_439_FAST;
-    char a[ntru_enc_len(&params)];
+    char a[ntru_enc_len(params.N, params.q)];
     NtruIntPoly p1;
     int valid = rand_int(params.N, 11, &p1, dev_urandom);
     ntru_to_arr(&p1, params.q, a);
 
     NtruIntPoly p2;
-    ntru_from_arr(a, sizeof a, params.N, params.q, &p2);
+    ntru_from_arr(a, params.N, params.q, &p2);
 
     valid &= equals_int(&p1, &p2);
     print_result("test_arr", valid);

@@ -104,4 +104,6 @@ extern struct NtruEncParams NtruEncParams;
  */
 #define APR2011_743_FAST {743, 2048, 11, 11, 15, 220, 256, 10, 27, 14, 1, {0, 7, 105}, 0, ntru_sha512, 64}
 
+int ntru_enc_len(int N, int q);
+
 #endif   /* ENCPARAMS_H */

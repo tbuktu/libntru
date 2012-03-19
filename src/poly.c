@@ -273,7 +273,7 @@ int get_bit(char *arr, int bit_idx) {
     return (arr_elem >> (bit_idx%8)) & 1;
 }
 
-void ntru_from_arr(char *arr, int arr_len, int N, int q, NtruIntPoly *p) {
+void ntru_from_arr(char *arr, int N, int q, NtruIntPoly *p) {
     p->N = N;
     memset(&p->coeffs, 0, N * sizeof p->coeffs[0]);
 

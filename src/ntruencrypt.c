@@ -61,9 +61,9 @@ int ntru_gen_key_pair(struct NtruEncParams params, NtruEncKeyPair *kp, int (*rng
     ntru_clear_tern(&g);
     ntru_clear_int(&fq);
 
-    NtruEncPrivKey priv = {params, t};
+    NtruEncPrivKey priv = {q, t};
     kp->priv = priv;
-    NtruEncPubKey pub = {params, h};
+    NtruEncPubKey pub = {q, h};
     kp->pub = pub;
 
     return 1;
@@ -163,7 +163,7 @@ void ntru_get_seed(char *msg, int msg_len, NtruIntPoly *h, char *b, struct NtruE
     int oid_len = sizeof params->oid;
     int pklen = params->db / 8;
 
-    char bh[ntru_enc_len(params)];
+    char bh[ntru_enc_len(params->N, params->q)];
     ntru_to_arr(h, params->q, (char*)&bh);
     char htrunc[pklen];
     memcpy(&htrunc, &bh, pklen);
@@ -281,25 +281,6 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParam
     }
 }
 
-int ntru_enc_len(struct NtruEncParams *params) {
-    int q = params->q;
-    int N = params->N;
-
-    /* make sure q is a power of 2 */
-    if (q & (q-1))
-        return -1;
-
-    int log2q = 0;
-    while (q > 1) {
-        q /= 2;
-        log2q++;
-    }
-
-    int len_bits = N * log2q;
-    int len_bytes = (len_bits+7) / 8;
-    return len_bytes;
-}
-
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, int q, NtruIntPoly *d) {
     ntru_mult_prod(e, &priv->t, d);
     ntru_mod(d, q);
@@ -315,7 +296,6 @@ int ntru_decrypt(char *enc, NtruEncKeyPair *kp, struct NtruEncParams *params, un
     int db = params->db;
     int max_len_bytes = ntru_max_msg_len(params);
     int dm0 = params->dm0;
-    int enc_len = ntru_enc_len(params);
 
     if (max_len_bytes > 255)
         return NTRU_ERR_INVALID_MAX_LEN;
@@ -323,7 +303,7 @@ int ntru_decrypt(char *enc, NtruEncKeyPair *kp, struct NtruEncParams *params, un
     int blen = db / 8;
 
     NtruIntPoly e;
-    ntru_from_arr(enc, enc_len, N, q, &e);
+    ntru_from_arr(enc, N, q, &e);
     NtruIntPoly ci;
     ntru_decrypt_poly(&e, &kp->priv, q, &ci);
 

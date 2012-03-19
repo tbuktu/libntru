@@ -47,7 +47,7 @@ int test_encr_decr() {
     NtruEncKeyPair kp;
     int valid = ntru_gen_key_pair(params, &kp, dev_urandom);
 
-    int enc_len = ntru_enc_len(&params);
+    int enc_len = ntru_enc_len(params.N, params.q);
     char plain[19];
     strcpy(plain, "test message 12345");
     int plain_len = strlen(plain);

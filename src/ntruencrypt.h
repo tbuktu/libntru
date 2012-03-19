@@ -8,7 +8,7 @@
  * NtruEncrypt private key
  */
 typedef struct NtruEncPrivKey {
-    struct NtruEncParams params;
+    int q;
     NtruProdPoly t;
 } NtruEncPrivKey;
 
@@ -16,7 +16,7 @@ typedef struct NtruEncPrivKey {
  * NtruEncrypt public key
  */
 typedef struct NtruEncPubKey {
-    struct NtruEncParams params;
+    int q;
     NtruIntPoly h;
 } NtruEncPubKey;
 
@@ -58,8 +58,6 @@ int ntru_gen_key_pair(struct NtruEncParams params, NtruEncKeyPair *kp, int (*rng
  * @return 0 on success, or one of the NTRU_ERR_ codes on failure
  */
 int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int), char *enc);
-
-int ntru_enc_len(struct NtruEncParams *params);
 
 /**
  * @brief Decryption
