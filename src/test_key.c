@@ -1,6 +1,6 @@
 #include "test_util.h"
 #include "key.h"
-#include "ntruencrypt.h"
+#include "ntru.h"
 #include "encparams.h"
 
 int test_key() {

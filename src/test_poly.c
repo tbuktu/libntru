@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "poly.h"
-#include "ntruencrypt.h"
+#include "ntru.h"
 #include "encparams.h"
 #include "test_util.h"
 

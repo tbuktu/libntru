@@ -1,6 +1,6 @@
 #include <string.h>
 #include <netinet/in.h>
-#include "ntruencrypt.h"
+#include "ntru.h"
 
 void ntru_export_pub(NtruEncPubKey *key, char *arr) {
     /* write N */

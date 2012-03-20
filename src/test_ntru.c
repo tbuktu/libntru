@@ -1,7 +1,7 @@
 #include "string.h"
-#include "test_ntruencrypt.h"
+#include "test_ntru.h"
 #include "test_util.h"
-#include "ntruencrypt.h"
+#include "ntru.h"
 
 void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, int q) {
     ntru_mult_tern(h, r, e);
@@ -62,7 +62,7 @@ int test_encr_decr() {
     return valid;
 }
 
-int test_ntruencrypt() {
+int test_ntru() {
     int valid = test_keygen();
     valid &= test_encr_decr();
     return valid;

@@ -1,7 +1,7 @@
 #ifndef KEY_H
 #define KEY_H
 
-#include "ntruencrypt.h"
+#include "ntru.h"
 
 void ntru_export_pub(NtruEncPubKey *key, char *arr);
 

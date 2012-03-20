@@ -2,8 +2,8 @@ CC=gcc
 CFLAGS=-g -Wall
 LDFLAGS=-lcrypto
 SRC=src
-OBJS=ntruencrypt.o poly.o hash.o idxgen.o bitstring.o mgf.o key.o encparams.o
-TEST_OBJS=test.o test_util.o test_ntruencrypt.o test_poly.o test_idxgen.o test_bitstring.o test_key.o
+OBJS=ntru.o poly.o hash.o idxgen.o bitstring.o mgf.o key.o encparams.o
+TEST_OBJS=test.o test_util.o test_ntru.o test_poly.o test_idxgen.o test_bitstring.o test_key.o
 
 # Use -install_name on Mac OS, -soname everywhere else
 UNAME := $(shell uname)

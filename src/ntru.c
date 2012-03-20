@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "ntruencrypt.h"
+#include "ntru.h"
 #include "poly.h"
 #include "idxgen.h"
 #include "mgf.h"
