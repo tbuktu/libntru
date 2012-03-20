@@ -12,12 +12,12 @@ const int BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
 const int BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
 const int BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
 
-int ntru_gen_key_pair(struct NtruEncParams params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int)) {
-    int N = params.N;
-    int q = params.q;
-    int df1 = params.df1;
-    int df2 = params.df2;
-    int df3 = params.df3;
+int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int)) {
+    int N = params->N;
+    int q = params->q;
+    int df1 = params->df1;
+    int df2 = params->df2;
+    int df3 = params->df3;
 
     NtruProdPoly t;
     NtruIntPoly fq;

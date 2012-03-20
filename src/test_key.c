@@ -6,7 +6,7 @@
 int test_key() {
     struct NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
-    ntru_gen_key_pair(params, &kp, dev_urandom);
+    ntru_gen_key_pair(&params, &kp, dev_urandom);
 
     /* test public key */
     char pub_arr[ntru_enc_len(params.N, params.q)];

@@ -20,7 +20,7 @@ void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, int q) {
 int test_keygen() {
     struct NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
-    int valid = ntru_gen_key_pair(params, &kp, dev_urandom);
+    int valid = ntru_gen_key_pair(&params, &kp, dev_urandom);
 
     /* encrypt a random message */
     NtruTernPoly m;
@@ -45,7 +45,7 @@ int test_keygen() {
 int test_encr_decr() {
     struct NtruEncParams params = APR2011_743_FAST;
     NtruEncKeyPair kp;
-    int valid = ntru_gen_key_pair(params, &kp, dev_urandom);
+    int valid = ntru_gen_key_pair(&params, &kp, dev_urandom);
 
     int enc_len = ntru_enc_len(params.N, params.q);
     char plain[19];

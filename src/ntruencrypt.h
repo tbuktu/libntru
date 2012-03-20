@@ -39,7 +39,7 @@ typedef struct NtruEncKeyPair {
  *            with random data. See dev_random() and dev_urandom().
  * @return 1 for success, 0 for failure
  */
-int ntru_gen_key_pair(struct NtruEncParams params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int));
+int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int));
 
 /**
  * @brief Encryption
