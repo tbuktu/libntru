@@ -10,12 +10,12 @@
 
 /* tests the average of multiple indices */
 int test_idxgen() {
-    // seed random number generator
+    /* seed random number generator */
     time_t rs;
     time(&rs);
     srand(rs);
 
-    // generate a random IGF seed array
+    /* generate a random IGF seed array */
     int i;
     char seed[100];
     for (i=0; i<sizeof seed; i++)

@@ -245,7 +245,7 @@ void ntru_to_arr4(NtruIntPoly *p, char *arr) {
         i += 4;
     }
 
-    // handle the last 0 to 3 coefficients
+    /* handle the last 0 to 3 coefficients */
     if (i >= p->N)
         return;
     int last = i / 4;
