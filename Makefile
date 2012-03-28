@@ -14,10 +14,10 @@ else
 endif
 
 lib: $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared -Wl,$(SONAME),libntru.so -o libntru.so $(OBJS)
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),libntru.so -o libntru.so $(OBJS) $(LDFLAGS)
 
 test: lib $(TEST_OBJS)
-	$(CC) $(CFLAGS) -o test -L. -lntru $(TEST_OBJS)
+	$(CC) $(CFLAGS) -o test $(TEST_OBJS) -L. -lntru
 	LD_LIBRARY_PATH=. ./test
 
 %.c %.o:
