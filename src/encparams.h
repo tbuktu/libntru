@@ -97,12 +97,12 @@ extern struct NtruEncParams NtruEncParams;
 /*
  * A parameter set that gives 128 bits of security.
  */
-#define APR2011_439_FAST {439, 2048, 9, 8, 5, 130, 128, 9, 32, 9, 1, {0, 7, 101}, 1, ntru_sha256, 32}
+#define APR2011_439_FAST {439, 2048, 9, 8, 5, 130, 128, 12, 32, 9, 1, {0, 7, 101}, 1, ntru_sha256, 32}
 
 /*
  * A parameter set that gives 256 bits of security.
  */
-#define APR2011_743_FAST {743, 2048, 11, 11, 15, 220, 256, 10, 27, 14, 1, {0, 7, 105}, 0, ntru_sha512, 64}
+#define APR2011_743_FAST {743, 2048, 11, 11, 15, 220, 256, 12, 27, 14, 1, {0, 7, 105}, 0, ntru_sha512, 64}
 
 int ntru_enc_len(int N, int q);
 
