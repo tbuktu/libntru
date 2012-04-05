@@ -41,6 +41,10 @@ int ntru_import_pub(char *arr, NtruEncPubKey *key) {
     return arr_head - arr;
 }
 
+int ntru_pub_len(int N, int q) {
+    return 4 + ntru_enc_len(N, q);
+}
+
 int ntru_tern_to_arr(NtruTernPoly *poly, char *arr) {
     char *arr_head = arr;
 

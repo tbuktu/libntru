@@ -9,7 +9,7 @@ int test_key() {
     ntru_gen_key_pair(&params, &kp, dev_urandom);
 
     /* test public key */
-    char pub_arr[ntru_enc_len(params.N, params.q)];
+    char pub_arr[ntru_pub_len(params.N, params.q)];
     ntru_export_pub(&kp.pub, pub_arr);
     NtruEncPubKey pub;
     ntru_import_pub(pub_arr, &pub);
