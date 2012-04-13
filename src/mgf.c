@@ -40,14 +40,14 @@ void ntru_MGF(char *seed, int seed_len, struct NtruEncParams *params, NtruIntPol
             int ter_idx;
             for (ter_idx=0; ter_idx<4; ter_idx++) {
                 int rem3 = O % 3;
-                i->coeffs[cur] = rem3 - 1;
+                i->coeffs[cur] = rem3==2 ? -1 : rem3;   /* reduce to [-1..1] */
                 cur++;
                 if (cur == N)
                     return;
                 O = (O-rem3) / 3;
             }
 
-            i->coeffs[cur] = O - 1;
+            i->coeffs[cur] = O==2 ? -1 : O;   /* reduce to [-1..1] */
             cur++;
             if (cur == N)
                 return;
