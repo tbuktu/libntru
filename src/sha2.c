@@ -646,7 +646,7 @@ sph_sha256_init(void *cc)
 #define RFUN   sha2_round
 #define HASH   sha224
 #define BE32   1
-#include "md_helper.c"
+#include "md_helper.h"
 
 /* see sph_sha2.h */
 void
