@@ -11,7 +11,7 @@ endif
 lib: src/*.o
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),libntru.so -o libntru.so src/*.o $(LDFLAGS)
 
-test: tests/*.o
+test: lib tests/*.o
 	$(CC) $(CFLAGS) -o test.out tests/*.o -L./tests -L. -lntru -lm
 	LD_LIBRARY_PATH=. ./test.out
 
