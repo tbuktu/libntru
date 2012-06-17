@@ -1,4 +1,3 @@
-#include <openssl/sha.h>
 #include <string.h>
 #include "idxgen.h"
 
