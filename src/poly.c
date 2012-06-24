@@ -524,6 +524,14 @@ done:
     return invertible;
 }
 
+int sum_coeffs(NtruIntPoly *a) {
+    int sum = 0;
+    int i;
+    for (i=1; i<a->N; i++)
+        sum += a->coeffs[i];
+    return sum;
+}
+
 int dev_random(unsigned rand_data[], int len) {
     int rand_fd = open("/dev/random", O_RDONLY);
     if (rand_fd < 0)

@@ -42,21 +42,30 @@ int test_keygen() {
     return valid;
 }
 
-int test_encr_decr() {
-    struct NtruEncParams params = APR2011_743_FAST;
+int test_encr_decr_param(struct NtruEncParams *params) {
     NtruEncKeyPair kp;
-    int valid = ntru_gen_key_pair(&params, &kp, dev_urandom);
+    int valid = ntru_gen_key_pair(params, &kp, dev_urandom);
 
-    int enc_len = ntru_enc_len(params.N, params.q);
+    int enc_len = ntru_enc_len(params->N, params->q);
     char plain[19];
     strcpy(plain, "test message 12345");
     int plain_len = strlen(plain);
     char encrypted[enc_len];
-    valid &= ntru_encrypt((char*)&plain, plain_len, &kp.pub, &params, dev_urandom, (char*)&encrypted) == 0;
+    valid &= ntru_encrypt((char*)&plain, plain_len, &kp.pub, params, dev_urandom, (char*)&encrypted) == 0;
     char decrypted[plain_len];
     int dec_len;
-    valid &= ntru_decrypt((char*)&encrypted, &kp, &params, (unsigned char*)&decrypted, &dec_len) == 0;
+    valid &= ntru_decrypt((char*)&encrypted, &kp, params, (unsigned char*)&decrypted, &dec_len) == 0;
     valid &= equals_arr((unsigned char*)&plain, (unsigned char*)&decrypted, plain_len);
+
+    return valid;
+}
+
+int test_encr_decr() {
+    /* test one param set for which maxm1=0 and one for which maxm1>0 */
+    struct NtruEncParams params743 = APR2011_743_FAST;
+    struct NtruEncParams params1087 = EES1087EP2_FAST;
+    int valid = test_encr_decr_param(&params743);
+    valid &= test_encr_decr_param(&params1087);
 
     print_result("test_encr_decr", valid);
     return valid;

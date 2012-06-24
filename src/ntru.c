@@ -80,12 +80,13 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
  * @param M an encoded ternary polynomial
  * @param M_len number of elements in M
  * @param N number of coefficients to generate
+ * @param skip whether to leave the constant coefficient zero and start populating at the linear coefficient
  * @param poly output parameter; pointer to write the polynomial to
  */
-void ntru_from_sves(char *M, int M_len, int N, NtruIntPoly *poly) {
+void ntru_from_sves(char *M, int M_len, int N, int skip, NtruIntPoly *poly) {
     poly->N = N;
 
-    int coeff_idx = 0;
+    int coeff_idx = skip ? 1 : 0;
     int bit_idx;
     for (bit_idx=0; bit_idx<M_len*8; ) {
         int bit1 = get_bit(M, bit_idx++);
@@ -111,10 +112,11 @@ void ntru_from_sves(char *M, int M_len, int N, NtruIntPoly *poly) {
  * See P1363.1 section 9.2.3.
  *
  * @param poly a ternary polynomial
+ * @param skip whether to skip the constant coefficient
  * @param data output parameter; must accommodate ceil(num_bits/8) bytes
  * @return 0 for success, 1 for illegal encoding
  */
-int ntru_to_sves(NtruIntPoly *poly, char *data) {
+int ntru_to_sves(NtruIntPoly *poly, int skip, char *data) {
     int N = poly->N;
 
     int num_bits = (N*3+1) / 2;
@@ -123,7 +125,9 @@ int ntru_to_sves(NtruIntPoly *poly, char *data) {
     int bit_index = 0;
     int byte_index = 0;
     int i;
-    for (i=0; i<N/2*2; ) {   /* if length is an odd number, throw away the highest coeff */
+    int start = skip ? 1 : 0;
+    int end = skip ? (N-1)|1 : N/2*2;   /* if there is an odd number of coeffs, throw away the highest one */
+    for (i=start; i<end; ) {
         int coeff1 = poly->coeffs[i++] + 1;
         int coeff2 = poly->coeffs[i++] + 1;
         if (coeff1==0 && coeff2==0)
@@ -221,6 +225,7 @@ void ntru_gen_blind_poly(char *seed, int seed_len, struct NtruEncParams *params,
 int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int), char *enc) {
     int N = params->N;
     int q = params->q;
+    int maxm1 = params->maxm1;
     int db = params->db;
     int max_len_bytes = ntru_max_msg_len(params);
     int buf_len_bits = (N*3/2+7)/8*8 + 1;
@@ -248,7 +253,7 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParam
         memset(M_head, 0, max_len_bytes+1-msg_len);
 
         NtruIntPoly mtrin;
-        ntru_from_sves((char*)&M, M_len, N, &mtrin);
+        ntru_from_sves((char*)&M, M_len, N, maxm1, &mtrin);
 
         int blen = params->db / 8;
         int sdata_len = sizeof(params->oid) + msg_len + blen + blen;
@@ -266,6 +271,19 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParam
         NtruIntPoly mask;
         ntru_MGF((char*)&oR4, oR4_len, params, &mask);
         ntru_add_int(&mtrin, &mask);
+
+        /*
+         * If df and dr are close to N/3, and the absolute value of sum_coeffs(mtrin) is
+         * large enough, the message becomes vulnerable to a meet-in-the-middle attack.
+         * To prevent this, we set the constant coefficient to zero but first check to ensure
+         * sum_coeffs() is small enough to keep the likelihood of a decryption failure low.
+         */
+        if (maxm1 > 0) {
+            if (sum_coeffs(&mtrin) > maxm1)
+                continue;
+            mtrin.coeffs[0] = 0;
+        }
+
         ntru_mod3(&mtrin);
 
         if (ntru_count(&mtrin, -1) < dm0)
@@ -294,6 +312,7 @@ int ntru_decrypt(char *enc, NtruEncKeyPair *kp, struct NtruEncParams *params, un
     int N = params->N;
     int q = params->q;
     int db = params->db;
+    int maxm1 = params->maxm1;
     int max_len_bytes = ntru_max_msg_len(params);
     int dm0 = params->dm0;
 
@@ -330,7 +349,7 @@ int ntru_decrypt(char *enc, NtruEncKeyPair *kp, struct NtruEncParams *params, un
     int cM_len_bits = (N*3+1) / 2;
     int cM_len_bytes = (cM_len_bits+7) / 8;
     unsigned char cM[cM_len_bytes];
-    ntru_to_sves(&cmtrin, (char*)&cM);
+    ntru_to_sves(&cmtrin, maxm1, (char*)&cM);
 
     unsigned char cb[blen];
     unsigned char *cM_head = cM;
@@ -369,5 +388,10 @@ int ntru_max_msg_len(struct NtruEncParams *params) {
     int N = params->N;
     int llen = 1;   /* ceil(log2(max_len)) */
     int db = params->db;
-    return N*3/2/8 - llen - db/8;;
+    int max_msg_len;
+    if (params->maxm1 > 0)
+        max_msg_len = (N-1)*3/2/8 - llen - db/8;   /* only N-1 coeffs b/c the constant coeff is not used */
+    else
+        max_msg_len = N*3/2/8 - llen - db/8;
+    return max_msg_len;
 }

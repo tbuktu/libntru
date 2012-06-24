@@ -301,6 +301,17 @@ void ntru_clear_int(NtruIntPoly *p);
 int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *b);
 
 /**
+ * @brief Sum of coefficients
+ *
+ * Returns the sum of all coefficients except the lowest coefficient,
+ * i.e. evaluates the polynomial at 1 and subtracts the constant coefficient.
+ *
+ * @param a a polynomial
+ * @return the sum of all coefficients
+ */
+int sum_coeffs(NtruIntPoly *a);
+
+/**
  * @brief /dev/random-based RNG
  *
  * Fills an array with random data from /dev/random.
