@@ -86,19 +86,19 @@ extern struct NtruEncParams NtruEncParams;
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is optimized for key size.
  */
-#define EES1087EP2_FAST {1087, 2048, 8, 8, 8, 120, 0, 256, 13, 25, 14, 1, {0, 6, 3}, 1, ntru_sha512, 64}
+#define EES1087EP2_FAST {1087, 2048, 8, 8, 11, 120, 0, 256, 13, 25, 14, 1, {0, 6, 3}, 1, ntru_sha512, 64}
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is a tradeoff between key size and encryption/decryption speed.
  */
-#define EES1171EP1_FAST {1171, 2048, 8, 7, 7, 106, 0, 256, 13, 20, 15, 1, {0, 6, 4}, 1, ntru_sha512, 64}
+#define EES1171EP1_FAST {1171, 2048, 8, 7, 11, 106, 0, 256, 13, 20, 15, 1, {0, 6, 4}, 1, ntru_sha512, 64}
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is optimized for encryption/decryption speed.
  */
-#define EES1499EP1_FAST {1499, 2048, 7, 6, 6, 79, 0, 256, 13, 17, 19, 1, {0, 6, 5}, 1, ntru_sha512, 64}
+#define EES1499EP1_FAST {1499, 2048, 7, 6, 11, 79, 0, 256, 13, 17, 19, 1, {0, 6, 5}, 1, ntru_sha512, 64}
 
 /*
  * A parameter set that gives 128 bits of security.
