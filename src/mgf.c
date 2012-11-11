@@ -1,5 +1,10 @@
 #include <string.h>
+#ifdef WIN32
+#include <stdint.h>
+#include <Winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
 #include "encparams.h"
 #include "poly.h"
 

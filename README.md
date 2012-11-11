@@ -43,5 +43,4 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
 
 
 ## Supported Platforms
-  libntru has only been tested on Linux and Mac OS X so far.
-  It won't work on Windows without modifications because it uses /dev/urandom.
+  libntru has been tested on Linux, Mac OS X and Windows (MingW).

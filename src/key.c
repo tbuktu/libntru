@@ -1,5 +1,10 @@
 #include <string.h>
+#ifdef WIN32
+#include <stdint.h>
+#include <Winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
 #include "ntru.h"
 
 void ntru_export_pub(NtruEncPubKey *key, char *arr) {

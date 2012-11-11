@@ -1,0 +1,17 @@
+CFLAGS=-g -Wall
+
+lib: src/*.o
+	$(CC) $(CFLAGS) -shared -o libntru.dll src/*.o $(LDFLAGS) -lws2_32 -ladvapi32
+
+test: lib tests/*.o
+	$(CC) $(CFLAGS) -o test.exe tests/*.o -L./tests -L. -lntru -lm
+	LD_LIBRARY_PATH=. ./test.exe
+
+src/%.c src/%.o:
+	cd src && $(CC) $(CFLAGS) $(LDFLAGS) -c $*.c
+
+tests/%.c tests/%.o:
+	cd tests && $(CC) $(CFLAGS) $(LDFLAGS) -c -I../src $*.c
+
+clean:
+	rm -f src/*.o tests/*.o libntru.dll test.exe
