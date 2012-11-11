@@ -2,6 +2,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <Wincrypt.h>
+#endif
 #include "poly.h"
 #include "err.h"
 
@@ -548,6 +553,14 @@ int dev_random(unsigned rand_data[], int len) {
     return tot_bytes == len_bytes;
 }
 
+#ifdef WIN32
+int dev_urandom(unsigned rand_data[], int len) {
+	static HCRYPTPROV hCryptProv = NULL;
+	if(hCryptProv == NULL)
+		CryptAcquireContext(&hCryptProv,NULL,NULL,PROV_RSA_FULL,0);
+	return CryptGenRandom(hCryptProv, len * sizeof *rand_data, rand_data);
+}
+#else
 int dev_urandom(unsigned rand_data[], int len) {
     int rand_fd = open("/dev/urandom", O_RDONLY);
     if (rand_fd < 0)
@@ -556,3 +569,4 @@ int dev_urandom(unsigned rand_data[], int len) {
     close(rand_fd);
     return bytes_read == len * sizeof rand_data[0];
 }
+#endif
