@@ -445,7 +445,6 @@ void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, int q) {
     }
 }
 
-
 int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
     int invertible;
     int i;
@@ -456,18 +455,27 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
         return NTRU_ERR_OUT_OF_MEMORY;
     b->coeffs[0] = 1;
     NtruIntPoly *c = ntru_zero_poly(N+1);
-    if (!c)
+    if (!c) {
+        free(b);
         return NTRU_ERR_OUT_OF_MEMORY;
+    }
     NtruIntPoly *f = ntru_clone(a);
-    if (!f)
+    if (!f) {
+        free(b);
+        free(c);
         return NTRU_ERR_OUT_OF_MEMORY;
+    }
     f->coeffs[f->N] = 0;   /* index N wasn't cloned */
     f->N++;   /* add one coefficient for a total of N+1 */
     ntru_mod2(f);
     /* set g(x) = x^N − 1 */
     NtruIntPoly *g = ntru_zero_poly(N+1);
-    if (!g)
+    if (!g) {
+        free(b);
+        free(c);
+        free(f);
         return NTRU_ERR_OUT_OF_MEMORY;
+    }
     g->coeffs[0] = 1;
     g->coeffs[N] = 1;
     for (;;) {
