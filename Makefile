@@ -1,4 +1,5 @@
 CFLAGS=-g -Wall
+LDFLAGS=-lrt
 
 # Use -install_name on Mac OS, -soname everywhere else
 UNAME := $(shell uname)
