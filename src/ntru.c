@@ -87,18 +87,24 @@ void ntru_from_sves(char *M, int M_len, int N, int skip, NtruIntPoly *poly) {
     poly->N = N;
 
     int coeff_idx = skip ? 1 : 0;
-    int bit_idx;
-    for (bit_idx=0; bit_idx<M_len*8; ) {
-        int bit1 = get_bit(M, bit_idx++);
-        int bit2 = get_bit(M, bit_idx++);
-        int bit3 = get_bit(M, bit_idx++);
-        int tbl_idx = bit1*4 + bit2*2 + bit3;
-        poly->coeffs[coeff_idx++] = COEFF1_TABLE[tbl_idx];
-        poly->coeffs[coeff_idx++] = COEFF2_TABLE[tbl_idx];
+    int i = 0;
+    while (i<M_len/3*3 && coeff_idx<N-1) {
+        /* process 24 bits at a time in the outer loop */
+        unsigned int chunk = (unsigned char)M[i+2];
+        chunk <<= 8;
+        chunk += (unsigned char)M[i+1];
+        chunk <<= 8;
+        chunk += (unsigned char)M[i];
+        i += 3;
 
-        /* ignore bytes that can't fit */
-        if (coeff_idx > N-2)
-            break;
+        int j;
+        for (j=0; j<8 && coeff_idx<N-1; j++) {
+            /* process 3 bits at a time in the inner loop */
+            int coeff_tbl_idx = ((chunk&1)<<2) + (chunk&2) + ((chunk&4)>>2);   /* low 3 bits in reverse order */
+            poly->coeffs[coeff_idx++] = COEFF1_TABLE[coeff_tbl_idx];
+            poly->coeffs[coeff_idx++] = COEFF2_TABLE[coeff_tbl_idx];
+            chunk >>= 3;
+        }
     }
 }
 

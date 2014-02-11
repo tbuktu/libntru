@@ -282,20 +282,33 @@ void ntru_from_arr(char *arr, int N, int q, NtruIntPoly *p) {
     p->N = N;
     memset(&p->coeffs, 0, N * sizeof p->coeffs[0]);
 
-    int bits_coeff = 0;
+    int bits_per_coeff = 0;
     while (q > 1) {
         q /= 2;
-        bits_coeff++;
+        bits_per_coeff++;
     }
 
-    int num_bits = N * bits_coeff;
-    int coeff_idx = 0;
-    int bit_idx = 0;
-    for (bit_idx=0; bit_idx<num_bits; bit_idx++) {
-        if (bit_idx>0 && bit_idx%bits_coeff==0)
-            coeff_idx++;
-        int bit = get_bit(arr, bit_idx);
-        p->coeffs[coeff_idx] += bit << (bit_idx%bits_coeff);
+    int mask = 0xFFFFFFFF >> (32-bits_per_coeff);   /* for truncating values to bitsPerCoeff bits */
+    int byte_idx = 0;
+    int bit_idx = 0;   /* next bit in arr[byte_idx] */
+    unsigned int coeff_buf = 0;   /* contains (bit_idx) bits */
+    int coeff_bits = 0;   /* length of coeffBuf */
+    int coeff_idx = 0;   /* index into coeffs */
+    while (coeff_idx < N) {
+        /* copy bits_per_coeff or more into coeff_buf */
+        while (coeff_bits < bits_per_coeff) {
+            coeff_buf += (arr[byte_idx]&0xFF) << coeff_bits;
+            coeff_bits += 8 - bit_idx;
+            byte_idx++;
+            bit_idx = 0;
+        }
+
+        /* low bits_per_coeff bits = next coefficient */
+        p->coeffs[coeff_idx] = coeff_buf & mask;
+        coeff_idx++;
+
+        coeff_buf >>= bits_per_coeff;
+        coeff_bits -= bits_per_coeff;
     }
 }
 
