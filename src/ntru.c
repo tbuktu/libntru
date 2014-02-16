@@ -45,7 +45,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
     int dg = N / 3;
     for (;;) {
         if (!ntru_rand_tern(N, dg, dg-1, &g, rng))
-            return 0;
+            return NTRU_ERR_PRNG;
         NtruIntPoly g_int;
         ntru_tern_to_int(&g, &g_int);
         if (ntru_invert(&g_int, q, &gq))
@@ -54,7 +54,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
 
     NtruIntPoly h;
     if (!ntru_mult_tern(&fq, &g, &h))
-        return 0;
+        return NTRU_ERR_PRNG;
     ntru_mult_fac(&h, 3);
     ntru_mod(&h, q);
 
@@ -66,7 +66,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
     NtruEncPubKey pub = {q, h};
     kp->pub = pub;
 
-    return 1;
+    return 0;
 }
 
 /**
