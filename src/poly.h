@@ -39,6 +39,7 @@ typedef struct NtruProdPoly {
  * @param poly output parameter; a pointer to store the new polynomial
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
               with random data. See dev_random() and dev_urandom().
+ * @return 1 for success, 0 for failure
  */
 int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int));
 
