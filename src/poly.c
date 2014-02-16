@@ -272,12 +272,6 @@ void ntru_to_arr4(NtruIntPoly *p, char *arr) {
     arr[last] |= (p->coeffs[i]&3) << 6;
 }
 
-int get_bit(char *arr, int bit_idx) {
-    int byte_idx = bit_idx / 8;
-    int arr_elem = arr[byte_idx];
-    return (arr_elem >> (bit_idx%8)) & 1;
-}
-
 void ntru_from_arr(char *arr, int N, int q, NtruIntPoly *p) {
     p->N = N;
     memset(&p->coeffs, 0, N * sizeof p->coeffs[0]);

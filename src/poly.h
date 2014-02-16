@@ -161,8 +161,6 @@ void ntru_to_arr(NtruIntPoly *p, int q, char *a);
  */
 void ntru_to_arr4(NtruIntPoly *p, char *arr);
 
-int get_bit(char *arr, int bit_idx);
-
 void ntru_from_arr(char *arr, int N, int q, NtruIntPoly *p);
 
 /**
