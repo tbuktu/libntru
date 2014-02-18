@@ -161,7 +161,7 @@ int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
                 j = N - 1;
         }
     }
-    
+
     for (i=0; i<b->num_neg_ones; i++) {
         int j = N - 1 - b->neg_ones[i];
         int k;
@@ -514,7 +514,7 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
         ntru_add_int_mod(f, g, 2);
         ntru_add_int_mod(b, c, 2);
     }
-    
+
     if (b->coeffs[N] != 0) {
         invertible = 0;
         goto done;
@@ -571,8 +571,15 @@ int dev_random(unsigned rand_data[], int len) {
 #ifdef WIN32
 int dev_urandom(unsigned rand_data[], int len) {
 	static HCRYPTPROV hCryptProv = NULL;
-	if(hCryptProv == NULL)
-		CryptAcquireContext(&hCryptProv,NULL,NULL,PROV_RSA_FULL,0);
+	if (hCryptProv == NULL) {
+        int result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0);
+        if (!result) {
+            if (GetLastError() == NTE_BAD_KEYSET)   // see http://support.microsoft.com/kb/238187
+                result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
+            if (!result)
+	            return NTRU_ERR_PRNG;
+        }
+    }
 	return CryptGenRandom(hCryptProv, len * sizeof *rand_data, rand_data);
 }
 #else
