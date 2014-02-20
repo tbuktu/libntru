@@ -2,6 +2,7 @@
 #include <string.h>
 #include <time.h>
 #include "ntru.h"
+#include "rand.h"
 
 #define NUM_ITER 10000
 
@@ -127,7 +128,7 @@ int main(int argc, char **argv) {
     NtruEncKeyPair kp;
 
     struct NtruEncParams params = APR2011_439_FAST;
-    int success = ntru_gen_key_pair(&params, &kp, dev_urandom) == 0;
+    int success = ntru_gen_key_pair(&params, &kp, ntru_rand_default) == 0;
     int enc_len = ntru_enc_len(params.N, params.q);
     char plain[33];
     strcpy(plain, "test message secret test message");
@@ -137,7 +138,7 @@ int main(int argc, char **argv) {
     struct timespec t1;
     clock_gettime(CLOCK_REALTIME, &t1);
     for (i=0; i<NUM_ITER; i++)
-        success &= ntru_encrypt((char*)&plain, strlen(plain), &kp.pub, &params, dev_urandom, (char*)&encrypted) == 0;
+        success &= ntru_encrypt((char*)&plain, strlen(plain), &kp.pub, &params, ntru_rand_default, (char*)&encrypted) == 0;
     struct timespec t2;
     clock_gettime(CLOCK_REALTIME, &t2);
     double time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER;

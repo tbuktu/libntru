@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "poly.h"
 #include "ntru.h"
+#include "rand.h"
 #include "encparams.h"
 #include "test_util.h"
 
@@ -40,9 +41,9 @@ int test_mult_int() {
 /* tests ntru_mult_tern() */
 int test_mult_tern() {
     NtruTernPoly a;
-    int valid = ntru_rand_tern(11, 3, 3, &a, dev_urandom);
+    int valid = ntru_rand_tern(11, 3, 3, &a, ntru_rand_default);
     NtruIntPoly b;
-    valid &= rand_int(11, 5, &b, dev_urandom);
+    valid &= rand_int(11, 5, &b, ntru_rand_default);
     NtruIntPoly c_tern;
     ntru_mult_tern(&b, &a, &c_tern);
     NtruIntPoly a_int;
@@ -61,9 +62,9 @@ int test_mult_prod() {
     int i;
     for (i=0; i<10; i++) {
         NtruProdPoly a;
-        ntru_rand_prod(853, 8, 8, 8, 9, &a, dev_urandom);
+        ntru_rand_prod(853, 8, 8, 8, 9, &a, ntru_rand_default);
         NtruIntPoly b;
-        valid = rand_int(853, 11, &b, dev_urandom);
+        valid = rand_int(853, 11, &b, ntru_rand_default);
         NtruIntPoly c_prod;
         ntru_mult_prod(&b, &a, &c_prod);
         NtruIntPoly a_int;
@@ -101,7 +102,7 @@ int test_inv() {
     int num_invertible = 0;
     while (num_invertible < 3) {
         NtruIntPoly a_int;
-        rand_int(853, 11, &a_int, dev_urandom);
+        rand_int(853, 11, &a_int, ntru_rand_default);
 
         NtruIntPoly b;
         int invertible = ntru_invert(&a_int, 2048, &b);
@@ -125,7 +126,7 @@ int test_arr() {
     struct NtruEncParams params = APR2011_439_FAST;
     char a[ntru_enc_len(params.N, params.q)];
     NtruIntPoly p1;
-    int valid = rand_int(params.N, 11, &p1, dev_urandom);
+    int valid = rand_int(params.N, 11, &p1, ntru_rand_default);
     ntru_to_arr(&p1, params.q, a);
 
     NtruIntPoly p2;

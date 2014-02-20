@@ -20,16 +20,16 @@ void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, int q) {
 int test_keygen() {
     struct NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
-    int valid = ntru_gen_key_pair(&params, &kp, dev_urandom) == 0;
+    int valid = ntru_gen_key_pair(&params, &kp, ntru_rand_default) == 0;
 
     /* encrypt a random message */
     NtruTernPoly m;
-    ntru_rand_tern(params.N, params.N/3, params.N/3, &m, dev_urandom);
+    ntru_rand_tern(params.N, params.N/3, params.N/3, &m, ntru_rand_default);
     NtruIntPoly m_int;
     ntru_tern_to_int(&m, &m_int);
 
     NtruTernPoly r;
-    ntru_rand_tern(params.N, params.N/3, params.N/3, &r, dev_urandom);
+    ntru_rand_tern(params.N, params.N/3, params.N/3, &r, ntru_rand_default);
     NtruIntPoly e;
     encrypt_poly(&m_int, &r, &kp.pub.h, &e, params.q);
 
@@ -44,14 +44,14 @@ int test_keygen() {
 
 int test_encr_decr_param(struct NtruEncParams *params) {
     NtruEncKeyPair kp;
-    int valid = ntru_gen_key_pair(params, &kp, dev_urandom) == 0;
+    int valid = ntru_gen_key_pair(params, &kp, ntru_rand_default) == 0;
 
     int enc_len = ntru_enc_len(params->N, params->q);
     char plain[19];
     strcpy(plain, "test message 12345");
     int plain_len = strlen(plain);
     char encrypted[enc_len];
-    valid &= ntru_encrypt((char*)&plain, plain_len, &kp.pub, params, dev_urandom, (char*)&encrypted) == 0;
+    valid &= ntru_encrypt((char*)&plain, plain_len, &kp.pub, params, ntru_rand_default, (char*)&encrypted) == 0;
     char decrypted[plain_len];
     int dec_len;
     valid &= ntru_decrypt((char*)&encrypted, &kp, params, (unsigned char*)&decrypted, &dec_len) == 0;

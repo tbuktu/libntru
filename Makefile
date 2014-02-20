@@ -9,7 +9,7 @@ else
 	SONAME=-soname
 endif
 
-lib: src/bitstring.o src/encparams.o src/hash.o src/idxgen.o src/key.o src/mgf.o src/ntru.o src/poly.o src/sha2big.o src/sha2.o
+lib: src/bitstring.o src/encparams.o src/hash.o src/idxgen.o src/key.o src/mgf.o src/ntru.o src/poly.o src/rand.o src/sha2big.o src/sha2.o
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),libntru.so -o libntru.so src/*.o $(LDFLAGS)
 
 test: lib tests/*.o

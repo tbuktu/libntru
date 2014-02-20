@@ -1,12 +1,13 @@
 #include "test_util.h"
 #include "key.h"
 #include "ntru.h"
+#include "rand.h"
 #include "encparams.h"
 
 int test_key() {
     struct NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
-    ntru_gen_key_pair(&params, &kp, dev_urandom);
+    ntru_gen_key_pair(&params, &kp, ntru_rand_default);
 
     /* test public key */
     char pub_arr[ntru_pub_len(params.N, params.q)];

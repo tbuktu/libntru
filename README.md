@@ -23,13 +23,13 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
     /* key generation */
     struct NtruEncParams params = APR2011_439_FAST; /*see encparams.h for more*/
     NtruEncKeyPair kp;
-    if (!ntru_gen_key_pair(&params, &kp, dev_urandom))
+    if (!ntru_gen_key_pair(&params, &kp, ntru_rand_default))
         printf("keygen fail\n");
 
     /* encryption */
     strcpy(msg, "whatever");
     char enc[ntru_enc_len(params.N, params.q)];
-    if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, dev_urandom, enc) != 0)
+    if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, ntru_rand_default, enc) != 0)
         printf("encrypt fail\n");
 
     /* decryption */

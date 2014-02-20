@@ -36,7 +36,7 @@ typedef struct NtruEncKeyPair {
  * @param params the NtruEncrypt parameters to use
  * @param kp pointer to write the key pair to (output parameter)
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with random data. See dev_random() and dev_urandom().
+ *            with random data. See the ntru_rand_* functions.
  * @return 0 for success, or a NTRU_ERR_ code for failure
  */
 int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int));
@@ -52,7 +52,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
  * @param pub the public key to encrypt the message with
  * @param params the NtruEncrypt parameters to use
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with random data. See dev_random() and dev_urandom().
+ *            with random data. See the ntru_rand_* functions.
  * @param enc output parameter; a pointer to store the encrypted message. Must accommodate
               ntru_enc_len(params) bytes.
  * @return 0 on success, or one of the NTRU_ERR_ codes on failure
