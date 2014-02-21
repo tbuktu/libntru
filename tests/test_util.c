@@ -48,5 +48,9 @@ int rand_int(int N, int pow2q, NtruIntPoly *poly, int (*rng)(unsigned[], int)) {
 }
 
 void print_result(char *test_name, int valid) {
+#ifdef WIN32
+    printf("  %-17s%s\n", test_name, valid?"OK":"FAIL");
+#else
     printf("  %-17s%s\n", test_name, valid?"✓":"FAIL");
+#endif
 }
