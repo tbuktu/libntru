@@ -1,5 +1,12 @@
 CFLAGS=-g -Wall -O2
 LDFLAGS=-lrt
+SRCDIR=src
+TESTDIR=tests
+LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o sha2big.o sha2.o
+TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
+
+LIB_OBJS_PATHS=$(patsubst %,$(SRCDIR)/%,$(LIB_OBJS))
+TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
 
 # Use -install_name on Mac OS, -soname everywhere else
 UNAME := $(shell uname)
@@ -9,21 +16,23 @@ else
 	SONAME=-soname
 endif
 
-lib: src/bitstring.o src/encparams.o src/hash.o src/idxgen.o src/key.o src/mgf.o src/ntru.o src/poly.o src/rand.o src/sha2big.o src/sha2.o
-	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),libntru.so -o libntru.so src/*.o $(LDFLAGS)
+.PHONY: lib
+lib: $(LIB_OBJS_PATHS)
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),libntru.so -o libntru.so $(LIB_OBJS_PATHS) $(LDFLAGS)
 
-test: lib tests/*.o
-	$(CC) $(CFLAGS) -o test.out tests/*.o -L./tests -L. -lntru -lm
-	LD_LIBRARY_PATH=. ./test.out
+test: lib $(TEST_OBJS_PATHS)
+	$(CC) $(CFLAGS) -o test $(TEST_OBJS_PATHS) -L. -lntru -lm
+	LD_LIBRARY_PATH=. ./test
 
-bench: lib src/bench.o
-	$(CC) $(CFLAGS) -o bench src/bench.o -L. -lntru
+bench: lib $(SRCDIR)/bench.o
+	$(CC) $(CFLAGS) -o bench $(SRCDIR)/bench.o -L. -lntru
 
-src/%.c src/%.o:
-	cd src && $(CC) $(CFLAGS) $(LDFLAGS) -c -fPIC $*.c
+$(SRCDIR)/%.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) -c -fPIC $< -o $@
 
-tests/%.c tests/%.o:
-	cd tests && $(CC) $(CFLAGS) $(LDFLAGS) -c -fPIC -I../src $*.c
+tests/%.o: tests/%.c
+	$(CC) $(CFLAGS) -fPIC -I$(SRCDIR) -c $< -o $@
 
+.PHONY: clean
 clean:
-	rm -f src/*.o tests/*.o libntru.so test.out bench
+	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dll test test.exe bench bench.exe
