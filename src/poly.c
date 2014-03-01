@@ -49,7 +49,7 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
             i++;
         }
         /* refill rand_data if we run out */
-        else if (r_idx >= sizeof rand_data) {
+        else if (r_idx >= rand_len) {
             if (!rng(rand_data, rand_len, rand_ctx))
                 return 0;
             r_idx = 0;
