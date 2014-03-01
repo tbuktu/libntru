@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ntru.h"
+#include "rand.h"
 #include "poly.h"
 #include "idxgen.h"
 #include "mgf.h"
@@ -12,7 +13,7 @@ const int BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
 const int BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
 const int BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
 
-int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int)) {
+int ntru_gen_key_pair_internal(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
     int N = params->N;
     int q = params->q;
     int df1 = params->df1;
@@ -26,7 +27,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
     NtruIntPoly f;
     for (;;) {
         /* choose random t, calculate f=3t+1 */
-        ntru_rand_prod(N, df1, df2, df3, df3, &t, rng);
+        ntru_rand_prod(N, df1, df2, df3, df3, &t, rng, rand_ctx);
         ntru_prod_to_int(&t, &f);
         ntru_mult_fac(&f, 3);
         f.coeffs[0] += 1;
@@ -44,7 +45,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
     NtruIntPoly gq;
     int dg = N / 3;
     for (;;) {
-        if (!ntru_rand_tern(N, dg, dg-1, &g, rng))
+        if (!ntru_rand_tern(N, dg, dg-1, &g, rng, rand_ctx))
             return NTRU_ERR_PRNG;
         NtruIntPoly g_int;
         ntru_tern_to_int(&g, &g_int);
@@ -67,6 +68,19 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
     kp->pub = pub;
 
     return 0;
+}
+
+int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*)) {
+    return ntru_gen_key_pair_internal(params, kp, rng, NULL);
+}
+
+int ntru_gen_key_pair_det(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len) {
+    void *rand_state = NULL;
+    NtruRandContext rand_ctx = {seed, seed_len, &rand_state};
+    int result = ntru_gen_key_pair_internal(params, kp, rng, &rand_ctx);
+    if (rand_state != NULL)
+        free(rand_state);
+    return result;
 }
 
 /**
@@ -228,7 +242,7 @@ void ntru_gen_blind_poly(char *seed, int seed_len, struct NtruEncParams *params,
     ntru_gen_tern_poly(&s, params->df3, &r->f3);
 }
 
-int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int), char *enc) {
+int ntru_encrypt_internal(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx, char *enc) {
     int N = params->N;
     int q = params->q;
     int maxm1 = params->maxm1;
@@ -245,7 +259,7 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParam
     for (;;) {
         /* M = b|octL|msg|p0 */
         unsigned char b[db/8];
-        if (!rng(&b, db/8/sizeof(int)))
+        if (!rng(&b, db/8/sizeof(int), rand_ctx))
             return NTRU_ERR_PRNG;
 
         int M_len = (buf_len_bits+7) / 8;
@@ -303,6 +317,10 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParam
         ntru_to_arr(&R, q, enc);
         return 0;
     }
+}
+
+int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc) {
+    return ntru_encrypt_internal(msg, msg_len, pub, params, rng, NULL, enc);
 }
 
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, int q, NtruIntPoly *d) {

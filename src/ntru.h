@@ -3,6 +3,7 @@
 
 #include "poly.h"
 #include "encparams.h"
+#include "rand.h"
 
 /**
  * NtruEncrypt private key
@@ -31,7 +32,7 @@ typedef struct NtruEncKeyPair {
 /**
  * @brief Key generation
  *
- * Generates an NtruEncrypt key pair.
+ * Generates a (non-deterministically) random NtruEncrypt key pair.
  *
  * @param params the NtruEncrypt parameters to use
  * @param kp pointer to write the key pair to (output parameter)
@@ -39,7 +40,24 @@ typedef struct NtruEncKeyPair {
  *            with random data. See the ntru_rand_* functions.
  * @return 0 for success, or a NTRU_ERR_ code for failure
  */
-int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int));
+int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*));
+
+/**
+ * @brief Deterministic key generation
+ *
+ * Generates an NtruEncrypt key pair which is determined by a random seed.
+ * For a given set of NTRU parameters and a given random seed, the key pair
+ * will always be the same.
+ *
+ * @param params the NtruEncrypt parameters to use
+ * @param kp pointer to write the key pair to (output parameter)
+ * @param rng a pointer to a function that takes an array and an array size, and fills the array
+ *            with pseudo-random data determined by the NtruRandContext. See the ntru_rand_* functions.
+ * @param seed seed value
+ * @param seed_len length of the seed parameter
+ * @return 0 for success, or a NTRU_ERR_ code for failure
+ */
+int ntru_gen_key_pair_det(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len);
 
 /**
  * @brief Encryption
@@ -57,7 +75,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
               ntru_enc_len(params) bytes.
  * @return 0 on success, or one of the NTRU_ERR_ codes on failure
  */
-int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int), char *enc);
+int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc);
 
 /**
  * @brief Decryption

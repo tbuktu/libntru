@@ -26,6 +26,13 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
     if (!ntru_gen_key_pair(&params, &kp, ntru_rand_default))
         printf("keygen fail\n");
 
+    /* deterministic key generation from password */
+    char seed[17];
+    strcpy(seed, "my test password");
+    NtruEncKeyPair kp;
+    if (ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed)) != 0)
+        printf("keygen fail\n");
+
     /* encryption */
     strcpy(msg, "whatever");
     char enc[ntru_enc_len(params.N, params.q)];

@@ -11,13 +11,13 @@ int ntru_num_bits(int n) {
     return b;
 }
 
-int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int)) {
+int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
     int coeffs[N];
     memset(&coeffs, 0, N * sizeof coeffs[0]);
 
     int rand_len = num_ones + num_neg_ones + 10;
     unsigned rand_data[rand_len];   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
-    if (!rng(rand_data, rand_len))
+    if (!rng(rand_data, rand_len, rand_ctx))
         return 0;
     int r_idx = 0;   /* index into rand_data */
 
@@ -33,7 +33,7 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
         }
         /* refill rand_data if we run out */
         else if (r_idx >= rand_len) {
-            if (!rng(rand_data, rand_len))
+            if (!rng(rand_data, rand_len, rand_ctx))
                 return 0;
             r_idx = 0;
         }
@@ -50,7 +50,7 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
         }
         /* refill rand_data if we run out */
         else if (r_idx >= sizeof rand_data) {
-            if (!rng(rand_data, rand_len))
+            if (!rng(rand_data, rand_len, rand_ctx))
                 return 0;
             r_idx = 0;
         }
@@ -63,11 +63,11 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
     return 1;
 }
 
-void ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int)) {
+void ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
     poly->N = N;
-    ntru_rand_tern(N, df1, df1, &poly->f1, rng);
-    ntru_rand_tern(N, df2, df2, &poly->f2, rng);
-    ntru_rand_tern(N, df3_ones, df3_neg_ones, &poly->f3, rng);
+    ntru_rand_tern(N, df1, df1, &poly->f1, rng, rand_ctx);
+    ntru_rand_tern(N, df2, df2, &poly->f2, rng, rand_ctx);
+    ntru_rand_tern(N, df3_ones, df3_neg_ones, &poly->f3, rng, rand_ctx);
 }
 
 void ntru_add_tern(NtruIntPoly *a, NtruTernPoly *b) {

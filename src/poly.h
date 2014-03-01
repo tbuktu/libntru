@@ -1,6 +1,8 @@
 #ifndef POLY_H
 #define POLY_H
 
+#include "rand.h"
+
 #define NTRU_MAX_N 1500   /* must be one higher than the maximum #coeffs */
 #define NTRU_MAX_ONES 499   /* max(df1, df2, df3, dg) */
 
@@ -41,7 +43,7 @@ typedef struct NtruProdPoly {
               with random data. See the ntru_rand_* functions.
  * @return 1 for success, 0 for failure
  */
-int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int));
+int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx);
 
 /**
  * @brief Random product-form polynomial
@@ -57,7 +59,7 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
               with random data. See the ntru_rand_* functions.
  */
-void ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int));
+void ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx);
 
 /**
  * @brief Ternary to general integer polynomial
@@ -319,7 +321,7 @@ int sum_coeffs(NtruIntPoly *a);
  * @param len the number of elements to write to rand_data
  * @return 0 for error, 1 otherwise
  */
-int ntru_rand_devrandom(unsigned rand_data[], int len);
+int ntru_rand_devrandom(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
 
 /**
  * @brief /dev/urandom-based RNG
@@ -330,8 +332,8 @@ int ntru_rand_devrandom(unsigned rand_data[], int len);
  * @param len the number of elements to write to rand_data
  * @return 0 for error, 1 otherwise
  */
-int ntru_rand_devurandom(unsigned rand_data[], int len);
+int ntru_rand_devurandom(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
 
-int ntru_rand_default(unsigned rand_data[], int len);
+int ntru_rand_default(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
 
 #endif   /* POLY_H */

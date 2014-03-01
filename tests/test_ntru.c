@@ -2,6 +2,7 @@
 #include "test_ntru.h"
 #include "test_util.h"
 #include "ntru.h"
+#include "rand.h"
 
 void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, int q) {
     ntru_mult_tern(h, r, e);
@@ -24,12 +25,12 @@ int test_keygen() {
 
     /* encrypt a random message */
     NtruTernPoly m;
-    ntru_rand_tern(params.N, params.N/3, params.N/3, &m, ntru_rand_default);
+    ntru_rand_tern(params.N, params.N/3, params.N/3, &m, ntru_rand_default, NULL);
     NtruIntPoly m_int;
     ntru_tern_to_int(&m, &m_int);
 
     NtruTernPoly r;
-    ntru_rand_tern(params.N, params.N/3, params.N/3, &r, ntru_rand_default);
+    ntru_rand_tern(params.N, params.N/3, params.N/3, &r, ntru_rand_default, NULL);
     NtruIntPoly e;
     encrypt_poly(&m_int, &r, &kp.pub.h, &e, params.q);
 
@@ -37,6 +38,16 @@ int test_keygen() {
     NtruIntPoly c;
     decrypt_poly(&e, &kp.priv.t, &c, params.q);
     valid &= ntru_equals_int(&m_int, &c);
+
+    /* test deterministic key generation */
+    char seed[17];
+    strcpy(seed, "my test password");
+    valid &= ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed)) == 0;
+    char password2[17];
+    strcpy(password2, "my test password");
+    NtruEncKeyPair kp2;
+    valid &= ntru_gen_key_pair_det(&params, &kp2, ntru_rand_igf2, password2, strlen(password2)) == 0;
+    valid &= equals_key_pair(&kp, &kp2);
 
     print_result("test_keygen", valid);
     return valid;
