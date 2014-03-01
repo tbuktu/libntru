@@ -23,24 +23,24 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
     /* key generation */
     struct NtruEncParams params = APR2011_439_FAST; /*see encparams.h for more*/
     NtruEncKeyPair kp;
-    if (!ntru_gen_key_pair(&params, &kp, ntru_rand_default))
+    if (ntru_gen_key_pair(&params, &kp, ntru_rand_default) != 0)
         printf("keygen fail\n");
 
     /* deterministic key generation from password */
     char seed[17];
     strcpy(seed, "my test password");
-    NtruEncKeyPair kp;
     if (ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed)) != 0)
         printf("keygen fail\n");
 
     /* encryption */
+    char msg[9];
     strcpy(msg, "whatever");
     char enc[ntru_enc_len(params.N, params.q)];
     if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, ntru_rand_default, enc) != 0)
         printf("encrypt fail\n");
 
     /* decryption */
-    char dec[ntru_max_msg_len(params)];
+    char dec[ntru_max_msg_len(&params)];
     int dec_len;
     if (ntru_decrypt((char*)&enc, &kp, &params, (unsigned char*)&dec, &dec_len) != 0)
         printf("decrypt fail\n");
