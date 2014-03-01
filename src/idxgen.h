@@ -1,7 +1,6 @@
 #ifndef IDXGEN_H
 #define IDXGEN_H
 
-#include "idxgen.h"
 #include "encparams.h"
 #include "bitstring.h"
 
