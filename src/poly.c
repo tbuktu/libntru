@@ -90,6 +90,12 @@ void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
         a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) % modulus;
 }
 
+void ntru_add_int_mod2(NtruIntPoly *a, NtruIntPoly *b) {
+    int i;
+    for (i=0; i<b->N; i++)
+        a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) & 1;
+}
+
 void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b) {
     int i;
     for (i=0; i<b->N; i++)
@@ -505,8 +511,8 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
             b = c;
             c = temp;
         }
-        ntru_add_int_mod(f, g, 2);
-        ntru_add_int_mod(b, c, 2);
+        ntru_add_int_mod2(f, g);
+        ntru_add_int_mod2(b, c);
     }
 
     if (b->coeffs[N] != 0) {
@@ -597,8 +603,8 @@ int ntru_is_invertible_pow2(NtruIntPoly *a) {
             b = c;
             c = temp;
         }
-        ntru_add_int_mod(f, g, 2);
-        ntru_add_int_mod(b, c, 2);
+        ntru_add_int_mod2(f, g);
+        ntru_add_int_mod2(b, c);
     }
 
     invertible = b->coeffs[N] == 0;
