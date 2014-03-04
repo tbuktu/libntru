@@ -1,14 +1,7 @@
 #ifndef RAND_H
 #define RAND_H
 
-/**
- * Seed and state for deterministic random number generators
- */
-typedef struct NtruRandContext {
-    char *seed;
-    int seed_len;
-    void **rand_state;
-} NtruRandContext;
+#include "types.h"
 
 #ifdef WIN32
 

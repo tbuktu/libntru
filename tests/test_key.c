@@ -1,5 +1,4 @@
 #include "test_util.h"
-#include "key.h"
 #include "ntru.h"
 #include "rand.h"
 #include "encparams.h"

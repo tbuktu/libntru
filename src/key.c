@@ -5,7 +5,9 @@
 #else
 #include <netinet/in.h>
 #endif
-#include "ntru.h"
+#include "poly.h"
+#include "encparams.h"
+#include "types.h"
 
 void ntru_export_pub(NtruEncPubKey *key, char *arr) {
     /* write N */

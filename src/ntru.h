@@ -1,33 +1,11 @@
 #ifndef NTRU_H
 #define NTRU_H
 
+#include "types.h"
+#include "key.h"
 #include "poly.h"
 #include "encparams.h"
 #include "rand.h"
-
-/**
- * NtruEncrypt private key
- */
-typedef struct NtruEncPrivKey {
-    int q;
-    NtruProdPoly t;
-} NtruEncPrivKey;
-
-/**
- * NtruEncrypt public key
- */
-typedef struct NtruEncPubKey {
-    int q;
-    NtruIntPoly h;
-} NtruEncPubKey;
-
-/**
- * NtruEncrypt key pair
- */
-typedef struct NtruEncKeyPair {
-    NtruEncPrivKey priv;
-    NtruEncPubKey pub;
-} NtruEncKeyPair;
 
 /**
  * @brief Key generation
