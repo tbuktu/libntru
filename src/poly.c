@@ -15,8 +15,8 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
     int coeffs[N];
     memset(&coeffs, 0, N * sizeof coeffs[0]);
 
-    int rand_len = num_ones + num_neg_ones + 10;
-    unsigned rand_data[rand_len];   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
+    int rand_len = num_ones + num_neg_ones + 10;   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
+    unsigned rand_data[rand_len];
     if (!rng(rand_data, rand_len, rand_ctx))
         return 0;
     int r_idx = 0;   /* index into rand_data */
