@@ -36,10 +36,6 @@ int ntru_gen_key_pair_internal(struct NtruEncParams *params, NtruEncKeyPair *kp,
             break;
     }
 
-    /* by the choice of t, f is always invertible mod 3 and fp=1 */
-    NtruIntPoly fp = {N, {0}};
-    fp.coeffs[0] = 1;
-
     /* choose a random g that is invertible mod q */
     NtruTernPoly g;
     NtruIntPoly gq;
