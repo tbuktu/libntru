@@ -538,6 +538,80 @@ done:
     return invertible;
 }
 
+int ntru_is_invertible_pow2(NtruIntPoly *a) {
+    int invertible;
+    int i;
+    int N = a->N;
+    int k = 0;
+    NtruIntPoly *b = ntru_zero_poly(N+1);
+    if (!b)
+        return NTRU_ERR_OUT_OF_MEMORY;
+    b->coeffs[0] = 1;
+    NtruIntPoly *c = ntru_zero_poly(N+1);
+    if (!c) {
+        free(b);
+        return NTRU_ERR_OUT_OF_MEMORY;
+    }
+    NtruIntPoly *f = ntru_clone(a);
+    if (!f) {
+        free(b);
+        free(c);
+        return NTRU_ERR_OUT_OF_MEMORY;
+    }
+    f->coeffs[f->N] = 0;   /* index N wasn't cloned */
+    f->N++;   /* add one coefficient for a total of N+1 */
+    ntru_mod2(f);
+    /* set g(x) = x^N − 1 */
+    NtruIntPoly *g = ntru_zero_poly(N+1);
+    if (!g) {
+        free(b);
+        free(c);
+        free(f);
+        return NTRU_ERR_OUT_OF_MEMORY;
+    }
+    g->coeffs[0] = 1;
+    g->coeffs[N] = 1;
+    for (;;) {
+        while (f->coeffs[0] == 0) {
+            for (i=1; i<=N; i++) {
+                f->coeffs[i-1] = f->coeffs[i];   /* f(x) = f(x) / x */
+                c->coeffs[N+1-i] = c->coeffs[N-i];   /* c(x) = c(x) * x */
+            }
+            f->coeffs[N] = 0;
+            c->coeffs[0] = 0;
+            k++;
+            if (ntru_equals0(f)) {
+                invertible = 0;
+                goto done;
+            }
+        }
+        if (ntru_equals1(f))
+            break;
+        if (ntru_deg(f) < ntru_deg(g)) {
+            /* exchange f and g */
+            NtruIntPoly *temp = f;
+            f = g;
+            g = temp;
+            /* exchange b and c */
+            temp = b;
+            b = c;
+            c = temp;
+        }
+        ntru_add_int_mod(f, g, 2);
+        ntru_add_int_mod(b, c, 2);
+    }
+
+    invertible = b->coeffs[N] == 0;
+
+done:
+    free(b);
+    free(c);
+    free(f);
+    free(g);
+
+    return invertible;
+}
+
 int sum_coeffs(NtruIntPoly *a) {
     int sum = 0;
     int i;

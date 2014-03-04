@@ -275,6 +275,8 @@ void ntru_clear_int(NtruIntPoly *p);
  */
 int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *b);
 
+int ntru_is_invertible_pow2(NtruIntPoly *a);
+
 /**
  * @brief Sum of coefficients
  *

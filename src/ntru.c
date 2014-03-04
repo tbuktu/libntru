@@ -38,14 +38,13 @@ int ntru_gen_key_pair_internal(struct NtruEncParams *params, NtruEncKeyPair *kp,
 
     /* choose a random g that is invertible mod q */
     NtruTernPoly g;
-    NtruIntPoly gq;
     int dg = N / 3;
     for (;;) {
         if (!ntru_rand_tern(N, dg, dg-1, &g, rng, rand_ctx))
             return NTRU_ERR_PRNG;
         NtruIntPoly g_int;
         ntru_tern_to_int(&g, &g_int);
-        if (ntru_invert(&g_int, q, &gq))
+        if (ntru_is_invertible_pow2(&g_int))
             break;
     }
 
