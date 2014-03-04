@@ -5,7 +5,6 @@
 #include "poly.h"
 #include "idxgen.h"
 #include "mgf.h"
-#include "err.h"
 
 const int COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
 const int COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};

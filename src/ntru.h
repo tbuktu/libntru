@@ -6,6 +6,7 @@
 #include "poly.h"
 #include "encparams.h"
 #include "rand.h"
+#include "err.h"
 
 /**
  * @brief Key generation
