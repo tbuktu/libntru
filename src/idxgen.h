@@ -7,7 +7,6 @@
 typedef struct NtruIGFState {
     int N;
     int c;
-    int clen;
     char *Z;
     int zlen;
     int rem_len;
