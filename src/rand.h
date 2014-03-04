@@ -15,7 +15,7 @@
  * @param rand_ctx ignored
  * @return 0 for error, 1 otherwise
  */
-int ntru_rand_wincrypt(unsigned rand_data[], int len, struct NtruRandContext *rand_ctx);
+int ntru_rand_wincrypt(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
 
 #else
 

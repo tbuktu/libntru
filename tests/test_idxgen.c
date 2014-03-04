@@ -21,7 +21,7 @@ int test_idxgen() {
     for (i=0; i<sizeof seed; i++)
         seed[i] = rand();
 
-    struct NtruEncParams params = APR2011_743_FAST;
+    NtruEncParams params = APR2011_743_FAST;
     double avg = 0;
     NtruIGFState s;
 

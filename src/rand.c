@@ -63,15 +63,15 @@ int ntru_rand_default(unsigned rand_data[], int len, NtruRandContext *rand_ctx) 
 #endif // WIN32
 
 int ntru_rand_igf2(unsigned rand_data[], int len, NtruRandContext *rand_ctx) {
-    struct NtruIGFState *igf_state;
+    NtruIGFState *igf_state;
     if (*(rand_ctx->rand_state) == NULL) {
-        *(rand_ctx->rand_state) = (struct NtruIGFState*)malloc(sizeof *igf_state);
-        struct NtruEncParams params = APR2011_439_FAST;
+        *(rand_ctx->rand_state) = (NtruIGFState*)malloc(sizeof *igf_state);
+        NtruEncParams params = APR2011_439_FAST;
         params.N = 256;   /* we want to generate chars */
-        ntru_IGF_init(rand_ctx->seed, rand_ctx->seed_len, &params, (struct NtruIGFState*)*(rand_ctx->rand_state));
+        ntru_IGF_init(rand_ctx->seed, rand_ctx->seed_len, &params, (NtruIGFState*)*(rand_ctx->rand_state));
     }
 
-    igf_state = (struct NtruIGFState*)*(rand_ctx->rand_state);
+    igf_state = (NtruIGFState*)*(rand_ctx->rand_state);
     int i;
     for (i=0; i<len; i++) {
         int idx1, idx2, idx3, idx4;

@@ -18,7 +18,7 @@
  *            with random data. See the ntru_rand_* functions.
  * @return 0 for success, or a NTRU_ERR_ code for failure
  */
-int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*));
+int ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*));
 
 /**
  * @brief Deterministic key generation
@@ -35,7 +35,7 @@ int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rn
  * @param seed_len length of the seed parameter
  * @return 0 for success, or a NTRU_ERR_ code for failure
  */
-int ntru_gen_key_pair_det(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len);
+int ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len);
 
 /**
  * @brief Encryption
@@ -53,7 +53,7 @@ int ntru_gen_key_pair_det(struct NtruEncParams *params, NtruEncKeyPair *kp, int 
               ntru_enc_len(params) bytes.
  * @return 0 on success, or one of the NTRU_ERR_ codes on failure
  */
-int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc);
+int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc);
 
 /**
  * @brief Decryption
@@ -70,8 +70,8 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParam
  * @param dec_len output parameter; pointer to store the length of dec
  * @return 0 on success, or one of the NTRU_ERR_ codes on failure
  */
-int ntru_decrypt(char *enc, NtruEncKeyPair *kp, struct NtruEncParams *params, unsigned char *dec, int *dec_len);
+int ntru_decrypt(char *enc, NtruEncKeyPair *kp, NtruEncParams *params, unsigned char *dec, int *dec_len);
 
-int ntru_max_msg_len(struct NtruEncParams *params);
+int ntru_max_msg_len(NtruEncParams *params);
 
 #endif   /* NTRU_H */

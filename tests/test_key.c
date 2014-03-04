@@ -4,7 +4,7 @@
 #include "encparams.h"
 
 int test_key() {
-    struct NtruEncParams params = APR2011_439_FAST;
+    NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
     ntru_gen_key_pair(&params, &kp, ntru_rand_default);
 

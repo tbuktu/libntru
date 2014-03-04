@@ -27,7 +27,7 @@ typedef struct NtruIGFState {
  * @param params
  * @param s
  */
-void ntru_IGF_init(char *seed, int seed_len, struct NtruEncParams *params, NtruIGFState *s);
+void ntru_IGF_init(char *seed, int seed_len, NtruEncParams *params, NtruIGFState *s);
 
 /**
  * @brief IGF next index

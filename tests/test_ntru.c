@@ -19,7 +19,7 @@ void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, int q) {
 }
 
 int test_keygen() {
-    struct NtruEncParams params = APR2011_439_FAST;
+    NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
     int valid = ntru_gen_key_pair(&params, &kp, ntru_rand_default) == 0;
 
@@ -53,7 +53,7 @@ int test_keygen() {
     return valid;
 }
 
-int test_encr_decr_param(struct NtruEncParams *params) {
+int test_encr_decr_param(NtruEncParams *params) {
     NtruEncKeyPair kp;
     int valid = ntru_gen_key_pair(params, &kp, ntru_rand_default) == 0;
 
@@ -73,8 +73,8 @@ int test_encr_decr_param(struct NtruEncParams *params) {
 
 int test_encr_decr() {
     /* test one param set for which maxm1=0 and one for which maxm1>0 */
-    struct NtruEncParams params743 = APR2011_743_FAST;
-    struct NtruEncParams params1087 = EES1087EP2_FAST;
+    NtruEncParams params743 = APR2011_743_FAST;
+    NtruEncParams params1087 = EES1087EP2_FAST;
     int valid = test_encr_decr_param(&params743);
     valid &= test_encr_decr_param(&params1087);
 

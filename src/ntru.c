@@ -13,7 +13,7 @@ const int BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
 const int BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
 const int BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
 
-int ntru_gen_key_pair_internal(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
+int ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
     int N = params->N;
     int q = params->q;
     int df1 = params->df1;
@@ -65,11 +65,11 @@ int ntru_gen_key_pair_internal(struct NtruEncParams *params, NtruEncKeyPair *kp,
     return 0;
 }
 
-int ntru_gen_key_pair(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*)) {
+int ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*)) {
     return ntru_gen_key_pair_internal(params, kp, rng, NULL);
 }
 
-int ntru_gen_key_pair_det(struct NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len) {
+int ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len) {
     void *rand_state = NULL;
     NtruRandContext rand_ctx = {seed, seed_len, &rand_state};
     int result = ntru_gen_key_pair_internal(params, kp, rng, &rand_ctx);
@@ -178,7 +178,7 @@ int ntru_to_sves(NtruIntPoly *poly, int skip, char *data) {
  * @param seed output parameter; an array to write the seed value to
  * @return 0 for success, 1 for illegal encoding
  */
-void ntru_get_seed(char *msg, int msg_len, NtruIntPoly *h, char *b, struct NtruEncParams *params, char *seed) {
+void ntru_get_seed(char *msg, int msg_len, NtruIntPoly *h, char *b, NtruEncParams *params, char *seed) {
     int oid_len = sizeof params->oid;
     int pklen = params->db / 8;
 
@@ -227,7 +227,7 @@ void ntru_gen_tern_poly(NtruIGFState *s, int df, NtruTernPoly *p) {
     }
 }
 
-void ntru_gen_blind_poly(char *seed, int seed_len, struct NtruEncParams *params, NtruProdPoly *r) {
+void ntru_gen_blind_poly(char *seed, int seed_len, NtruEncParams *params, NtruProdPoly *r) {
     NtruIGFState s;
     ntru_IGF_init(seed, seed_len, params, &s);
     r->N = s.N;
@@ -237,7 +237,7 @@ void ntru_gen_blind_poly(char *seed, int seed_len, struct NtruEncParams *params,
     ntru_gen_tern_poly(&s, params->df3, &r->f3);
 }
 
-int ntru_encrypt_internal(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx, char *enc) {
+int ntru_encrypt_internal(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx, char *enc) {
     int N = params->N;
     int q = params->q;
     int maxm1 = params->maxm1;
@@ -314,7 +314,7 @@ int ntru_encrypt_internal(char *msg, int msg_len, NtruEncPubKey *pub, struct Ntr
     }
 }
 
-int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, struct NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc) {
+int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc) {
     return ntru_encrypt_internal(msg, msg_len, pub, params, rng, NULL, enc);
 }
 
@@ -327,7 +327,7 @@ void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, int q, NtruIntPoly 
     ntru_mod3(d);
 }
 
-int ntru_decrypt(char *enc, NtruEncKeyPair *kp, struct NtruEncParams *params, unsigned char *dec, int *dec_len) {
+int ntru_decrypt(char *enc, NtruEncKeyPair *kp, NtruEncParams *params, unsigned char *dec, int *dec_len) {
     int N = params->N;
     int q = params->q;
     int db = params->db;
@@ -403,7 +403,7 @@ int ntru_decrypt(char *enc, NtruEncKeyPair *kp, struct NtruEncParams *params, un
     return 0;
 }
 
-int ntru_max_msg_len(struct NtruEncParams *params) {
+int ntru_max_msg_len(NtruEncParams *params) {
     int N = params->N;
     int llen = 1;   /* ceil(log2(max_len)) */
     int db = params->db;

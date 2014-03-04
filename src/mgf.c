@@ -8,7 +8,7 @@
 #include "encparams.h"
 #include "poly.h"
 
-void ntru_MGF(char *seed, int seed_len, struct NtruEncParams *params, NtruIntPoly *i) {
+void ntru_MGF(char *seed, int seed_len, NtruEncParams *params, NtruIntPoly *i) {
     int N = params->N;
     i->N = N;
     int min_calls_mask = params->min_calls_mask;

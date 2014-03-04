@@ -123,7 +123,7 @@ int test_inv() {
 }
 
 int test_arr() {
-    struct NtruEncParams params = APR2011_439_FAST;
+    NtruEncParams params = APR2011_439_FAST;
     char a[ntru_enc_len(params.N, params.q)];
     NtruIntPoly p1;
     int valid = rand_int(params.N, 11, &p1, ntru_rand_default, NULL);
