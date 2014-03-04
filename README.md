@@ -59,9 +59,9 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
 
 ## Further reading
 
-  Wikipedia article: http://en.wikipedia.org/wiki/NTRUEncrypt
-  Original NTRUEncrypt paper: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.25.8422&rep=rep1&type=pdf
-  Follow-up NTRUEncrypt paper: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.64.6834&rep=rep1&type=pdf
-  NTRU articles (technical and mathematical): http://www.securityinnovation.com/security-lab/crypto.html
-  EESS: http://grouper.ieee.org/groups/1363/lattPK/submissions/EESS1v2.pdf
-  Jeffrey Hoffstein et al: An Introduction to Mathematical Cryptography, Springer-Verlag, ISBN 978-0-387-77993-5
+  * Wikipedia article: http://en.wikipedia.org/wiki/NTRUEncrypt
+  * Original NTRUEncrypt paper: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.25.8422&rep=rep1&type=pdf
+  * Follow-up NTRUEncrypt paper: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.64.6834&rep=rep1&type=pdf
+  * NTRU articles (technical and mathematical): http://www.securityinnovation.com/security-lab/crypto.html
+  * EESS: http://grouper.ieee.org/groups/1363/lattPK/submissions/EESS1v2.pdf
+  * Jeffrey Hoffstein et al: An Introduction to Mathematical Cryptography, Springer-Verlag, ISBN 978-0-387-77993-5
