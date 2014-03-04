@@ -3,15 +3,6 @@
 #include "encparams.h"
 #include <string.h>
 
-void pt(unsigned char *md)
-	{
-	int i;
-
-	for (i=0; i<64; i++)
-		printf("0x%02x, ",md[i]);
-	printf("\n");
-	}
-
 int test_hash() {
     char* test_string = "The quick brown fox jumps over the lazy dog";
     unsigned char sha256[] = {
