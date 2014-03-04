@@ -13,7 +13,7 @@
 #define NTRU_MAX_BIT_STR_LEN (NTRU_MAX_HASH_LEN * (NTRU_MAX_C+1))
 
 /* A set of parameters for NtruEncrypt */
-struct NtruEncParams {
+typedef struct NtruEncParams {
     /* number of polynomial coefficients */
     int N;
 
@@ -79,8 +79,7 @@ struct NtruEncParams {
 
     /* output length of the hash function */
     int hlen;
-};
-extern struct NtruEncParams NtruEncParams;
+} NtruEncParams;
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
