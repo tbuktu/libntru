@@ -1,6 +1,7 @@
 #ifndef ERR_H
 #define ERR_H
 
+#define NTRU_SUCCESS 0
 #define NTRU_ERR_OUT_OF_MEMORY 1
 #define NTRU_ERR_PRNG 2
 #define NTRU_ERR_MSG_TOO_LONG 3

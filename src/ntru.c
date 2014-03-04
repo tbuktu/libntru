@@ -62,7 +62,7 @@ int ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, int (*
     NtruEncPubKey pub = {q, h};
     kp->pub = pub;
 
-    return 0;
+    return NTRU_SUCCESS;
 }
 
 int ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*)) {
@@ -129,7 +129,7 @@ void ntru_from_sves(char *M, int M_len, int N, int skip, NtruIntPoly *poly) {
  * @param poly a ternary polynomial
  * @param skip whether to skip the constant coefficient
  * @param data output parameter; must accommodate ceil(num_bits/8) bytes
- * @return 0 for success, 1 for illegal encoding
+ * @return NTRU_SUCCESS for success, NTRU_ERR_INVALID_ENCODING otherwise
  */
 int ntru_to_sves(NtruIntPoly *poly, int skip, char *data) {
     int N = poly->N;
@@ -146,7 +146,7 @@ int ntru_to_sves(NtruIntPoly *poly, int skip, char *data) {
         int coeff1 = poly->coeffs[i++] + 1;
         int coeff2 = poly->coeffs[i++] + 1;
         if (coeff1==0 && coeff2==0)
-            return 1;
+            return NTRU_ERR_INVALID_ENCODING;
         int bit_tbl_index = coeff1*3 + coeff2;
         int j;
         int bits[] = {BIT1_TABLE[bit_tbl_index], BIT2_TABLE[bit_tbl_index], BIT3_TABLE[bit_tbl_index]};
@@ -162,7 +162,7 @@ int ntru_to_sves(NtruIntPoly *poly, int skip, char *data) {
         }
     }
 
-    return 0;
+    return NTRU_SUCCESS;
 }
 
 /**
@@ -176,7 +176,6 @@ int ntru_to_sves(NtruIntPoly *poly, int skip, char *data) {
  * @param b db bits of random data
  * @param params encryption parameters
  * @param seed output parameter; an array to write the seed value to
- * @return 0 for success, 1 for illegal encoding
  */
 void ntru_get_seed(char *msg, int msg_len, NtruIntPoly *h, char *b, NtruEncParams *params, char *seed) {
     int oid_len = sizeof params->oid;
@@ -310,7 +309,7 @@ int ntru_encrypt_internal(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncPar
 
         ntru_add_int_mod(&R, &mtrin, q);
         ntru_to_arr(&R, q, enc);
-        return 0;
+        return NTRU_SUCCESS;
     }
 }
 
@@ -400,7 +399,7 @@ int ntru_decrypt(char *enc, NtruEncKeyPair *kp, NtruEncParams *params, unsigned 
         return NTRU_ERR_INVALID_ENCODING;
 
     *dec_len = cl;
-    return 0;
+    return NTRU_SUCCESS;
 }
 
 int ntru_max_msg_len(NtruEncParams *params) {
