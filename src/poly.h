@@ -286,28 +286,4 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *b);
  */
 int sum_coeffs(NtruIntPoly *a);
 
-/**
- * @brief /dev/random-based RNG
- *
- * Fills an array with random data from /dev/random.
- *
- * @param rand_data output parameter; the random data is written to this array
- * @param len the number of elements to write to rand_data
- * @return 0 for error, 1 otherwise
- */
-int ntru_rand_devrandom(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
-
-/**
- * @brief /dev/urandom-based RNG
- *
- * Fills an array with random data from /dev/urandom.
- *
- * @param rand_data output parameter; the random data is written to this array
- * @param len the number of elements to write to rand_data
- * @return 0 for error, 1 otherwise
- */
-int ntru_rand_devurandom(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
-
-int ntru_rand_default(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
-
 #endif   /* POLY_H */
