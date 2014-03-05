@@ -60,8 +60,8 @@ the_time->tv_nsec = mts.tv_nsec;
 /* POSIX.1b structure for a time value. This is like a `struct timeval' but
 has nanoseconds instead of microseconds. */
 struct timespec {
-  long int tv_sec;	/* Seconds. */
-  long int tv_nsec;	/* Nanoseconds. */
+  long int tv_sec;    /* Seconds. */
+  long int tv_nsec;   /* Nanoseconds. */
 };
 
 LARGE_INTEGER getFILETIMEoffset()
