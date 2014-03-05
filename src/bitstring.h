@@ -1,5 +1,5 @@
-#ifndef BITSTRING_H
-#define BITSTRING_H
+#ifndef NTRU_BITSTRING_H
+#define NTRU_BITSTRING_H
 
 #include "encparams.h"
 
@@ -17,4 +17,4 @@ int ntru_leading(NtruBitStr *a, int num_bits);
 
 void ntru_truncate(NtruBitStr *a, int num_bits);
 
-#endif   /* BITSTRING_H */
+#endif   /* NTRU_BITSTRING_H */

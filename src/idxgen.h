@@ -1,5 +1,5 @@
-#ifndef IDXGEN_H
-#define IDXGEN_H
+#ifndef NTRU_IDXGEN_H
+#define NTRU_IDXGEN_H
 
 #include "encparams.h"
 #include "bitstring.h"
@@ -40,4 +40,4 @@ void ntru_IGF_init(char *seed, int seed_len, NtruEncParams *params, NtruIGFState
  */
 void ntru_IGF_next(NtruIGFState *s, int *i);
 
-#endif   /* IDXGEN_H */
+#endif   /* NTRU_IDXGEN_H */

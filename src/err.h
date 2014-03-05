@@ -1,5 +1,5 @@
-#ifndef ERR_H
-#define ERR_H
+#ifndef NTRU_ERR_H
+#define NTRU_ERR_H
 
 #define NTRU_SUCCESS 0
 #define NTRU_ERR_OUT_OF_MEMORY 1
@@ -10,4 +10,4 @@
 #define NTRU_ERR_NO_ZERO_PAD 6
 #define NTRU_ERR_INVALID_ENCODING 7
 
-#endif
+#endif   /* NTRU_ERR_H */

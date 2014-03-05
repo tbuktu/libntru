@@ -1,5 +1,5 @@
-#ifndef POLY_H
-#define POLY_H
+#ifndef NTRU_POLY_H
+#define NTRU_POLY_H
 
 #include "rand.h"
 #include "types.h"
@@ -289,4 +289,4 @@ int ntru_is_invertible_pow2(NtruIntPoly *a);
  */
 int sum_coeffs(NtruIntPoly *a);
 
-#endif   /* POLY_H */
+#endif   /* NTRU_POLY_H */

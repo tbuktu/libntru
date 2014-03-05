@@ -1,5 +1,5 @@
-#ifndef RAND_H
-#define RAND_H
+#ifndef NTRU_RAND_H
+#define NTRU_RAND_H
 
 #include "types.h"
 
@@ -69,4 +69,4 @@ int ntru_rand_default(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
  */
 int ntru_rand_igf2(unsigned rand_data[], int len, NtruRandContext *rand_ctx);
 
-#endif   /* RAND_H */
+#endif   /* NTRU_RAND_H */

@@ -1,5 +1,5 @@
-#ifndef KEY_H
-#define KEY_H
+#ifndef NTRU_KEY_H
+#define NTRU_KEY_H
 
 #include "types.h"
 
@@ -15,4 +15,4 @@ int ntru_pub_len(int N, int q);
 
 int ntru_priv_len(int df1, int df2, int df3);
 
-#endif
+#endif   /* NTRU_KEY_H */

@@ -1,5 +1,5 @@
-#ifndef NTRU_H
-#define NTRU_H
+#ifndef NTRU_NTRU_H
+#define NTRU_NTRU_H
 
 #include "types.h"
 #include "key.h"
@@ -95,4 +95,4 @@ int ntru_decrypt(char *enc, NtruEncKeyPair *kp, NtruEncParams *params, unsigned 
 
 int ntru_max_msg_len(NtruEncParams *params);
 
-#endif   /* NTRU_H */
+#endif   /* NTRU_NTRU_H */

@@ -1,5 +1,5 @@
-#ifndef ENCPARAMS_H
-#define ENCPARAMS_H
+#ifndef NTRU_ENCPARAMS_H
+#define NTRU_ENCPARAMS_H
 
 #include "hash.h"
 
@@ -111,4 +111,4 @@ typedef struct NtruEncParams {
 
 int ntru_enc_len(int N, int q);
 
-#endif   /* ENCPARAMS_H */
+#endif   /* NTRU_ENCPARAMS_H */

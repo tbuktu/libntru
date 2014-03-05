@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef NTRU_TYPES_H
+#define NTRU_TYPES_H
 
 #define NTRU_MAX_N 1500   /* must be one higher than the maximum #coeffs */
 #define NTRU_MAX_ONES 499   /* max(df1, df2, df3, dg) */
@@ -61,4 +61,4 @@ typedef struct NtruRandContext {
     void **rand_state;
 } NtruRandContext;
 
-#endif
+#endif   /* NTRU_TYPES_H */
