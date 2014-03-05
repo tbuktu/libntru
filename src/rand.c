@@ -20,7 +20,7 @@ int ntru_rand_wincrypt(unsigned rand_data[], int len, NtruRandContext *rand_ctx)
             if (GetLastError() == NTE_BAD_KEYSET)   // see http://support.microsoft.com/kb/238187
                 result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
             if (!result)
-                return NTRU_ERR_PRNG;
+                return 0;
         }
     }
     return CryptGenRandom(hCryptProv, len * sizeof *rand_data, rand_data);
