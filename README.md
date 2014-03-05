@@ -46,7 +46,7 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
         printf("decrypt fail\n");
 
     /* export key to char array */
-    char pub_arr[ntru_enc_len(params.N, params.q)];
+    char pub_arr[ntru_pub_len(params.N, params.q)];
     ntru_export_pub(&kp.pub, pub_arr);
 
     /* import key from char array */
