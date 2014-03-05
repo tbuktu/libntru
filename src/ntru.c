@@ -316,6 +316,16 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *para
     return ntru_encrypt_internal(msg, msg_len, pub, params, rng, NULL, enc);
 }
 
+int ntru_encrypt_det(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len, char *enc) {
+    void *rand_state;
+    rand_state = NULL;
+    NtruRandContext rand_ctx = {seed, seed_len, &rand_state};
+    int result = ntru_encrypt_internal(msg, msg_len, pub, params, rng, &rand_ctx, enc);
+    if (rand_state == NULL)
+        free(rand_state);
+    return result;
+}
+
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, int q, NtruIntPoly *d) {
     ntru_mult_prod(e, &priv->t, d);
     ntru_mod(d, q);

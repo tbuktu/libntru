@@ -57,6 +57,26 @@ int ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(
 int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc);
 
 /**
+ * @brief Deterministic encryption
+ *
+ * Encrypts a message. Produces the same output for a given plain text, key, and random seed.
+ * See P1363.1 section 9.2.2.
+ *
+ * @param msg The message to encrypt
+ * @param msg_len length of msg
+ * @param pub the public key to encrypt the message with
+ * @param params the NtruEncrypt parameters to use
+ * @param rng a pointer to a function that takes an array and an array size, and fills the array
+ *            with pseudo-random data determined by the NtruRandContext. See the ntru_rand_* functions.
+ * @param seed seed value
+ * @param seed_len length of the seed parameter
+ * @param enc output parameter; a pointer to store the encrypted message. Must accommodate
+              ntru_enc_len(params) bytes.
+ * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
+ */
+int ntru_encrypt_det(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len, char *enc);
+
+/**
  * @brief Decryption
  *
  * Decrypts a message.

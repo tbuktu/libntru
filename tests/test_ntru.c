@@ -57,6 +57,7 @@ int test_encr_decr_param(NtruEncParams *params) {
     NtruEncKeyPair kp;
     int valid = ntru_gen_key_pair(params, &kp, ntru_rand_default) == 0;
 
+    /* test ntru_encrypt() */
     int enc_len = ntru_enc_len(params->N, params->q);
     char plain[19];
     strcpy(plain, "test message 12345");
@@ -68,6 +69,22 @@ int test_encr_decr_param(NtruEncParams *params) {
     valid &= ntru_decrypt((char*)&encrypted, &kp, params, (unsigned char*)&decrypted, &dec_len) == 0;
     valid &= equals_arr((unsigned char*)&plain, (unsigned char*)&decrypted, plain_len);
 
+    /* test ntru_encrypt_det() */
+    char pub_arr[ntru_pub_len(params->N, params->q)];
+    ntru_export_pub(&kp.pub, pub_arr);
+    NtruEncPubKey pub2;
+    ntru_import_pub(pub_arr, &pub2);
+    valid = ntru_equals_int(&kp.pub.h, &pub2.h);
+    char seed[11];
+    strcpy(seed, "seed value");
+    valid &= ntru_encrypt_det((char*)&plain, plain_len, &kp.pub, params, ntru_rand_igf2, seed, strlen(seed), (char*)&encrypted) == 0;
+    char plain2[19];
+    strcpy(plain2, "test message 12345");
+    char seed2[11];
+    strcpy(seed2, "seed value");
+    char encrypted2[enc_len];
+    valid &= ntru_encrypt_det((char*)&plain2, plain_len, &pub2, params, ntru_rand_igf2, seed2, strlen(seed2), (char*)&encrypted2) == 0;
+    valid &= strncmp(encrypted, encrypted2, enc_len) == 0;
     return valid;
 }
 
