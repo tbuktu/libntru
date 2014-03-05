@@ -26,7 +26,8 @@ int ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, int (*
     NtruIntPoly f;
     for (;;) {
         /* choose random t, calculate f=3t+1 */
-        ntru_rand_prod(N, df1, df2, df3, df3, &t, rng, rand_ctx);
+        if (!ntru_rand_prod(N, df1, df2, df3, df3, &t, rng, rand_ctx))
+            return NTRU_ERR_PRNG;
         ntru_prod_to_int(&t, &f);
         ntru_mult_fac(&f, 3);
         f.coeffs[0] += 1;

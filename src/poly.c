@@ -63,11 +63,12 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
     return 1;
 }
 
-void ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
+int ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
     poly->N = N;
-    ntru_rand_tern(N, df1, df1, &poly->f1, rng, rand_ctx);
-    ntru_rand_tern(N, df2, df2, &poly->f2, rng, rand_ctx);
-    ntru_rand_tern(N, df3_ones, df3_neg_ones, &poly->f3, rng, rand_ctx);
+    int result = ntru_rand_tern(N, df1, df1, &poly->f1, rng, rand_ctx);
+    result &= ntru_rand_tern(N, df2, df2, &poly->f2, rng, rand_ctx);
+    result &= ntru_rand_tern(N, df3_ones, df3_neg_ones, &poly->f3, rng, rand_ctx);
+    return result;
 }
 
 void ntru_add_tern(NtruIntPoly *a, NtruTernPoly *b) {

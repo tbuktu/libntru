@@ -62,9 +62,9 @@ int test_mult_prod() {
     int i;
     for (i=0; i<10; i++) {
         NtruProdPoly a;
-        ntru_rand_prod(853, 8, 8, 8, 9, &a, ntru_rand_default, NULL);
+        valid &= ntru_rand_prod(853, 8, 8, 8, 9, &a, ntru_rand_default, NULL);
         NtruIntPoly b;
-        valid = rand_int(853, 11, &b, ntru_rand_default, NULL);
+        valid &= rand_int(853, 11, &b, ntru_rand_default, NULL);
         NtruIntPoly c_prod;
         ntru_mult_prod(&b, &a, &c_prod);
         NtruIntPoly a_int;

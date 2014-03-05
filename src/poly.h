@@ -31,9 +31,10 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
  * @param df3_neg_ones number of negative ones in the third ternary polynomial
  * @param poly output parameter; a pointer to store the new polynomial
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
-              with random data. See the ntru_rand_* functions.
+ *            with random data. See the ntru_rand_* functions.
+ * @return 1 for success, 0 for failure
  */
-void ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx);
+int ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx);
 
 /**
  * @brief Ternary to general integer polynomial
