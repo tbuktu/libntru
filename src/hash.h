@@ -1,8 +1,10 @@
 #ifndef NTRU_HASH_H
 #define NTRU_HASH_H
 
-void ntru_sha256(char *input, int input_len, char *digest);
+#include <stdint.h>
 
-void ntru_sha512(char *input, int input_len, char *digest);
+void ntru_sha256(uint8_t *input, uint16_t input_len, uint8_t *digest);
+
+void ntru_sha512(uint8_t *input, uint16_t input_len, uint8_t *digest);
 
 #endif   /* NTRU_HASH_H */

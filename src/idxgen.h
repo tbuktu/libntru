@@ -1,19 +1,20 @@
 #ifndef NTRU_IDXGEN_H
 #define NTRU_IDXGEN_H
 
+#include <stdint.h>
 #include "encparams.h"
 #include "bitstring.h"
 
 typedef struct NtruIGFState {
-    int N;
-    int c;
-    char *Z;
-    int zlen;
-    int rem_len;
+    uint16_t N;
+    uint16_t c;
+    uint8_t *Z;
+    uint16_t zlen;
+    uint16_t rem_len;
     NtruBitStr buf;
-    int counter;
-    void (*hash)(char[], int, char[]);
-    int hlen;
+    uint16_t counter;
+    void (*hash)(uint8_t[], uint16_t, uint8_t[]);
+    uint16_t hlen;
 } NtruIGFState;
 
 /**
@@ -27,7 +28,7 @@ typedef struct NtruIGFState {
  * @param params
  * @param s
  */
-void ntru_IGF_init(char *seed, int seed_len, NtruEncParams *params, NtruIGFState *s);
+void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruIGFState *s);
 
 /**
  * @brief IGF next index
@@ -38,6 +39,6 @@ void ntru_IGF_init(char *seed, int seed_len, NtruEncParams *params, NtruIGFState
  * @param s
  * @param i
  */
-void ntru_IGF_next(NtruIGFState *s, int *i);
+void ntru_IGF_next(NtruIGFState *s, uint16_t *i);
 
 #endif   /* NTRU_IDXGEN_H */

@@ -1,6 +1,8 @@
 #ifndef TEST_BITSTRING_H
 #define TEST_BITSTRING_H
 
-int test_bitstring();
+#include <stdint.h>
+
+uint8_t test_bitstring();
 
 #endif

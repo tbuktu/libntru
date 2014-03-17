@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include "test_poly.h"
 #include "test_ntru.h"
 #include "test_idxgen.h"
@@ -8,7 +9,7 @@
 
 int main(int argc, char** argv) {
     printf("Running tests...\n");
-    int pass = test_poly();
+    uint8_t pass = test_poly();
     pass &= test_ntru();
     pass &= test_idxgen();
     pass &= test_bitstring();

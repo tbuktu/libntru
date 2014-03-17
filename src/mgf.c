@@ -8,25 +8,25 @@
 #include "encparams.h"
 #include "poly.h"
 
-void ntru_MGF(char *seed, int seed_len, NtruEncParams *params, NtruIntPoly *i) {
-    int N = params->N;
+void ntru_MGF(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruIntPoly *i) {
+    uint16_t N = params->N;
     i->N = N;
-    int min_calls_mask = params->min_calls_mask;
-    int hlen = params->hlen;
+    uint16_t min_calls_mask = params->min_calls_mask;
+    uint16_t hlen = params->hlen;
 
-    char buf[min_calls_mask * hlen];
-    int buf_len = 0;
-    char Z[hlen];
-    params->hash(seed, seed_len, (char*)&Z);   /* hashSeed is always true */
-    int counter = 0;
-    char H[hlen];
-    int inp_len = hlen + sizeof counter;
-    char hash_inp[inp_len];
+    uint8_t buf[min_calls_mask * hlen];
+    uint16_t buf_len = 0;
+    uint8_t Z[hlen];
+    params->hash(seed, seed_len, (uint8_t*)&Z);   /* hashSeed is always true */
+    uint16_t counter = 0;
+    uint8_t H[hlen];
+    uint16_t inp_len = hlen + sizeof counter;
+    uint8_t hash_inp[inp_len];
     while (counter < min_calls_mask) {
-        int counter_endian = htonl(counter);   /* convert to network byte order */
+        uint16_t counter_endian = htons(counter);   /* convert to network byte order */
         memcpy(&hash_inp, Z, sizeof Z);
-        memcpy((char*)&hash_inp + sizeof Z, &counter_endian, sizeof counter_endian);
-        params->hash((char*)&hash_inp, inp_len, (char*)&H);
+        memcpy((uint8_t*)&hash_inp + sizeof Z, &counter_endian, sizeof counter_endian);
+        params->hash((uint8_t*)&hash_inp, inp_len, (uint8_t*)&H);
 
         memcpy(buf+buf_len, H, hlen);
         buf_len += hlen;
@@ -34,17 +34,17 @@ void ntru_MGF(char *seed, int seed_len, NtruEncParams *params, NtruIntPoly *i) {
     }
 
     for (;;) {
-        int cur = 0;
+        uint16_t cur = 0;
 
-        int j;
+        uint16_t j;
         for (j=0; j<buf_len; j++) {
-            int O = (unsigned char)buf[j];
+            uint8_t O = buf[j];
             if (O >= 243)   /* 243 = 3^5 */
                 continue;
 
-            int ter_idx;
+            uint8_t ter_idx;
             for (ter_idx=0; ter_idx<4; ter_idx++) {
-                int rem3 = O % 3;
+                uint8_t rem3 = O % 3;
                 i->coeffs[cur] = rem3==2 ? -1 : rem3;   /* reduce to [-1..1] */
                 cur++;
                 if (cur == N)
@@ -61,9 +61,9 @@ void ntru_MGF(char *seed, int seed_len, NtruEncParams *params, NtruIntPoly *i) {
         if (cur >= N)
             return;
 
-        memcpy(&hash_inp, (char*)Z, sizeof Z);
-        memcpy((char*)&hash_inp + hlen, &counter, sizeof counter);
-        params->hash((char*)&hash_inp, inp_len, (char*)&H);
+        memcpy(&hash_inp, Z, sizeof Z);
+        memcpy((uint8_t*)&hash_inp + hlen, &counter, sizeof counter);
+        params->hash((uint8_t*)&hash_inp, inp_len, (uint8_t*)&H);
         memcpy(&buf, &H, hlen);
         buf_len = hlen;
     }

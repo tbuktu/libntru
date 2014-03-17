@@ -1,6 +1,7 @@
 #ifndef NTRU_POLY_H
 #define NTRU_POLY_H
 
+#include <stdint.h>
 #include "rand.h"
 #include "types.h"
 
@@ -17,7 +18,7 @@
               with random data. See the ntru_rand_* functions.
  * @return 1 for success, 0 for failure
  */
-int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
 
 /**
  * @brief Random product-form polynomial
@@ -34,7 +35,7 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
  *            with random data. See the ntru_rand_* functions.
  * @return 1 for success, 0 for failure
  */
-int ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
 
 /**
  * @brief Ternary to general integer polynomial
@@ -60,14 +61,14 @@ void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b);
 /**
  * @brief Addition of two polynomials with a modulus
  *
- * Adds a NtruIntPoly to another, taking the coefficient values modulo an int.
+ * Adds a NtruIntPoly to another, taking the coefficient values modulo an integer.
  * The polynomial b must not have more coefficients than a.
  *
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to add to the polynomial a
  * @param modulus the modulus to apply to the coefficients of c
  */
-void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus);
+void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
 
 /**
  * @brief Subtraction of two polynomials
@@ -101,7 +102,7 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b);
  * @param c output parameter; a pointer to store the new polynomial
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
+uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
 
 /**
  * @brief General polynomial by product-form polynomial multiplication
@@ -114,42 +115,42 @@ int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
  * @param c output parameter; a pointer to store the new polynomial
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-int ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c);
+uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c);
 
 /**
  * @brief Polynomial to binary
  *
- * Converts a NtruIntPoly to a char array. Each coefficient is encoded
+ * Converts a NtruIntPoly to a uint8_t array. Each coefficient is encoded
  * in (log q) bits.
  *
  * @param p a polynomial
  * @param p the modulus; must be a power of two
  * @param a output parameter; a pointer to store the encoded polynomial
  */
-void ntru_to_arr(NtruIntPoly *p, int q, char *a);
+void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a);
 
 /**
  * @brief Polynomial to binary modulo 4
  *
  * Optimized version of ntru_to_arr() for q=4.
- * Encodes the low 2 bits of all coefficients in a char array.
+ * Encodes the low 2 bits of all coefficients in a uint8_t array.
  *
  * @param p a polynomial
  * @param arr output parameter; a pointer to store the encoded polynomial
  */
-void ntru_to_arr4(NtruIntPoly *p, char *arr);
+void ntru_to_arr4(NtruIntPoly *p, uint8_t *arr);
 
-void ntru_from_arr(char *arr, int N, int q, NtruIntPoly *p);
+void ntru_from_arr(uint8_t *arr, uint16_t N, uint16_t q, NtruIntPoly *p);
 
 /**
  * @brief Multiplies a polynomial by a factor
  *
- * Multiplies each coefficient of an NtruIntPoly by an int.
+ * Multiplies each coefficient of an NtruIntPoly by an integer.
  *
  * @param a input and output parameter; coefficients are overwritten
  * @param factor the factor to multiply by
  */
-void ntru_mult_fac(NtruIntPoly *a, int factor);
+void ntru_mult_fac(NtruIntPoly *a, int16_t factor);
 
 /**
  * @brief Multiplication of two general polynomials
@@ -162,12 +163,12 @@ void ntru_mult_fac(NtruIntPoly *a, int factor);
  * @param c output parameter; a pointer to store the new polynomial
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-int ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c);
+uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c);
 
 /**
  * @brief Multiplication of two general polynomials with a modulus
  *
- * Multiplies a NtruIntPoly by another, taking the coefficient values modulo an int.
+ * Multiplies a NtruIntPoly by another, taking the coefficient values modulo an integer.
  * The number of coefficients must be the same for both polynomials.
  *
  * @param a input and output parameter; coefficients are overwritten
@@ -176,17 +177,17 @@ int ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c);
  * @param modulus the modulus to apply to the coefficients of c
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-int ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, int modulus);
+uint8_t ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 /**
- * @brief Reduction modulo an int
+ * @brief Reduction modulo an integer
  *
- * Reduces the coefficients of an NtruIntPoly modulo an int.
+ * Reduces the coefficients of an NtruIntPoly modulo an integer.
  *
  * @param p input and output parameter; coefficients are overwritten
  * @param modulus the modulus to apply to the coefficients of c
  */
-void ntru_mod(NtruIntPoly *p, int modulus);
+void ntru_mod(NtruIntPoly *p, uint16_t modulus);
 
 /**
  * @brief Reduction modulo 3
@@ -200,15 +201,15 @@ void ntru_mod(NtruIntPoly *p, int modulus);
 void ntru_mod3(NtruIntPoly *p);
 
 /**
- * @brief Reduction modulo an int, centered
+ * @brief Reduction modulo an integer, centered
  *
- * Reduces the coefficients of an NtruIntPoly modulo an int such that
+ * Reduces the coefficients of an NtruIntPoly modulo an integer such that
  * -q/2 <= p->coeffs[i] < q/2 for all coefficients.
  *
  * @param p input and output parameter; coefficients are overwritten
  * @param modulus the modulus to apply to the coefficients of p
  */
-void ntru_mod_center(NtruIntPoly *p, int modulus);
+void ntru_mod_center(NtruIntPoly *p, uint16_t modulus);
 
 /**
  * @brief Equality with one
@@ -218,7 +219,7 @@ void ntru_mod_center(NtruIntPoly *p, int modulus);
  * @param p a polynomial
  * @return 1 iff all coefficients are equal to zero, except for the lowest coefficient which must equal 1
  */
-int ntru_equals1(NtruIntPoly *p);
+uint8_t ntru_equals1(NtruIntPoly *p);
 
 /**
  * @brief Equality of two polynomials
@@ -229,7 +230,7 @@ int ntru_equals1(NtruIntPoly *p);
  * @param b a polynomial
  * @return 1 iff all coefficients are equal
  */
-int ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b);
+uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b);
 
 /**
  * @brief Frequency of a coefficient
@@ -241,7 +242,7 @@ int ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b);
  * @param value
  * @return the number of coefficients equal to the value
  */
-int ntru_count(NtruIntPoly *p, int value);
+uint16_t ntru_count(NtruIntPoly *p, int16_t value);
 
 /**
  * @brief Erases a ternary polynomial
@@ -274,9 +275,9 @@ void ntru_clear_int(NtruIntPoly *p);
  * @param b output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *b);
+uint8_t ntru_invert(NtruIntPoly *a, uint16_t q, NtruIntPoly *b);
 
-int ntru_is_invertible_pow2(NtruIntPoly *a);
+uint8_t ntru_is_invertible_pow2(NtruIntPoly *a);
 
 /**
  * @brief Sum of coefficients
@@ -287,6 +288,6 @@ int ntru_is_invertible_pow2(NtruIntPoly *a);
  * @param a a polynomial
  * @return the sum of all coefficients
  */
-int sum_coeffs(NtruIntPoly *a);
+int32_t sum_coeffs(NtruIntPoly *a);
 
 #endif   /* NTRU_POLY_H */

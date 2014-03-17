@@ -1,22 +1,24 @@
 #ifndef NTRU_TYPES_H
 #define NTRU_TYPES_H
 
+#include <stdint.h>
+
 #define NTRU_MAX_N 1500   /* must be one higher than the maximum #coeffs */
 #define NTRU_MAX_ONES 499   /* max(df1, df2, df3, dg) */
 
 /** A polynomial with integer coefficients. */
 typedef struct NtruIntPoly {
-    int N;
-    int coeffs[NTRU_MAX_N];
+    uint16_t N;
+    int16_t coeffs[NTRU_MAX_N];
 } NtruIntPoly;
 
 /** A ternary polynomial, i.e. all coefficients are equal to -1, 0, or 1. */
 typedef struct NtruTernPoly {
-    int N;
-    int num_ones;
-    int num_neg_ones;
-    int ones[NTRU_MAX_ONES];
-    int neg_ones[NTRU_MAX_ONES];
+    uint16_t N;
+    uint16_t num_ones;
+    uint16_t num_neg_ones;
+    uint16_t ones[NTRU_MAX_ONES];
+    uint16_t neg_ones[NTRU_MAX_ONES];
 } NtruTernPoly;
 
 /**
@@ -24,7 +26,7 @@ typedef struct NtruTernPoly {
  * where f1,f2,f3 are very sparsely populated ternary polynomials.
  */
 typedef struct NtruProdPoly {
-    int N;
+    uint16_t N;
     NtruTernPoly f1, f2, f3;
 } NtruProdPoly;
 
@@ -32,7 +34,7 @@ typedef struct NtruProdPoly {
  * NtruEncrypt private key
  */
 typedef struct NtruEncPrivKey {
-    int q;
+    uint16_t q;
     NtruProdPoly t;
 } NtruEncPrivKey;
 
@@ -40,7 +42,7 @@ typedef struct NtruEncPrivKey {
  * NtruEncrypt public key
  */
 typedef struct NtruEncPubKey {
-    int q;
+    uint16_t q;
     NtruIntPoly h;
 } NtruEncPubKey;
 
@@ -56,8 +58,8 @@ typedef struct NtruEncKeyPair {
  * Seed and state for deterministic random number generators
  */
 typedef struct NtruRandContext {
-    char *seed;
-    int seed_len;
+    uint8_t *seed;
+    uint16_t seed_len;
     void **rand_state;
 } NtruRandContext;
 

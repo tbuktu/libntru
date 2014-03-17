@@ -11,15 +11,15 @@
 #define NUM_ITER_LARGE 100000
 
 /* tests the IGF-2 implementation */
-int test_idxgen() {
+uint8_t test_idxgen() {
     /* seed random number generator */
     time_t rs;
     time(&rs);
     srand(rs);
 
     /* generate a random IGF seed array */
-    int i;
-    char seed[100];
+    uint32_t i;
+    uint8_t seed[100];
     for (i=0; i<sizeof seed; i++)
         seed[i] = rand();
 
@@ -29,32 +29,32 @@ int test_idxgen() {
 
     /* sanity check for the avg value */
     ntru_IGF_init(seed, sizeof seed, &params, &s);
-    int idx;
+    uint16_t idx;
     for (i=0; i<NUM_ITER; i++) {
         ntru_IGF_next(&s, &idx);
         avg += idx;
     }
     avg /= NUM_ITER;
 
-    int valid = fabs((params.N/2.0)-avg) < 30;
+    uint8_t valid = fabs((params.N/2.0)-avg) < 30;
 
     /* test reproducability */
     ntru_IGF_init(seed, sizeof seed, &params, &s);
-    int last_idx = idx;
+    uint16_t last_idx = idx;
     for (i=0; i<NUM_ITER; i++)
         ntru_IGF_next(&s, &idx);
     valid &= idx == last_idx;
 
     /* check that all values between 0 and N-1 are generated */
     ntru_IGF_init(seed, sizeof seed, &params, &s);
-    int check_list[params.N];
-    memset(check_list, 0, params.N * sizeof check_list[0]);
+    uint8_t checklist[params.N];
+    memset(checklist, 0, params.N);
     for (i=0; i<NUM_ITER_LARGE; i++) {
         ntru_IGF_next(&s, &idx);
-        check_list[idx] = 1;
+        checklist[idx] = 1;
     }
     for (i=0; i<params.N; i++)
-        valid &= check_list[i];
+        valid &= checklist[i];
 
     print_result("test_idxgen", valid);
     return valid;

@@ -1,6 +1,7 @@
 #ifndef NTRU_ENCPARAMS_H
 #define NTRU_ENCPARAMS_H
 
+#include <stdint.h>
 #include "hash.h"
 
 /* max hash output length in bytes */
@@ -15,70 +16,70 @@
 /* A set of parameters for NtruEncrypt */
 typedef struct NtruEncParams {
     /* number of polynomial coefficients */
-    int N;
+    uint16_t N;
 
     /* modulus */
-    int q;
+    uint16_t q;
 
     /*
      * number of ones in the private polynomial f1
      */
-    int df1;
+    uint16_t df1;
 
     /*
      * number of ones in the private polynomial f2
      */
-    int df2;
+    uint16_t df2;
 
     /*
      * number of ones in the private polynomial f3
      */
-    int df3;
+    uint16_t df3;
 
     /*
      * minimum acceptable number of -1's, 0's, and 1's in the polynomial m'
      * in the last encryption step
      */
-    int dm0;
+    uint16_t dm0;
 
     /*
      * Maximum absolute value of sum_coeffs(mtrin) or zero to disable this check.
      * Values greater than zero cause the constant coefficient of the message to always be zero.
      */
-    int maxm1;
+    uint16_t maxm1;
 
     /* number of random bits to prepend to the message */
-    int db;
+    uint16_t db;
 
     /* a parameter for the Index Generation Function */
-    int c;
+    uint16_t c;
 
     /* minimum number of hash calls for the IGF to make */
-    int min_calls_r;
+    uint16_t min_calls_r;
 
     /* minimum number of calls to generate the masking polynomial */
-    int min_calls_mask;
+    uint16_t min_calls_mask;
 
     /*
      * whether to hash the seed in the MGF first (1) or
      * use the seed directly (0)
      */
-    int hash_seed;
+    uint8_t hash_seed;
 
     /* three bytes that uniquely identify the parameter set */
-    char oid[3];
+    uint8_t oid[3];
 
     /*
      * whether to treat ternary polynomials as sparsely populated (1) or
      * densely (0)
      */
-    int sparse;
+    uint8_t sparse;
 
     /* hash function, e.g. ntru_sha256 */
-    void (*hash)(char[], int, char[]);
+    void (*hash)(uint8_t[], uint16_t, uint8_t[]);
 
     /* output length of the hash function */
-    int hlen;
+    uint16_t hlen;
 } NtruEncParams;
 
 /*
@@ -109,6 +110,6 @@ typedef struct NtruEncParams {
  */
 #define APR2011_743_FAST {743, 2048, 11, 11, 15, 220, 60, 256, 12, 27, 14, 1, {0, 7, 105}, 0, ntru_sha512, 64}
 
-int ntru_enc_len(int N, int q);
+uint16_t ntru_enc_len(uint16_t N, uint16_t q);
 
 #endif   /* NTRU_ENCPARAMS_H */

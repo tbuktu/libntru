@@ -1,7 +1,7 @@
 #include <string.h>
 #include "idxgen.h"
 
-void ntru_IGF_init(char *seed, int seed_len, NtruEncParams *params, NtruIGFState *s) {
+void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruIGFState *s) {
     s->Z = seed;
     s->zlen = seed_len;
     s->N = params->N;
@@ -14,40 +14,40 @@ void ntru_IGF_init(char *seed, int seed_len, NtruEncParams *params, NtruIGFState
     s->buf.num_bytes = 0;
     s->buf.last_byte_bits = 0;
 
-    unsigned char H[NTRU_MAX_HASH_LEN];
+    uint8_t H[NTRU_MAX_HASH_LEN];
 
     while (s->counter < params->min_calls_r) {
-        int inp_len = s->zlen + sizeof s->counter;
-        char hash_inp[inp_len];
-        memcpy(&hash_inp, (char*)s->Z, s->zlen);
-        memcpy((char*)&hash_inp + s->zlen, &s->counter, sizeof s->counter);
-        s->hash((char*)&hash_inp, inp_len, (char*)&H);
+        uint16_t inp_len = s->zlen + sizeof s->counter;
+        uint8_t hash_inp[inp_len];
+        memcpy(&hash_inp, (uint8_t*)s->Z, s->zlen);
+        memcpy((uint8_t*)&hash_inp + s->zlen, &s->counter, sizeof s->counter);
+        s->hash((uint8_t*)&hash_inp, inp_len, (uint8_t*)&H);
 
-        ntru_append(&s->buf, (unsigned char*)&H, s->hlen);
+        ntru_append(&s->buf, (uint8_t*)&H, s->hlen);
         s->counter++;
     }
 }
 
-void ntru_IGF_next(NtruIGFState *s, int *i) {
-    int N = s-> N;
-    int c = s-> c;
+void ntru_IGF_next(NtruIGFState *s, uint16_t *i) {
+    uint16_t N = s-> N;
+    uint16_t c = s-> c;
 
-    unsigned char H[NTRU_MAX_HASH_LEN];
+    uint8_t H[NTRU_MAX_HASH_LEN];
 
     for (;;) {
         if (s->rem_len < c) {
             NtruBitStr M;
             ntru_trailing(&s->buf, s->rem_len, &M);
-            int tmp_len = c - s->rem_len;
-            int c_thresh = s->counter + (tmp_len+s->hlen-1) / s->hlen;
+            uint16_t tmp_len = c - s->rem_len;
+            uint16_t c_thresh = s->counter + (tmp_len+s->hlen-1) / s->hlen;
             while (s->counter < c_thresh) {
-                int inp_len = s->zlen + sizeof s->counter;
-                unsigned char hash_inp[inp_len];
-                memcpy(&hash_inp, (unsigned char*)s->Z, s->zlen);
-                memcpy((char*)&hash_inp + s->zlen, &s->counter, sizeof s->counter);
-                s->hash((char*)&hash_inp, inp_len, (char*)&H);
+                uint16_t inp_len = s->zlen + sizeof s->counter;
+                uint8_t hash_inp[inp_len];
+                memcpy(&hash_inp, (uint8_t*)s->Z, s->zlen);
+                memcpy((uint8_t*)&hash_inp + s->zlen, &s->counter, sizeof s->counter);
+                s->hash((uint8_t*)&hash_inp, inp_len, (uint8_t*)&H);
 
-                ntru_append(&M, (unsigned char*)&H, s->hlen);
+                ntru_append(&M, (uint8_t*)&H, s->hlen);
                 s->counter++;
                 s->rem_len += 8 * s->hlen;
             }

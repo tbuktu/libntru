@@ -19,7 +19,7 @@
  *            with random data. See the ntru_rand_* functions.
  * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
  */
-int ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*));
+uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*));
 
 /**
  * @brief Deterministic key generation
@@ -36,7 +36,7 @@ int ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsi
  * @param seed_len length of the seed parameter
  * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
  */
-int ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len);
+uint8_t ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len);
 
 /**
  * @brief Encryption
@@ -54,7 +54,7 @@ int ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, int (*rng)(
               ntru_enc_len(params) bytes.
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
  */
-int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *enc);
+uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), uint8_t *enc);
 
 /**
  * @brief Deterministic encryption
@@ -74,7 +74,7 @@ int ntru_encrypt(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *para
               ntru_enc_len(params) bytes.
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
  */
-int ntru_encrypt_det(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *params, int (*rng)(unsigned[], int, NtruRandContext*), char *seed, int seed_len, char *enc);
+uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len, uint8_t *enc);
 
 /**
  * @brief Decryption
@@ -91,8 +91,8 @@ int ntru_encrypt_det(char *msg, int msg_len, NtruEncPubKey *pub, NtruEncParams *
  * @param dec_len output parameter; pointer to store the length of dec
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
  */
-int ntru_decrypt(char *enc, NtruEncKeyPair *kp, NtruEncParams *params, unsigned char *dec, int *dec_len);
+uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, uint8_t *dec, uint16_t *dec_len);
 
-int ntru_max_msg_len(NtruEncParams *params);
+uint8_t ntru_max_msg_len(NtruEncParams *params);
 
 #endif   /* NTRU_NTRU_H */

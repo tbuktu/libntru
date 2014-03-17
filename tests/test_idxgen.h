@@ -1,6 +1,8 @@
 #ifndef TEST_IDXGEN_H
 #define TEST_IDXGEN_H
 
-int test_idxgen();
+#include <stdint.h>
+
+uint8_t test_idxgen();
 
 #endif

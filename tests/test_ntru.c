@@ -4,12 +4,12 @@
 #include "ntru.h"
 #include "rand.h"
 
-void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, int q) {
+void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, uint16_t q) {
     ntru_mult_tern(h, r, e);
     ntru_add_int_mod(e, m, q);
 }
 
-void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, int q) {
+void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, uint16_t q) {
     ntru_mult_prod(e, t, c);
     ntru_mult_fac(c, 3);
     ntru_add_int(c, e);
@@ -18,10 +18,10 @@ void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, int q) {
     ntru_mod_center(c, 3);
 }
 
-int test_keygen() {
+uint8_t test_keygen() {
     NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
-    int valid = ntru_gen_key_pair(&params, &kp, ntru_rand_default) == NTRU_SUCCESS;
+    uint8_t valid = ntru_gen_key_pair(&params, &kp, ntru_rand_default) == NTRU_SUCCESS;
 
     /* encrypt a random message */
     NtruTernPoly m;
@@ -40,67 +40,87 @@ int test_keygen() {
     valid &= ntru_equals_int(&m_int, &c);
 
     /* test deterministic key generation */
-    char seed[17];
-    strcpy(seed, "my test password");
-    valid &= ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed)) == NTRU_SUCCESS;
-    char password2[17];
-    strcpy(password2, "my test password");
+    char seed_char[17];
+    strcpy(seed_char, "my test password");
+    uint8_t seed[strlen(seed_char)];
+    uint16_t i;
+    for (i=0; i<strlen(seed_char); i++)
+        seed[i] = seed_char[i];
+    valid &= ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed_char)) == NTRU_SUCCESS;
+    char seed2_char[19];
+    strcpy(seed2_char, "my test password");
+    uint8_t seed2[strlen(seed2_char)];
+    for (i=0; i<strlen(seed2_char); i++)
+        seed2[i] = seed2_char[i];
     NtruEncKeyPair kp2;
-    valid &= ntru_gen_key_pair_det(&params, &kp2, ntru_rand_igf2, password2, strlen(password2)) == NTRU_SUCCESS;
+    valid &= ntru_gen_key_pair_det(&params, &kp2, ntru_rand_igf2, seed2, strlen(seed2_char)) == NTRU_SUCCESS;
     valid &= equals_key_pair(&kp, &kp2);
 
     print_result("test_keygen", valid);
     return valid;
 }
 
-int test_encr_decr_param(NtruEncParams *params) {
+uint8_t test_encr_decr_param(NtruEncParams *params) {
     NtruEncKeyPair kp;
-    int valid = ntru_gen_key_pair(params, &kp, ntru_rand_default) == NTRU_SUCCESS;
+    uint8_t valid = ntru_gen_key_pair(params, &kp, ntru_rand_default) == NTRU_SUCCESS;
 
     /* test ntru_encrypt() */
-    int enc_len = ntru_enc_len(params->N, params->q);
-    char plain[19];
-    strcpy(plain, "test message 12345");
-    int plain_len = strlen(plain);
-    char encrypted[enc_len];
-    valid &= ntru_encrypt((char*)&plain, plain_len, &kp.pub, params, ntru_rand_default, (char*)&encrypted) == NTRU_SUCCESS;
-    char decrypted[plain_len];
-    int dec_len;
-    valid &= ntru_decrypt((char*)&encrypted, &kp, params, (unsigned char*)&decrypted, &dec_len) == NTRU_SUCCESS;
-    valid &= equals_arr((unsigned char*)&plain, (unsigned char*)&decrypted, plain_len);
+    uint16_t enc_len = ntru_enc_len(params->N, params->q);
+    char plain_char[19];
+    strcpy(plain_char, "test message 12345");
+    uint16_t i;
+    size_t plain_len = strlen(plain_char);
+    uint8_t plain[plain_len];
+    for (i=0; i<plain_len; i++)
+        plain[i] = plain_char[i];
+    uint8_t encrypted[enc_len];
+    valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &kp.pub, params, ntru_rand_default, (uint8_t*)&encrypted) == NTRU_SUCCESS;
+    uint8_t decrypted[plain_len];
+    uint16_t dec_len;
+    valid &= ntru_decrypt((uint8_t*)&encrypted, &kp, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
+    valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
 
     /* test ntru_encrypt_det() */
-    char pub_arr[ntru_pub_len(params->N, params->q)];
+    uint8_t pub_arr[ntru_pub_len(params->N, params->q)];
     ntru_export_pub(&kp.pub, pub_arr);
     NtruEncPubKey pub2;
     ntru_import_pub(pub_arr, &pub2);
     valid = ntru_equals_int(&kp.pub.h, &pub2.h);
-    char seed[11];
-    strcpy(seed, "seed value");
-    valid &= ntru_encrypt_det((char*)&plain, plain_len, &kp.pub, params, ntru_rand_igf2, seed, strlen(seed), (char*)&encrypted) == NTRU_SUCCESS;
-    char plain2[19];
-    strcpy(plain2, "test message 12345");
-    char seed2[11];
-    strcpy(seed2, "seed value");
-    char encrypted2[enc_len];
-    valid &= ntru_encrypt_det((char*)&plain2, plain_len, &pub2, params, ntru_rand_igf2, seed2, strlen(seed2), (char*)&encrypted2) == NTRU_SUCCESS;
-    valid &= strncmp(encrypted, encrypted2, enc_len) == NTRU_SUCCESS;
+    char seed_char[11];
+    strcpy(seed_char, "seed value");
+    uint8_t seed[11];
+    for (i=0; i<plain_len; i++)
+        seed[i] = seed_char[i];
+    valid &= ntru_encrypt_det((uint8_t*)&plain, plain_len, &kp.pub, params, ntru_rand_igf2, seed, strlen(seed_char), (uint8_t*)&encrypted) == NTRU_SUCCESS;
+    char plain2_char[19];
+    strcpy(plain2_char, "test message 12345");
+    uint8_t plain2[plain_len];
+    for (i=0; i<plain_len; i++)
+        plain2[i] = plain2_char[i];
+    char seed2_char[11];
+    strcpy(seed2_char, "seed value");
+    uint8_t seed2[11];
+    for (i=0; i<strlen(seed2_char); i++)
+        seed2[i] = seed2_char[i];
+    uint8_t encrypted2[enc_len];
+    valid &= ntru_encrypt_det((uint8_t*)&plain2, plain_len, &pub2, params, ntru_rand_igf2, seed2, strlen(seed2_char), (uint8_t*)&encrypted2) == NTRU_SUCCESS;
+    valid &= strncmp((char*)encrypted, (char*)encrypted2, enc_len) == 0;
     return valid;
 }
 
-int test_encr_decr() {
+uint8_t test_encr_decr() {
     /* test one param set for which maxm1=0 and one for which maxm1>0 */
     NtruEncParams params743 = APR2011_743_FAST;
     NtruEncParams params1087 = EES1087EP2_FAST;
-    int valid = test_encr_decr_param(&params743);
+    uint8_t valid = test_encr_decr_param(&params743);
     valid &= test_encr_decr_param(&params1087);
 
     print_result("test_encr_decr", valid);
     return valid;
 }
 
-int test_ntru() {
-    int valid = test_keygen();
+uint8_t test_ntru() {
+    uint8_t valid = test_keygen();
     valid &= test_encr_decr();
     return valid;
 }

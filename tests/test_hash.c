@@ -3,14 +3,19 @@
 #include "encparams.h"
 #include <string.h>
 
-int test_hash() {
-    char* test_string = "The quick brown fox jumps over the lazy dog";
-    unsigned char sha256[] = {
+uint8_t test_hash() {
+    char* test_string_char = "The quick brown fox jumps over the lazy dog";
+    size_t len = strlen(test_string_char);
+    uint8_t test_string[len];
+    size_t i;
+    for (i=0; i<len; i++)
+        test_string[i] = (uint8_t)test_string_char[i];
+    uint8_t sha256[] = {
       0xd7, 0xa8, 0xfb, 0xb3, 0x07, 0xd7, 0x80, 0x94, 0x69, 0xca, 0x9a, 0xbc,
       0xb0, 0x08, 0x2e, 0x4f, 0x8d, 0x56, 0x51, 0xe4, 0x6d, 0x3c, 0xdb, 0x76,
       0x2d, 0x02, 0xd0, 0xbf, 0x37, 0xc9, 0xe5, 0x92
     };
-    unsigned char sha512[] = {
+    uint8_t sha512[] = {
       0x07, 0xe5, 0x47, 0xd9, 0x58, 0x6f, 0x6a, 0x73, 0xf7, 0x3f, 0xba, 0xc0,
       0x43, 0x5e, 0xd7, 0x69, 0x51, 0x21, 0x8f, 0xb7, 0xd0, 0xc8, 0xd7, 0x88,
       0xa3, 0x09, 0xd7, 0x85, 0x43, 0x6b, 0xbb, 0x64, 0x2e, 0x93, 0xa2, 0x52,
@@ -19,13 +24,13 @@ int test_hash() {
       0xb8, 0x54, 0xfe, 0xe6
     };
 
-    unsigned char hash256[32];
-    ntru_sha256(test_string, strlen(test_string), (char*)&hash256);
-    int valid256 = strncmp((char*)&hash256, (char*)&sha256, 32);
+    uint8_t hash256[32];
+    ntru_sha256(test_string, len, (uint8_t*)&hash256);
+    int valid256 = memcmp((uint8_t*)&hash256, (uint8_t*)&sha256, 32);
 
-    char hash512[64];
-    ntru_sha512(test_string, strlen(test_string), (char*)&hash512);
-    int valid512 = strncmp((char*)hash512, (char*)sha512, 64);
+    uint8_t hash512[64];
+    ntru_sha512(test_string, len, (uint8_t*)&hash512);
+    int valid512 = memcmp((uint8_t*)hash512, (uint8_t*)sha512, 64);
 
     print_result("test_hash", (valid256 == 0 && valid512 == 0) ? 1 : 0);
     return valid256 == 0 && valid512 == 0;

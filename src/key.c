@@ -1,6 +1,6 @@
 #include <string.h>
-#ifdef WIN32
 #include <stdint.h>
+#ifdef WIN32
 #include <Winsock2.h>
 #else
 #include <netinet/in.h>
@@ -9,7 +9,7 @@
 #include "encparams.h"
 #include "types.h"
 
-void ntru_export_pub(NtruEncPubKey *key, char *arr) {
+void ntru_export_pub(NtruEncPubKey *key, uint8_t *arr) {
     /* write N */
     uint16_t N_endian = htons(key->h.N);
     memcpy(arr, &N_endian, sizeof N_endian);
@@ -24,20 +24,20 @@ void ntru_export_pub(NtruEncPubKey *key, char *arr) {
     ntru_to_arr(&key->h, key->q, arr);
 }
 
-int ntru_import_pub(char *arr, NtruEncPubKey *key) {
-    char *arr_head = arr;
+uint16_t ntru_import_pub(uint8_t *arr, NtruEncPubKey *key) {
+    uint8_t *arr_head = arr;
 
     /* read N */
     uint16_t N_endian;
     memcpy(&N_endian, arr_head, sizeof N_endian);
-    int N = ntohs(N_endian);
+    uint16_t N = ntohs(N_endian);
     key->h.N = N;
 
     /* read q */
     arr_head += sizeof N_endian;
     uint16_t q_endian;
     memcpy(&q_endian, arr_head, sizeof q_endian);
-    int q = ntohs(q_endian);
+    uint16_t q = ntohs(q_endian);
     key->q = q;
     arr_head += sizeof q_endian;
 
@@ -48,12 +48,12 @@ int ntru_import_pub(char *arr, NtruEncPubKey *key) {
     return arr_head - arr;
 }
 
-int ntru_pub_len(int N, int q) {
+uint16_t ntru_pub_len(uint16_t N, uint16_t q) {
     return 4 + ntru_enc_len(N, q);
 }
 
-int ntru_tern_to_arr(NtruTernPoly *poly, char *arr) {
-    char *arr_head = arr;
+uint16_t ntru_tern_to_arr(NtruTernPoly *poly, uint8_t *arr) {
+    uint8_t *arr_head = arr;
 
     /* write #ones and #neg_ones */
     uint16_t num_ones = htons(poly->num_ones);
@@ -64,7 +64,7 @@ int ntru_tern_to_arr(NtruTernPoly *poly, char *arr) {
     arr_head += sizeof num_neg_ones;
 
     /* write indices of ones and negative ones */
-    int i;
+    uint16_t i;
     for (i=0; i<poly->num_ones; i++) {
         uint16_t idx = htons(poly->ones[i]);
         memcpy(arr_head, &idx, sizeof idx);
@@ -79,8 +79,8 @@ int ntru_tern_to_arr(NtruTernPoly *poly, char *arr) {
     return arr_head - arr;
 }
 
-int ntru_export_priv(NtruEncPrivKey *key, char *arr) {
-    char *arr_head = arr;
+uint16_t ntru_export_priv(NtruEncPrivKey *key, uint8_t *arr) {
+    uint8_t *arr_head = arr;
 
     /* write N */
     uint16_t N_endian = htons(key->t.N);
@@ -104,9 +104,9 @@ int ntru_export_priv(NtruEncPrivKey *key, char *arr) {
     return arr_head - arr;
 }
 
-int ntru_tern_from_arr(char *arr, int N, NtruTernPoly *poly) {
+uint16_t ntru_tern_from_arr(uint8_t *arr, uint16_t N, NtruTernPoly *poly) {
     poly->N = N;
-    char *arr_head = arr;
+    uint8_t *arr_head = arr;
 
     /* read #ones and #ones */
     uint16_t num_ones;
@@ -119,7 +119,7 @@ int ntru_tern_from_arr(char *arr, int N, NtruTernPoly *poly) {
     arr_head += sizeof num_neg_ones;
 
     /* read indices of ones and negative ones */
-    int i;
+    uint16_t i;
     for (i=0; i<poly->num_ones; i++) {
         uint16_t idx;
         memcpy(&idx, arr_head, sizeof idx);
@@ -136,7 +136,7 @@ int ntru_tern_from_arr(char *arr, int N, NtruTernPoly *poly) {
     return arr_head - arr;
 }
 
-void ntru_import_priv(char *arr, NtruEncPrivKey *key) {
+void ntru_import_priv(uint8_t *arr, NtruEncPrivKey *key) {
     /* read N */
     uint16_t N;
     memcpy(&N, arr, sizeof N);
@@ -157,6 +157,6 @@ void ntru_import_priv(char *arr, NtruEncPrivKey *key) {
     arr += ntru_tern_from_arr(arr, key->t.N, &key->t.f3);
 }
 
-int ntru_priv_len(int df1, int df2, int df3) {
+uint16_t ntru_priv_len(uint16_t df1, uint16_t df2, uint16_t df3) {
     return 5 + 4 + 4*df1 + 4 + 4*df2 + 4 + 4*df3;
 }

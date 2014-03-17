@@ -4,25 +4,25 @@
 #include "rand.h"
 #include "err.h"
 
-int ntru_num_bits(int n) {
-    int b = 1;
+uint8_t ntru_num_bits(uint16_t n) {
+    uint8_t b = 1;
     while (n >>= 1)
         b++;
     return b;
 }
 
-int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
-    int coeffs[N];
+uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
+    int16_t coeffs[N];
     memset(&coeffs, 0, N * sizeof coeffs[0]);
 
-    int rand_len = num_ones + num_neg_ones + 10;   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
+    uint16_t rand_len = num_ones + num_neg_ones + 10;   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
     unsigned rand_data[rand_len];
     if (!rng(rand_data, rand_len, rand_ctx))
         return 0;
-    int r_idx = 0;   /* index into rand_data */
+    uint16_t r_idx = 0;   /* index into rand_data */
 
-    int bits = ntru_num_bits(N);
-    int i = 0;
+    uint16_t bits = ntru_num_bits(N);
+    uint16_t i = 0;
     while (i < num_ones) {
         int r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
         r_idx++;
@@ -63,16 +63,16 @@ int ntru_rand_tern(int N, int num_ones, int num_neg_ones, NtruTernPoly *poly, in
     return 1;
 }
 
-int ntru_rand_prod(int N, int df1, int df2, int df3_ones, int df3_neg_ones, NtruProdPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx) {
+uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
     poly->N = N;
-    int result = ntru_rand_tern(N, df1, df1, &poly->f1, rng, rand_ctx);
+    uint8_t result = ntru_rand_tern(N, df1, df1, &poly->f1, rng, rand_ctx);
     result &= ntru_rand_tern(N, df2, df2, &poly->f2, rng, rand_ctx);
     result &= ntru_rand_tern(N, df3_ones, df3_neg_ones, &poly->f3, rng, rand_ctx);
     return result;
 }
 
 void ntru_add_tern(NtruIntPoly *a, NtruTernPoly *b) {
-    int i;
+    uint16_t i;
     for (i=0; i<b->num_ones; i++)
         a->coeffs[b->ones[i]]++;
     for (i=0; i<b->num_neg_ones; i++)
@@ -80,44 +80,44 @@ void ntru_add_tern(NtruIntPoly *a, NtruTernPoly *b) {
 }
 
 void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b) {
-    int i;
+    uint16_t i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] += b->coeffs[i];
 }
 
-void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
-    int i;
+void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
+    uint16_t i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) % modulus;
 }
 
 void ntru_add_int_mod2(NtruIntPoly *a, NtruIntPoly *b) {
-    int i;
+    uint16_t i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) & 1;
 }
 
 void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b) {
-    int i;
+    uint16_t i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] -= b->coeffs[i];
 }
 
-void ntru_sub_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
-    int i;
+void ntru_sub_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
+    uint16_t i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] = (a->coeffs[i]-b->coeffs[i]) % modulus;
 }
 
-int ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
-    int N = a->N;
+uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
+    uint16_t N = a->N;
     if (N != b->N)
         return 0;
     c->N = N;
 
-    int i, k;
+    uint16_t i, k;
     for (k=0; k<N; k++) {
-        int ck = 0;
+        int32_t ck = 0;
         for (i=0; i<N; i++)
             ck += b->coeffs[i] * a->coeffs[(N+k-i)%N];
         c->coeffs[k] = ck;
@@ -126,16 +126,16 @@ int ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
     return 1;
 }
 
-int ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, int modulus) {
-    int N = a->N;
+uint8_t ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+    uint16_t N = a->N;
     if (N != b->N)
         return 0;
     c->N = N;
 
-    int k;
+    uint16_t k;
     for (k=0; k<N; k++) {
-        int ck = 0;
-        int i;
+        int16_t ck = 0;
+        uint16_t i;
         for (i=0; i<N; i++)
             ck += b->coeffs[i] * a->coeffs[(N+k-i)%N];
         c->coeffs[k] = ck % modulus;
@@ -144,17 +144,17 @@ int ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, int modulu
     return 1;
 }
 
-int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
-    int N = a->N;
+uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
+    uint16_t N = a->N;
     if (N != b->N)
         return 0;
     c->N = N;
     memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
 
-    int i;
+    uint16_t i;
     for (i=0; i<b->num_ones; i++) {
-        int j = N - 1 - b->ones[i];
-        int k;
+        int16_t j = N - 1 - b->ones[i];
+        int16_t k;
         for(k=N-1; k>=0; k--) {
             c->coeffs[k] += a->coeffs[j];
             j--;
@@ -164,8 +164,8 @@ int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
     }
 
     for (i=0; i<b->num_neg_ones; i++) {
-        int j = N - 1 - b->neg_ones[i];
-        int k;
+        int16_t j = N - 1 - b->neg_ones[i];
+        int16_t k;
         for(k=N-1; k>=0; k--) {
             c->coeffs[k] -= a->coeffs[j];
             j--;
@@ -177,8 +177,8 @@ int ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
     return 1;
 }
 
-int ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
-    int N = a->N;
+uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
+    uint16_t N = a->N;
     if (N != b->N)
         return 0;
     c->N = N;
@@ -196,7 +196,7 @@ int ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
 
 void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
     memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
-    int i;
+    uint16_t i;
     for (i=0; i<a->num_ones; i++)
         b->coeffs[a->ones[i]] = 1;
     for (i=0; i<a->num_neg_ones; i++)
@@ -214,20 +214,20 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b) {
     ntru_add_tern(b, &a->f3);
 }
 
-void ntru_to_arr(NtruIntPoly *p, int q, char *a) {
-    int bits_coeff = 0;
+void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
+    uint8_t bits_coeff = 0;
     while (q > 1) {
         q /= 2;
         bits_coeff++;
     }
 
-    int bit_idx = 0;
-    int byte_idx = 0;
-    int i, j;
+    uint8_t bit_idx = 0;
+    uint16_t byte_idx = 0;
+    uint16_t i, j;
     a[0] = 0;
     for (i=0; i<p->N; i++)
         for (j=0; j<bits_coeff; j++) {
-            int curr_bit = (p->coeffs[i] >> j) & 1;
+            uint8_t curr_bit = (p->coeffs[i] >> j) & 1;
             a[byte_idx] |= curr_bit << bit_idx;
             if (bit_idx == 7) {
                 bit_idx = 0;
@@ -239,14 +239,14 @@ void ntru_to_arr(NtruIntPoly *p, int q, char *a) {
         }
 }
 
-void ntru_to_arr4(NtruIntPoly *p, char *arr) {
-    int i = 0;
+void ntru_to_arr4(NtruIntPoly *p, uint8_t *arr) {
+    uint16_t i = 0;
     while (i < p->N-3) {
-        int c0 = p->coeffs[i] & 3;
-        int c1 = p->coeffs[i+1] & 3;
-        int c2 = p->coeffs[i+2] & 3;
-        int c3 = p->coeffs[i+3] & 3;
-        int d = c0 + (c1<<2) + (c2<<4) + (c3<<6);
+        int8_t c0 = p->coeffs[i] & 3;
+        int8_t c1 = p->coeffs[i+1] & 3;
+        int8_t c2 = p->coeffs[i+2] & 3;
+        int8_t c3 = p->coeffs[i+3] & 3;
+        int16_t d = c0 + (c1<<2) + (c2<<4) + (c3<<6);
         arr[i/4] = d;
         i += 4;
     }
@@ -254,7 +254,7 @@ void ntru_to_arr4(NtruIntPoly *p, char *arr) {
     /* handle the last 0 to 3 coefficients */
     if (i >= p->N)
         return;
-    int last = i / 4;
+    uint16_t last = i / 4;
     arr[last] = p->coeffs[i] & 3;
     i++;
 
@@ -273,22 +273,22 @@ void ntru_to_arr4(NtruIntPoly *p, char *arr) {
     arr[last] |= (p->coeffs[i]&3) << 6;
 }
 
-void ntru_from_arr(char *arr, int N, int q, NtruIntPoly *p) {
+void ntru_from_arr(uint8_t *arr, uint16_t N, uint16_t q, NtruIntPoly *p) {
     p->N = N;
     memset(&p->coeffs, 0, N * sizeof p->coeffs[0]);
 
-    int bits_per_coeff = 0;
+    uint8_t bits_per_coeff = 0;
     while (q > 1) {
         q /= 2;
         bits_per_coeff++;
     }
 
-    int mask = 0xFFFFFFFF >> (32-bits_per_coeff);   /* for truncating values to bitsPerCoeff bits */
-    int byte_idx = 0;
-    int bit_idx = 0;   /* next bit in arr[byte_idx] */
-    unsigned int coeff_buf = 0;   /* contains (bit_idx) bits */
-    int coeff_bits = 0;   /* length of coeffBuf */
-    int coeff_idx = 0;   /* index into coeffs */
+    uint32_t mask = 0xFFFFFFFF >> (32-bits_per_coeff);   /* for truncating values to bitsPerCoeff bits */
+    uint16_t byte_idx = 0;
+    uint8_t bit_idx = 0;   /* next bit in arr[byte_idx] */
+    uint32_t coeff_buf = 0;   /* contains (bit_idx) bits */
+    uint8_t coeff_bits = 0;   /* length of coeffBuf */
+    uint16_t coeff_idx = 0;   /* index into coeffs */
     while (coeff_idx < N) {
         /* copy bits_per_coeff or more into coeff_buf */
         while (coeff_bits < bits_per_coeff) {
@@ -307,19 +307,19 @@ void ntru_from_arr(char *arr, int N, int q, NtruIntPoly *p) {
     }
 }
 
-void ntru_mult_fac(NtruIntPoly *a, int factor) {
-    int i;
+void ntru_mult_fac(NtruIntPoly *a, int16_t factor) {
+    uint16_t i;
     for (i=0; i<a->N; i++)
         a->coeffs[i] *= factor;
 }
 
-void ntru_mult_2(NtruIntPoly *a, int modulus) {
-    int i;
+void ntru_mult_2(NtruIntPoly *a, uint16_t modulus) {
+    uint16_t i;
     for (i=0; i<a->N; i++)
         a->coeffs[i] = (a->coeffs[i]*2) % modulus;
 }
 
-NtruIntPoly *ntru_zero_poly(int n) {
+NtruIntPoly *ntru_zero_poly(uint16_t n) {
     NtruIntPoly *poly = calloc(1, sizeof *poly);
     if (poly) {
         poly->N = n;
@@ -334,8 +334,8 @@ NtruIntPoly *ntru_clone(NtruIntPoly *a) {
     return b;
 }
 
-void ntru_mod(NtruIntPoly *p, int modulus) {
-    int i;
+void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
+    uint16_t i;
     if (modulus == 2048)
         for (i=0; i<p->N; i++)
             p->coeffs[i] &= 2047;
@@ -345,9 +345,9 @@ void ntru_mod(NtruIntPoly *p, int modulus) {
 }
 
 void ntru_mod3(NtruIntPoly *p) {
-    int i;
+    uint16_t i;
     for (i=0; i<p->N; i++) {
-        int c = p->coeffs[i] % 3;
+        int8_t c = p->coeffs[i] % 3;
         if (c > 1)
             c = -1;
         if (c < -1)
@@ -356,19 +356,19 @@ void ntru_mod3(NtruIntPoly *p) {
     }
 }
 
-void ntru_mod_center(NtruIntPoly *p, int modulus) {
-    int i;
+void ntru_mod_center(NtruIntPoly *p, uint16_t modulus) {
+    uint16_t i;
     if (modulus == 2048)
         for (i=0; i<p->N; i++) {
-            int c = p->coeffs[i] & 2047;
+            int16_t c = p->coeffs[i] & 2047;
             if (c & 1024)
                 c -= 2048;
             p->coeffs[i] = c;
         }
     else {
-        int m2 = modulus / 2;
+        uint16_t m2 = modulus / 2;
         for (i=0; i<p->N; i++) {
-            int c = p->coeffs[i] % modulus;
+            int16_t c = p->coeffs[i] % modulus;
             if (c < -m2)
                 c += modulus;
             if (c > m2)
@@ -379,32 +379,32 @@ void ntru_mod_center(NtruIntPoly *p, int modulus) {
 }
 
 void ntru_mod2(NtruIntPoly *p) {
-    int i;
+    uint16_t i;
     for (i=0; i<p->N; i++)
         p->coeffs[i] &= 1;
 }
 
-int ntru_equals0(NtruIntPoly *p) {
-    int i;
+uint8_t ntru_equals0(NtruIntPoly *p) {
+    uint16_t i;
     for (i=0; i<p->N; i++)
         if (p->coeffs[i] != 0)
             return 0;
     return 1;
 }
 
-int ntru_equals1(NtruIntPoly *p) {
-    int i;
+uint8_t ntru_equals1(NtruIntPoly *p) {
+    uint16_t i;
     for (i=1; i<p->N; i++)
         if (p->coeffs[i] != 0)
             return 0;
     return p->coeffs[0] == 1;
 }
 
-int ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
+uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
     if (a->N != b->N)
         return 0;
 
-    int i;
+    uint16_t i;
     for (i=0; i<a->N; i++)
         if (a->coeffs[i] != b->coeffs[i])
             return 0;
@@ -412,16 +412,16 @@ int ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
     return 1;
 }
 
-int ntru_deg(NtruIntPoly *p) {
-    int deg = p->N - 1;
+uint16_t ntru_deg(NtruIntPoly *p) {
+    uint16_t deg = p->N - 1;
     while (deg>0 && p->coeffs[deg]==0)
         deg--;
     return deg;
 }
 
-int ntru_count(NtruIntPoly *p, int value) {
-    int count = 0;
-    int i;
+uint16_t ntru_count(NtruIntPoly *p, int16_t value) {
+    uint16_t count = 0;
+    uint16_t i;
     for (i=0; i<p->N; i++)
         if (p->coeffs[i] == value)
             count++;
@@ -434,13 +434,13 @@ void ntru_clear_tern(NtruTernPoly *p) {
 }
 
 void ntru_clear_int(NtruIntPoly *p) {
-    int i;
+    uint16_t i;
     for (i=0; i<p->N; i++)
         p->coeffs[i] = 0;
 }
 
-void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, int q) {
-    int v = 2;
+void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, uint16_t q) {
+    uint16_t v = 2;
     NtruIntPoly temp, temp2, temp3;
     while (v < q) {
         v *= 2;
@@ -453,11 +453,11 @@ void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, int q) {
     }
 }
 
-int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
-    int invertible;
-    int i;
-    int N = a->N;
-    int k = 0;
+uint8_t ntru_invert(NtruIntPoly *a, uint16_t q, NtruIntPoly *Fq) {
+    uint8_t invertible;
+    int16_t i;
+    uint16_t N = a->N;
+    uint16_t k = 0;
     NtruIntPoly *b = ntru_zero_poly(N+1);
     if (!b)
         return NTRU_ERR_OUT_OF_MEMORY;
@@ -525,7 +525,7 @@ int ntru_invert(NtruIntPoly *a, int q, NtruIntPoly *Fq) {
     /* Fq(x) = x^(N-k) * b(x) */
     memset(&Fq->coeffs, 0, N * sizeof Fq->coeffs[0]);
     Fq->N = N;
-    int j = 0;
+    int16_t j = 0;
     k %= N;
     for (i=N-1; i>=0; i--) {
         j = i - k;
@@ -545,11 +545,11 @@ done:
     return invertible;
 }
 
-int ntru_is_invertible_pow2(NtruIntPoly *a) {
-    int invertible;
-    int i;
-    int N = a->N;
-    int k = 0;
+uint8_t ntru_is_invertible_pow2(NtruIntPoly *a) {
+    uint8_t invertible;
+    uint16_t i;
+    uint16_t N = a->N;
+    uint16_t k = 0;
     NtruIntPoly *b = ntru_zero_poly(N+1);
     if (!b)
         return NTRU_ERR_OUT_OF_MEMORY;
@@ -619,9 +619,9 @@ done:
     return invertible;
 }
 
-int sum_coeffs(NtruIntPoly *a) {
-    int sum = 0;
-    int i;
+int32_t sum_coeffs(NtruIntPoly *a) {
+    int16_t sum = 0;
+    uint16_t i;
     for (i=1; i<a->N; i++)
         sum += a->coeffs[i];
     return sum;

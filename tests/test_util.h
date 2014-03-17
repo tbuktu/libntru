@@ -1,20 +1,21 @@
 #ifndef TEST_UTIL_H
 #define TEST_UTIL_H
 
+#include <stdint.h>
 #include "ntru.h"
 #include "poly.h"
 #include "rand.h"
 
-int equals_int(NtruIntPoly *a, NtruIntPoly *b);
+uint8_t equals_int(NtruIntPoly *a, NtruIntPoly *b);
 
-int equals_int_mod(NtruIntPoly *a, NtruIntPoly *b, int modulus);
+uint8_t equals_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
 
-int equals_key_pair(NtruEncKeyPair *kp1, NtruEncKeyPair *kp2);
+uint8_t equals_key_pair(NtruEncKeyPair *kp1, NtruEncKeyPair *kp2);
 
-int equals_arr(unsigned char *arr1, unsigned char *arr2, int len);
+uint8_t equals_arr(uint8_t *arr1, uint8_t *arr2, uint16_t len);
 
-int rand_int(int N, int pow2q, NtruIntPoly *poly, int (*rng)(unsigned[], int, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
 
-void print_result(char *test_name, int valid);
+void print_result(char *test_name, uint8_t valid);
 
 #endif

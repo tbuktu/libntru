@@ -1,6 +1,8 @@
 #ifndef NTRU_MGF_H
 #define NTRU_MGF_H
 
+#include <stdint.h>
+
 /**
  * @brief Mask Generation Function
  *
@@ -11,6 +13,6 @@
  * @param params NTRUEncrypt parameters
  * @param i output parameter: the generated ternary polynomial
  */
-void ntru_MGF(char *seed, int seed_len, NtruEncParams *params, NtruIntPoly *i);
+void ntru_MGF(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruIntPoly *i);
 
 #endif   /* NTRU_MGF_H */

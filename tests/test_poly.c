@@ -4,10 +4,11 @@
 #include "rand.h"
 #include "encparams.h"
 #include "test_util.h"
+#include "test_poly.h"
 
 /** tests ntru_mult_int() and ntru_mult_int_mod() */
-int test_mult_int() {
-    int valid = 1;
+uint8_t test_mult_int() {
+    uint8_t valid = 1;
 
     /* multiplication modulo q */
     NtruIntPoly a1 = {11, {-1, 1, 1, 0, -1, 0, 1, 0, 0, 1, -1}};
@@ -39,9 +40,9 @@ int test_mult_int() {
 }
 
 /* tests ntru_mult_tern() */
-int test_mult_tern() {
+uint8_t test_mult_tern() {
     NtruTernPoly a;
-    int valid = ntru_rand_tern(11, 3, 3, &a, ntru_rand_default, NULL);
+    uint8_t valid = ntru_rand_tern(11, 3, 3, &a, ntru_rand_default, NULL);
     NtruIntPoly b;
     valid &= rand_int(11, 5, &b, ntru_rand_default, NULL);
     NtruIntPoly c_tern;
@@ -57,9 +58,9 @@ int test_mult_tern() {
 }
 
 /* tests ntru_mult_prod() */
-int test_mult_prod() {
-    int valid = 1;
-    int i;
+uint8_t test_mult_prod() {
+    uint8_t valid = 1;
+    uint16_t i;
     for (i=0; i<10; i++) {
         NtruProdPoly a;
         valid &= ntru_rand_prod(853, 8, 8, 8, 9, &a, ntru_rand_default, NULL);
@@ -78,7 +79,7 @@ int test_mult_prod() {
     return valid;
 }
 
-int verify_inverse(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
+uint8_t verify_inverse(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
     NtruIntPoly c;
     ntru_mult_int_mod(a, b, &c, modulus);
     ntru_mod(&c, modulus);
@@ -86,26 +87,26 @@ int verify_inverse(NtruIntPoly *a, NtruIntPoly *b, int modulus) {
 }
 
 /* tests ntru_invert() */
-int test_inv() {
-    int valid = 1;
+uint8_t test_inv() {
+    uint8_t valid = 1;
 
     /* Verify an example from the NTRU tutorial */
     NtruIntPoly a1 = {11, {-1, 1, 1, 0, -1, 0, 1, 0, 0, 1, -1}};
     NtruIntPoly b1;
-    int invertible = ntru_invert(&a1, 32, &b1);
+    uint8_t invertible = ntru_invert(&a1, 32, &b1);
     NtruIntPoly b_exp = {11, {5, -23, 6, 16, 4, 15, 16, -10, -12, -14, -2}};
     valid &= invertible;
     valid &= ntru_equals_int(&b_exp, &b1);
     valid &= verify_inverse(&a1, &b1, 32);
 
     /* test 3 random polynomials */
-    int num_invertible = 0;
+    uint16_t num_invertible = 0;
     while (num_invertible < 3) {
         NtruIntPoly a_int;
         rand_int(853, 11, &a_int, ntru_rand_default, NULL);
 
         NtruIntPoly b;
-        int invertible = ntru_invert(&a_int, 2048, &b);
+        uint8_t invertible = ntru_invert(&a_int, 2048, &b);
         if (invertible) {
             valid &= verify_inverse(&a_int, &b, 2048);
             num_invertible++;
@@ -122,11 +123,11 @@ int test_inv() {
     return valid;
 }
 
-int test_arr() {
+uint8_t test_arr() {
     NtruEncParams params = APR2011_439_FAST;
-    char a[ntru_enc_len(params.N, params.q)];
+    uint8_t a[ntru_enc_len(params.N, params.q)];
     NtruIntPoly p1;
-    int valid = rand_int(params.N, 11, &p1, ntru_rand_default, NULL);
+    uint8_t valid = rand_int(params.N, 11, &p1, ntru_rand_default, NULL);
     ntru_to_arr(&p1, params.q, a);
 
     NtruIntPoly p2;
@@ -137,8 +138,8 @@ int test_arr() {
     return valid;
 }
 
-int test_poly() {
-    int valid = 1;
+uint8_t test_poly() {
+    uint8_t valid = 1;
     valid &= test_mult_int();
     valid &= test_mult_tern();
     valid &= test_mult_prod();
