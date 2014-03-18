@@ -116,6 +116,9 @@ void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, uint16_t skip, NtruI
             chunk >>= 3;
         }
     }
+
+    while (coeff_idx < N)
+        poly->coeffs[coeff_idx++] = 0;
 }
 
 /**
