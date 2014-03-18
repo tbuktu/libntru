@@ -18,6 +18,15 @@ void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, uint16_t q) {
     ntru_mod_center(c, 3);
 }
 
+uint8_t gen_key_pair_det(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
+    uint16_t seed_len = strlen(seed);
+    uint8_t seed_uint8[seed_len];
+    uint16_t i;
+    for (i=0; i<seed_len; i++)
+        seed_uint8[i] = seed[i];
+    return ntru_gen_key_pair_det(params, kp, ntru_rand_igf2, seed_uint8, seed_len);
+}
+
 uint8_t test_keygen() {
     NtruEncParams params = APR2011_439_FAST;
     NtruEncKeyPair kp;
@@ -40,16 +49,11 @@ uint8_t test_keygen() {
     valid &= ntru_equals_int(&m_int, &c);
 
     /* test deterministic key generation */
-    char seed_char[17];
-    strcpy(seed_char, "my test password");
-    uint8_t seed[strlen(seed_char)];
-    uint16_t i;
-    for (i=0; i<strlen(seed_char); i++)
-        seed[i] = seed_char[i];
-    valid &= ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed_char)) == NTRU_SUCCESS;
+    valid &= gen_key_pair_det("my test password", &params, &kp) == NTRU_SUCCESS;
     char seed2_char[19];
     strcpy(seed2_char, "my test password");
     uint8_t seed2[strlen(seed2_char)];
+    uint16_t i;
     for (i=0; i<strlen(seed2_char); i++)
         seed2[i] = seed2_char[i];
     NtruEncKeyPair kp2;
@@ -81,15 +85,16 @@ uint8_t test_encr_decr_param(NtruEncParams *params) {
     valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
 
     /* test ntru_encrypt_det() */
+    valid &= gen_key_pair_det("seed value for key generation", params, &kp) == NTRU_SUCCESS;
     uint8_t pub_arr[ntru_pub_len(params->N, params->q)];
     ntru_export_pub(&kp.pub, pub_arr);
     NtruEncPubKey pub2;
     ntru_import_pub(pub_arr, &pub2);
-    valid = ntru_equals_int(&kp.pub.h, &pub2.h);
+    valid &= ntru_equals_int(&kp.pub.h, &pub2.h);
     char seed_char[11];
     strcpy(seed_char, "seed value");
     uint8_t seed[11];
-    for (i=0; i<plain_len; i++)
+    for (i=0; i<strlen(seed_char); i++)
         seed[i] = seed_char[i];
     valid &= ntru_encrypt_det((uint8_t*)&plain, plain_len, &kp.pub, params, ntru_rand_igf2, seed, strlen(seed_char), (uint8_t*)&encrypted) == NTRU_SUCCESS;
     char plain2_char[19];
@@ -104,7 +109,7 @@ uint8_t test_encr_decr_param(NtruEncParams *params) {
         seed2[i] = seed2_char[i];
     uint8_t encrypted2[enc_len];
     valid &= ntru_encrypt_det((uint8_t*)&plain2, plain_len, &pub2, params, ntru_rand_igf2, seed2, strlen(seed2_char), (uint8_t*)&encrypted2) == NTRU_SUCCESS;
-    valid &= strncmp((char*)encrypted, (char*)encrypted2, enc_len) == 0;
+    valid &= memcmp(encrypted, encrypted2, enc_len) == 0;
     return valid;
 }
 
