@@ -26,16 +26,16 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
     while (i < num_ones) {
         int r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
         r_idx++;
+        /* refill rand_data if we run out */
+        if (r_idx >= rand_len) {
+            if (!rng(rand_data, rand_len, rand_ctx))
+                return 0;
+            r_idx = 0;
+        }
         if (r<N && !coeffs[r]) {
             poly->ones[i] = r;
             coeffs[r] = 1;
             i++;
-        }
-        /* refill rand_data if we run out */
-        else if (r_idx >= rand_len) {
-            if (!rng(rand_data, rand_len, rand_ctx))
-                return 0;
-            r_idx = 0;
         }
     }
 
@@ -43,16 +43,16 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
     while (i < num_neg_ones) {
         int r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
         r_idx++;
+        /* refill rand_data if we run out */
+        if (r_idx >= rand_len) {
+            if (!rng(rand_data, rand_len, rand_ctx))
+                return 0;
+            r_idx = 0;
+        }
         if (r<N && !coeffs[r]) {
             poly->neg_ones[i] = r;
             coeffs[r] = -1;
             i++;
-        }
-        /* refill rand_data if we run out */
-        else if (r_idx >= rand_len) {
-            if (!rng(rand_data, rand_len, rand_ctx))
-                return 0;
-            r_idx = 0;
         }
     }
 
