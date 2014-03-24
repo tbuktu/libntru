@@ -272,10 +272,10 @@ void ntru_clear_int(NtruIntPoly *p);
  *
  * @param a a polynomial
  * @param q the modulus
- * @param b output parameter; a pointer to store the new polynomial
+ * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t ntru_invert(NtruIntPoly *a, uint16_t q, NtruIntPoly *b);
+uint8_t ntru_invert(NtruIntPoly *a, uint16_t q, NtruIntPoly *Fq);
 
 uint8_t ntru_is_invertible_pow2(NtruIntPoly *a);
 
