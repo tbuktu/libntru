@@ -153,19 +153,6 @@ void ntru_from_arr(uint8_t *arr, uint16_t N, uint16_t q, NtruIntPoly *p);
 void ntru_mult_fac(NtruIntPoly *a, int16_t factor);
 
 /**
- * @brief Multiplication of two general polynomials
- *
- * Multiplies a NtruIntPoly by another. The number of coefficients
- * must be the same for both polynomials.
- *
- * @param a a general polynomial
- * @param b a general polynomial
- * @param c output parameter; a pointer to store the new polynomial
- * @return 0 if the number of coefficients differ, 1 otherwise
- */
-uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c);
-
-/**
  * @brief Multiplication of two general polynomials with a modulus
  *
  * Multiplies a NtruIntPoly by another, taking the coefficient values modulo an integer.

@@ -6,7 +6,35 @@
 #include "test_util.h"
 #include "test_poly.h"
 
-/** tests ntru_mult_int() and ntru_mult_int_mod() */
+/**
+ * @brief Multiplication of two general polynomials
+ *
+ * Multiplies a NtruIntPoly by another. The number of coefficients
+ * must be the same for both polynomials.
+ *
+ * @param a a general polynomial
+ * @param b a general polynomial
+ * @param c output parameter; a pointer to store the new polynomial
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
+    uint16_t N = a->N;
+    if (N != b->N)
+        return 0;
+    c->N = N;
+
+    uint16_t i, k;
+    for (k=0; k<N; k++) {
+        int32_t ck = 0;
+        for (i=0; i<N; i++)
+            ck += b->coeffs[i] * a->coeffs[(N+k-i)%N];
+        c->coeffs[k] = ck;
+    }
+
+    return 1;
+}
+
+/** tests ntru_mult_int_mod() */
 uint8_t test_mult_int() {
     uint8_t valid = 1;
 
@@ -18,15 +46,7 @@ uint8_t test_mult_int() {
     NtruIntPoly c1_exp = {11, {3, 25, -10, 21, 10, 7, 6, 7, 5, 29, -7}};
     valid &= ntru_equals_int(&c1_exp, &c1);
 
-    /* multiplication without a modulus */
-    NtruIntPoly a2 = {11, {1, 1, 0, 0, -1, -1, 0, 0, -1, 0, 1}};
-    NtruIntPoly b2 = {11, {2, 14, -10, 10, -4, -10, 2, 12, 11, -2, 8}};
-    NtruIntPoly c2;
-    ntru_mult_int(&a2, &b2, &c2);
-    NtruIntPoly c2_exp = {11, {0, -13, 15, -12, -26, -39, 2, 17, 13, 17, 26}};
-    valid &= ntru_equals_int(&c2_exp, &c2);
-
-    /* mult_mod should give the same result as mult followed by mod */
+    /* ntru_mult_mod should give the same result as ntru_mult_int followed by ntru_mod */
     NtruIntPoly a3 = {11, {1, 0, -1, 1, 0, 1, 1, 1, -1, 1, -1}};
     NtruIntPoly b3 = {11, {0, 1, 1, 0, 0, -1, -1, 1, 1, -1, 1}};
     NtruIntPoly c3, c3_exp;

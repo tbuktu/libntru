@@ -109,23 +109,6 @@ void ntru_sub_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
         a->coeffs[i] = (a->coeffs[i]-b->coeffs[i]) % modulus;
 }
 
-uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
-    uint16_t N = a->N;
-    if (N != b->N)
-        return 0;
-    c->N = N;
-
-    uint16_t i, k;
-    for (k=0; k<N; k++) {
-        int32_t ck = 0;
-        for (i=0; i<N; i++)
-            ck += b->coeffs[i] * a->coeffs[(N+k-i)%N];
-        c->coeffs[k] = ck;
-    }
-
-    return 1;
-}
-
 uint8_t ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
