@@ -30,12 +30,19 @@ typedef struct NtruProdPoly {
     NtruTernPoly f1, f2, f3;
 } NtruProdPoly;
 
+/** Private polynomial, can be ternary or product-form */
+typedef union {
+    NtruTernPoly tern;
+    NtruProdPoly prod;
+} NtruPrivPoly;
+
 /**
  * NtruEncrypt private key
  */
 typedef struct NtruEncPrivKey {
     uint16_t q;
-    NtruProdPoly t;
+    uint8_t prod_flag;   /* whether t is in product form */
+    NtruPrivPoly t;
 } NtruEncPrivKey;
 
 /**

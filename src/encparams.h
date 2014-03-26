@@ -21,18 +21,21 @@ typedef struct NtruEncParams {
     /* modulus */
     uint16_t q;
 
+    /* 1 for product-form private keys, 0 for ternary */
+    uint8_t prod_flag;
+
     /*
-     * number of ones in the private polynomial f1
+     * number of ones in the private polynomial f1 (if prod=1) or f (if prod=0)
      */
     uint16_t df1;
 
     /*
-     * number of ones in the private polynomial f2
+     * number of ones in the private polynomial f2; ignored if prod=0
      */
     uint16_t df2;
 
     /*
-     * number of ones in the private polynomial f3
+     * number of ones in the private polynomial f3; ignored if prod=0
      */
     uint16_t df3;
 
@@ -83,32 +86,31 @@ typedef struct NtruEncParams {
 } NtruEncParams;
 
 /*
- * A conservative (in terms of security) parameter set that gives 256 bits of
- * security and is optimized for key size.
+ * A parameter set from IEEE 1361.1 that gives 256 bits of security and is optimized for key size.
  */
-#define EES1087EP2_FAST {1087, 2048, 8, 8, 11, 120, 0, 256, 13, 25, 14, 1, {0, 6, 3}, 1, ntru_sha512, 64}
+#define EES1087EP2 {1087, 2048, 0, 120, 0, 0, 120, 0, 256, 13, 25, 14, 1, {0, 6, 3}, 1, ntru_sha512, 64}
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is a tradeoff between key size and encryption/decryption speed.
  */
-#define EES1171EP1_FAST {1171, 2048, 8, 7, 11, 106, 0, 256, 13, 20, 15, 1, {0, 6, 4}, 1, ntru_sha512, 64}
+#define EES1171EP1 {1171, 2048, 0, 79, 0, 0, 106, 0, 256, 13, 20, 15, 1, {0, 6, 4}, 1, ntru_sha512, 64}
 
 /*
  * A conservative (in terms of security) parameter set that gives 256 bits of
  * security and is optimized for encryption/decryption speed.
  */
-#define EES1499EP1_FAST {1499, 2048, 7, 6, 11, 79, 0, 256, 13, 17, 19, 1, {0, 6, 5}, 1, ntru_sha512, 64}
+#define EES1499EP1 {1499, 2048, 0, 79, 0, 0, 79, 0, 256, 13, 17, 19, 1, {0, 6, 5}, 1, ntru_sha512, 64}
 
 /*
  * A parameter set that gives 128 bits of security.
  */
-#define APR2011_439_FAST {439, 2048, 9, 8, 5, 130, 126, 128, 12, 32, 9, 1, {0, 7, 101}, 1, ntru_sha256, 32}
+#define APR2011_439_FAST {439, 2048, 1, 9, 8, 5, 130, 126, 128, 12, 32, 9, 1, {0, 7, 101}, 1, ntru_sha256, 32}
 
 /*
  * A parameter set that gives 256 bits of security.
  */
-#define APR2011_743_FAST {743, 2048, 11, 11, 15, 220, 60, 256, 12, 27, 14, 1, {0, 7, 105}, 0, ntru_sha512, 64}
+#define APR2011_743_FAST {743, 2048, 1, 11, 11, 15, 220, 60, 256, 12, 27, 14, 1, {0, 7, 105}, 0, ntru_sha512, 64}
 
 uint16_t ntru_enc_len(uint16_t N, uint16_t q);
 

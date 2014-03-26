@@ -51,7 +51,9 @@ uint8_t equals_prod(NtruProdPoly *a, NtruProdPoly *b) {
 uint8_t equals_key_pair(NtruEncKeyPair *kp1, NtruEncKeyPair *kp2) {
     if (kp1->priv.q != kp2->priv.q)
         return 0;
-    if (!equals_prod(&kp1->priv.t, &kp2->priv.t))
+    if (kp1->priv.prod_flag && !equals_prod(&kp1->priv.t.prod, &kp2->priv.t.prod))
+        return 0;
+    if (!kp1->priv.prod_flag && !equals_tern(&kp1->priv.t.tern, &kp2->priv.t.tern))
         return 0;
     if (kp1->pub.q != kp2->pub.q)
         return 0;

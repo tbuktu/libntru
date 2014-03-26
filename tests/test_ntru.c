@@ -9,13 +9,16 @@ void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *
     ntru_add_int_mod(e, m, q);
 }
 
-void decrypt_poly(NtruIntPoly *e, NtruProdPoly *t, NtruIntPoly *c, uint16_t q) {
-    ntru_mult_prod(e, t, c);
-    ntru_mult_fac(c, 3);
-    ntru_add_int(c, e);
-
-    ntru_mod_center(c, q);
-    ntru_mod_center(c, 3);
+void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
+    if (priv->prod_flag)
+        ntru_mult_prod(e, &priv->t.prod, d);
+    else
+        ntru_mult_tern(e, &priv->t.tern, d);
+    ntru_mod(d, q);
+    ntru_mult_fac(d, 3);
+    ntru_add_int(d, e);
+    ntru_mod_center(d, q);
+    ntru_mod3(d);
 }
 
 uint8_t gen_key_pair_det(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
@@ -28,37 +31,43 @@ uint8_t gen_key_pair_det(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) 
 }
 
 uint8_t test_keygen() {
-    NtruEncParams params = APR2011_439_FAST;
-    NtruEncKeyPair kp;
-    uint8_t valid = ntru_gen_key_pair(&params, &kp, ntru_rand_default) == NTRU_SUCCESS;
+    NtruEncParams param_arr[] = {APR2011_439_FAST, EES1087EP2};
+    uint8_t valid = 1;
 
-    /* encrypt a random message */
-    NtruTernPoly m;
-    ntru_rand_tern(params.N, params.N/3, params.N/3, &m, ntru_rand_default, NULL);
-    NtruIntPoly m_int;
-    ntru_tern_to_int(&m, &m_int);
+    uint8_t i;
+    for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++) {
+        NtruEncParams params = param_arr[i];
+        NtruEncKeyPair kp;
+        valid &= ntru_gen_key_pair(&params, &kp, ntru_rand_default) == NTRU_SUCCESS;
 
-    NtruTernPoly r;
-    ntru_rand_tern(params.N, params.N/3, params.N/3, &r, ntru_rand_default, NULL);
-    NtruIntPoly e;
-    encrypt_poly(&m_int, &r, &kp.pub.h, &e, params.q);
+        /* encrypt a random message */
+        NtruTernPoly m;
+        ntru_rand_tern(params.N, params.N/3, params.N/3, &m, ntru_rand_default, NULL);
+        NtruIntPoly m_int;
+        ntru_tern_to_int(&m, &m_int);
 
-    /* decrypt and verify */
-    NtruIntPoly c;
-    decrypt_poly(&e, &kp.priv.t, &c, params.q);
-    valid &= ntru_equals_int(&m_int, &c);
+        NtruTernPoly r;
+        ntru_rand_tern(params.N, params.N/3, params.N/3, &r, ntru_rand_default, NULL);
+        NtruIntPoly e;
+        encrypt_poly(&m_int, &r, &kp.pub.h, &e, params.q);
 
-    /* test deterministic key generation */
-    valid &= gen_key_pair_det("my test password", &params, &kp) == NTRU_SUCCESS;
-    char seed2_char[19];
-    strcpy(seed2_char, "my test password");
-    uint8_t seed2[strlen(seed2_char)];
-    uint16_t i;
-    for (i=0; i<strlen(seed2_char); i++)
-        seed2[i] = seed2_char[i];
-    NtruEncKeyPair kp2;
-    valid &= ntru_gen_key_pair_det(&params, &kp2, ntru_rand_igf2, seed2, strlen(seed2_char)) == NTRU_SUCCESS;
-    valid &= equals_key_pair(&kp, &kp2);
+        /* decrypt and verify */
+        NtruIntPoly c;
+        decrypt_poly(&e, &kp.priv, params.q, &c);
+        valid &= ntru_equals_int(&m_int, &c);
+
+        /* test deterministic key generation */
+        valid &= gen_key_pair_det("my test password", &params, &kp) == NTRU_SUCCESS;
+        char seed2_char[19];
+        strcpy(seed2_char, "my test password");
+        uint8_t seed2[strlen(seed2_char)];
+        uint16_t j;
+        for (j=0; j<strlen(seed2_char); j++)
+            seed2[j] = seed2_char[j];
+        NtruEncKeyPair kp2;
+        valid &= ntru_gen_key_pair_det(&params, &kp2, ntru_rand_igf2, seed2, strlen(seed2_char)) == NTRU_SUCCESS;
+        valid &= equals_key_pair(&kp, &kp2);
+    }
 
     print_result("test_keygen", valid);
     return valid;
@@ -115,10 +124,11 @@ uint8_t test_encr_decr_param(NtruEncParams *params) {
 
 uint8_t test_encr_decr() {
     /* test one param set for which maxm1=0 and one for which maxm1>0 */
-    NtruEncParams params743 = APR2011_743_FAST;
-    NtruEncParams params1087 = EES1087EP2_FAST;
-    uint8_t valid = test_encr_decr_param(&params743);
-    valid &= test_encr_decr_param(&params1087);
+    NtruEncParams param_arr[] = {APR2011_743_FAST, EES1087EP2};
+    uint8_t valid = 1;
+    uint8_t i;
+    for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++)
+        valid &= test_encr_decr_param(&param_arr[i]);
 
     print_result("test_encr_decr", valid);
     return valid;

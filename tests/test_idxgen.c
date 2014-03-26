@@ -23,38 +23,42 @@ uint8_t test_idxgen() {
     for (i=0; i<sizeof seed; i++)
         seed[i] = rand();
 
-    NtruEncParams params = APR2011_743_FAST;
-    double avg = 0;
-    NtruIGFState s;
+    NtruEncParams params[] = {APR2011_743_FAST, EES1087EP2};
+    uint8_t valid = 1;
+    for (i=0; i<sizeof(params)/sizeof(params[0]); i++) {
+        double avg = 0;
+        NtruIGFState s;
 
-    /* sanity check for the avg value */
-    ntru_IGF_init(seed, sizeof seed, &params, &s);
-    uint16_t idx;
-    for (i=0; i<NUM_ITER; i++) {
-        ntru_IGF_next(&s, &idx);
-        avg += idx;
+        /* sanity check for the avg value */
+        ntru_IGF_init(seed, sizeof seed, &params[i], &s);
+        uint16_t idx;
+        uint32_t j;
+        for (j=0; j<NUM_ITER; j++) {
+            ntru_IGF_next(&s, &idx);
+            avg += idx;
+        }
+        avg /= NUM_ITER;
+
+        valid &= fabs((params[i].N/2.0)-avg) < 30;
+
+        /* test reproducability */
+        ntru_IGF_init(seed, sizeof seed, &params[i], &s);
+        uint16_t last_idx = idx;
+        for (j=0; j<NUM_ITER; j++)
+            ntru_IGF_next(&s, &idx);
+        valid &= idx == last_idx;
+
+        /* check that all values between 0 and N-1 are generated */
+        ntru_IGF_init(seed, sizeof seed, &params[i], &s);
+        uint8_t checklist[params[i].N];
+        memset(checklist, 0, params[i].N);
+        for (j=0; j<NUM_ITER_LARGE; j++) {
+            ntru_IGF_next(&s, &idx);
+            checklist[idx] = 1;
+        }
+        for (j=0; j<params[i].N; j++)
+            valid &= checklist[j];
     }
-    avg /= NUM_ITER;
-
-    uint8_t valid = fabs((params.N/2.0)-avg) < 30;
-
-    /* test reproducability */
-    ntru_IGF_init(seed, sizeof seed, &params, &s);
-    uint16_t last_idx = idx;
-    for (i=0; i<NUM_ITER; i++)
-        ntru_IGF_next(&s, &idx);
-    valid &= idx == last_idx;
-
-    /* check that all values between 0 and N-1 are generated */
-    ntru_IGF_init(seed, sizeof seed, &params, &s);
-    uint8_t checklist[params.N];
-    memset(checklist, 0, params.N);
-    for (i=0; i<NUM_ITER_LARGE; i++) {
-        ntru_IGF_next(&s, &idx);
-        checklist[idx] = 1;
-    }
-    for (i=0; i<params.N; i++)
-        valid &= checklist[i];
 
     print_result("test_idxgen", valid);
     return valid;

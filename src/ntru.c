@@ -20,21 +20,46 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
     uint16_t df2 = params->df2;
     uint16_t df3 = params->df3;
 
-    NtruProdPoly t;
     NtruIntPoly fq;
 
     /* choose a random f that is invertible mod q */
     NtruIntPoly f;
-    for (;;) {
-        /* choose random t, calculate f=3t+1 */
-        if (!ntru_rand_prod(N, df1, df2, df3, df3, &t, rng, rand_ctx))
-            return NTRU_ERR_PRNG;
-        ntru_prod_to_int(&t, &f);
-        ntru_mult_fac(&f, 3);
-        f.coeffs[0] += 1;
+    if (params->prod_flag) {
+        NtruProdPoly t;
+        for (;;) {
+            /* choose random t, calculate f=3t+1 */
+            if (!ntru_rand_prod(N, df1, df2, df3, df3, &t, rng, rand_ctx))
+                return NTRU_ERR_PRNG;
+            ntru_prod_to_int(&t, &f);
+            ntru_mult_fac(&f, 3);
+            f.coeffs[0] += 1;
 
-        if (ntru_invert(&f, q, &fq))
-            break;
+            if (ntru_invert(&f, q, &fq))
+                break;
+        }
+
+        kp->priv.q = q;
+        kp->priv.prod_flag = 1;
+        NtruProdPoly prod = {N, t.f1, t.f2, t.f3};
+        kp->priv.t.prod = prod;
+    }
+    else {
+        NtruTernPoly t;
+        for (;;) {
+            /* choose random t, calculate f=3t+1 */
+            if (!ntru_rand_tern(N, df1, df1, &t, rng, rand_ctx))
+                return NTRU_ERR_PRNG;
+            ntru_tern_to_int(&t, &f);
+            ntru_mult_fac(&f, 3);
+            f.coeffs[0] += 1;
+
+            if (ntru_invert(&f, q, &fq))
+                break;
+        }
+
+        kp->priv.q = q;
+        kp->priv.prod_flag = 0;
+        kp->priv.t.tern = t;
     }
 
     /* choose a random g that is invertible mod q */
@@ -58,8 +83,6 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
     ntru_clear_tern(&g);
     ntru_clear_int(&fq);
 
-    NtruEncPrivKey priv = {q, t};
-    kp->priv = priv;
     NtruEncPubKey pub = {q, h};
     kp->pub = pub;
 
@@ -230,14 +253,20 @@ void ntru_gen_tern_poly(NtruIGFState *s, uint16_t df, NtruTernPoly *p) {
     }
 }
 
-void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruProdPoly *r) {
+void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruPrivPoly *r) {
     NtruIGFState s;
     ntru_IGF_init(seed, seed_len, params, &s);
-    r->N = s.N;
 
-    ntru_gen_tern_poly(&s, params->df1, &r->f1);
-    ntru_gen_tern_poly(&s, params->df2, &r->f2);
-    ntru_gen_tern_poly(&s, params->df3, &r->f3);
+    if (params->prod_flag) {
+        r->prod.N = s.N;
+        ntru_gen_tern_poly(&s, params->df1, &r->prod.f1);
+        ntru_gen_tern_poly(&s, params->df2, &r->prod.f2);
+        ntru_gen_tern_poly(&s, params->df3, &r->prod.f3);
+    }
+    else {
+        r->tern.N = s.N;
+        ntru_gen_tern_poly(&s, params->df1, &r->tern);
+    }
 }
 
 uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx, uint8_t *enc) {
@@ -278,10 +307,13 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
         uint8_t sdata[sdata_len];
         ntru_get_seed(msg, msg_len, &pub->h, (uint8_t*)&b, params, (uint8_t*)&sdata);
 
-        NtruProdPoly r;
-        ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &r);
         NtruIntPoly R;
-        ntru_mult_prod(&pub->h, &r, &R);
+        NtruPrivPoly r;
+        ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &r);
+        if (params->prod_flag)
+            ntru_mult_prod(&pub->h, &r.prod, &R);
+        else
+            ntru_mult_tern(&pub->h, &r.tern, &R);
         ntru_mod(&R, q);
         uint16_t oR4_len = (N*2+7) / 8;
         uint8_t oR4[oR4_len];
@@ -332,7 +364,10 @@ uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, Ntr
 }
 
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
-    ntru_mult_prod(e, &priv->t, d);
+    if (priv->prod_flag)
+        ntru_mult_prod(e, &priv->t.prod, d);
+    else
+        ntru_mult_tern(e, &priv->t.tern, d);
     ntru_mod(d, q);
     ntru_mult_fac(d, 3);
     ntru_add_int(d, e);
@@ -404,10 +439,13 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     uint8_t sdata[sdata_len];
     ntru_get_seed(dec, cl, &kp->pub.h, (uint8_t*)&cb, params, (uint8_t*)&sdata);
 
-    NtruProdPoly cr;
+    NtruPrivPoly cr;
     ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &cr);
     NtruIntPoly cR_prime;
-    ntru_mult_prod(&kp->pub.h, &cr, &cR_prime);
+    if (params->prod_flag)
+        ntru_mult_prod(&kp->pub.h, &cr.prod, &cR_prime);
+    else
+        ntru_mult_tern(&kp->pub.h, &cr.tern, &cR_prime);
     ntru_mod(&cR_prime, q);
     if (!ntru_equals_int(&cR_prime, &cR))
         return NTRU_ERR_INVALID_ENCODING;

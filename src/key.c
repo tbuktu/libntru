@@ -82,8 +82,10 @@ uint16_t ntru_tern_to_arr(NtruTernPoly *poly, uint8_t *arr) {
 uint16_t ntru_export_priv(NtruEncPrivKey *key, uint8_t *arr) {
     uint8_t *arr_head = arr;
 
+    uint8_t prod_flag = key->prod_flag;
+
     /* write N */
-    uint16_t N_endian = htons(key->t.N);
+    uint16_t N_endian = prod_flag ? htons(key->t.prod.N) : htons(key->t.tern.N);
     memcpy(arr_head, &N_endian, sizeof N_endian);
     arr_head += sizeof N_endian;
 
@@ -93,13 +95,17 @@ uint16_t ntru_export_priv(NtruEncPrivKey *key, uint8_t *arr) {
     arr_head += sizeof q_endian;
 
     /* write flags */
-    *arr_head = 3;
+    *arr_head = 3 | (prod_flag?4:0);
     arr_head++;
 
     /* write f1, f2, f3 */
-    arr_head += ntru_tern_to_arr(&key->t.f1, arr_head);
-    arr_head += ntru_tern_to_arr(&key->t.f2, arr_head);
-    arr_head += ntru_tern_to_arr(&key->t.f3, arr_head);
+    if (prod_flag) {
+        arr_head += ntru_tern_to_arr(&key->t.prod.f1, arr_head);
+        arr_head += ntru_tern_to_arr(&key->t.prod.f2, arr_head);
+        arr_head += ntru_tern_to_arr(&key->t.prod.f3, arr_head);
+    }
+    else
+        arr_head += ntru_tern_to_arr(&key->t.tern, arr_head);
 
     return arr_head - arr;
 }
@@ -140,7 +146,7 @@ void ntru_import_priv(uint8_t *arr, NtruEncPrivKey *key) {
     /* read N */
     uint16_t N;
     memcpy(&N, arr, sizeof N);
-    key->t.N = ntohs(N);
+    N = ntohs(N);
     arr += sizeof N;
 
     /* read q */
@@ -149,14 +155,26 @@ void ntru_import_priv(uint8_t *arr, NtruEncPrivKey *key) {
     key->q = ntohs(q);
     arr += sizeof q;
 
-    /* skip flags */
+    /* read flags and check bit 2 */
+    uint8_t flags = *arr;
+    key->prod_flag = (flags&4) != 0;
     arr++;
 
-    arr += ntru_tern_from_arr(arr, key->t.N, &key->t.f1);
-    arr += ntru_tern_from_arr(arr, key->t.N, &key->t.f2);
-    arr += ntru_tern_from_arr(arr, key->t.N, &key->t.f3);
+    if (key->prod_flag) {
+        key->t.prod.N = N;
+        arr += ntru_tern_from_arr(arr, N, &key->t.prod.f1);
+        arr += ntru_tern_from_arr(arr, N, &key->t.prod.f2);
+        arr += ntru_tern_from_arr(arr, N, &key->t.prod.f3);
+    }
+    else {
+        key->t.tern.N = N;
+        arr += ntru_tern_from_arr(arr, key->t.tern.N, &key->t.tern);
+    }
 }
 
-uint16_t ntru_priv_len(uint16_t df1, uint16_t df2, uint16_t df3) {
-    return 5 + 4 + 4*df1 + 4 + 4*df2 + 4 + 4*df3;
+uint16_t ntru_priv_len(NtruEncParams *params) {
+    if (params->prod_flag)
+        return 5 + 4 + 4*params->df1 + 4 + 4*params->df2 + 4 + 4*params->df3;
+    else
+        return 5 + 4 + 4*params->df1;
 }
