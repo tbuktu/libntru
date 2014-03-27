@@ -38,8 +38,8 @@ void ntru_trailing(NtruBitStr *a, uint8_t num_bits, NtruBitStr *b) {
 uint16_t ntru_leading(NtruBitStr *a, uint8_t num_bits) {
     uint16_t start_bit = (a->num_bytes-1)*8 + a->last_byte_bits - num_bits;
     uint16_t start_byte = start_bit / 8;
-
     uint8_t start_bit_in_byte = start_bit % 8;
+
     uint16_t sum = a->buf[start_byte] >> start_bit_in_byte;
     uint8_t shift = 8 - start_bit_in_byte;
     uint16_t i;

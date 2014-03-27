@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
 
     NtruEncKeyPair kp;
 
-    NtruEncParams params = APR2011_439_FAST;
+    NtruEncParams params = EES439EP1;
     uint8_t success = 1;
     uint32_t i;
     struct timespec t1;

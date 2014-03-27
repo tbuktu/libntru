@@ -21,7 +21,7 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
     #include "ntru.h"
 
     /* key generation */
-    struct NtruEncParams params = APR2011_439_FAST; /*see encparams.h for more*/
+    struct NtruEncParams params = EES439EP1; /*see encparams.h for more*/
     NtruEncKeyPair kp;
     if (ntru_gen_key_pair(&params, &kp, ntru_rand_default) != NTRU_SUCCESS)
         printf("keygen fail\n");

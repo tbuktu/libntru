@@ -5,7 +5,7 @@
 #include "encparams.h"
 
 uint8_t test_key() {
-    NtruEncParams param_arr[] = {APR2011_439_FAST, EES1087EP2};
+    NtruEncParams param_arr[] = {EES439EP1, EES1087EP2};
     uint8_t valid = 1;
 
     uint8_t i;

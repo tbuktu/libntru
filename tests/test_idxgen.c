@@ -23,7 +23,7 @@ uint8_t test_idxgen() {
     for (i=0; i<sizeof seed; i++)
         seed[i] = rand();
 
-    NtruEncParams params[] = {APR2011_743_FAST, EES1087EP2};
+    NtruEncParams params[] = {EES743EP1, EES1087EP2};
     uint8_t valid = 1;
     for (i=0; i<sizeof(params)/sizeof(params[0]); i++) {
         double avg = 0;

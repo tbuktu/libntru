@@ -66,7 +66,7 @@ uint8_t ntru_rand_igf2(unsigned rand_data[], uint16_t len, NtruRandContext *rand
     NtruIGFState *igf_state;
     if (*(rand_ctx->rand_state) == NULL) {
         *(rand_ctx->rand_state) = (NtruIGFState*)malloc(sizeof *igf_state);
-        NtruEncParams params = APR2011_439_FAST;
+        NtruEncParams params = EES439EP1;
         params.N = 256;   /* we want to generate bytes */
         ntru_IGF_init(rand_ctx->seed, rand_ctx->seed_len, &params, (NtruIGFState*)*(rand_ctx->rand_state));
     }

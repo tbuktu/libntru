@@ -206,12 +206,12 @@ uint8_t ntru_to_sves(NtruIntPoly *poly, uint16_t skip, uint8_t *data) {
  */
 void ntru_get_seed(uint8_t *msg, uint16_t msg_len, NtruIntPoly *h, uint8_t *b, NtruEncParams *params, uint8_t *seed) {
     uint16_t oid_len = sizeof params->oid;
-    uint16_t pklen = params->db / 8;
+    uint16_t pklen = params->pklen;
 
     uint8_t bh[ntru_enc_len(params->N, params->q)];
     ntru_to_arr(h, params->q, (uint8_t*)&bh);
-    uint8_t htrunc[pklen];
-    memcpy(&htrunc, &bh, pklen);
+    uint8_t htrunc[pklen/8];
+    memcpy(&htrunc, &bh, pklen/8);
 
     /* seed = OID|m|b|htrunc */
     uint16_t blen = params->db/8;
@@ -221,7 +221,7 @@ void ntru_get_seed(uint8_t *msg, uint16_t msg_len, NtruIntPoly *h, uint8_t *b, N
     seed += msg_len;
     memcpy(seed, b, blen);
     seed += blen;
-    memcpy(seed, &htrunc, pklen);
+    memcpy(seed, &htrunc, pklen/8);
 }
 
 void ntru_gen_tern_poly(NtruIGFState *s, uint16_t df, NtruTernPoly *p) {
@@ -336,12 +336,14 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
 
         ntru_mod3(&mtrin);
 
-        if (ntru_count(&mtrin, -1) < dm0)
-            continue;
-        if (ntru_count(&mtrin, 0) < dm0)
-            continue;
-        if (ntru_count(&mtrin, 1) < dm0)
-            continue;
+        if (dm0 > 0) {
+            if (ntru_count(&mtrin, -1) < dm0)
+                continue;
+            if (ntru_count(&mtrin, 0) < dm0)
+                continue;
+            if (ntru_count(&mtrin, 1) < dm0)
+                continue;
+        }
 
         ntru_add_int_mod(&R, &mtrin, q);
         ntru_to_arr(&R, q, enc);

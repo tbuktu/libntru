@@ -31,7 +31,7 @@ uint8_t gen_key_pair_det(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) 
 }
 
 uint8_t test_keygen() {
-    NtruEncParams param_arr[] = {APR2011_439_FAST, EES1087EP2};
+    NtruEncParams param_arr[] = ALL_PARAM_SETS;
     uint8_t valid = 1;
 
     uint8_t i;
@@ -123,8 +123,7 @@ uint8_t test_encr_decr_param(NtruEncParams *params) {
 }
 
 uint8_t test_encr_decr() {
-    /* test one param set for which maxm1=0 and one for which maxm1>0 */
-    NtruEncParams param_arr[] = {APR2011_743_FAST, EES1087EP2};
+    NtruEncParams param_arr[] = ALL_PARAM_SETS;
     uint8_t valid = 1;
     uint8_t i;
     for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++)
