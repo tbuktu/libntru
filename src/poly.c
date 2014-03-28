@@ -15,7 +15,7 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
     int16_t coeffs[N];
     memset(&coeffs, 0, N * sizeof coeffs[0]);
 
-    uint16_t rand_len = num_ones + num_neg_ones + 10;   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
+    uint16_t rand_len = num_ones + num_neg_ones + 10;   /* 10 more to avoid calling rng() again for up to 10 collisions */
     uint16_t rand_data[rand_len*2];
     if (!rng((uint8_t*)rand_data, rand_len*2, rand_ctx))
         return 0;
