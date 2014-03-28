@@ -46,7 +46,7 @@ typedef struct NtruEncParams {
     uint16_t dm0;
 
     /*
-     * Maximum absolute value of sum_coeffs(mtrin) or zero to disable this check.
+     * Maximum absolute value of ntru_sum_coeffs(mtrin) or zero to disable this check.
      * Values greater than zero cause the constant coefficient of the message to always be zero.
      */
     uint16_t maxm1;

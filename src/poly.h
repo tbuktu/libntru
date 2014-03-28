@@ -275,6 +275,6 @@ uint8_t ntru_is_invertible_pow2(NtruIntPoly *a);
  * @param a a polynomial
  * @return the sum of all coefficients
  */
-int32_t sum_coeffs(NtruIntPoly *a);
+int32_t ntru_sum_coeffs(NtruIntPoly *a);
 
 #endif   /* NTRU_POLY_H */

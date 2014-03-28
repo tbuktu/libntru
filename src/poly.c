@@ -602,7 +602,7 @@ done:
     return invertible;
 }
 
-int32_t sum_coeffs(NtruIntPoly *a) {
+int32_t ntru_sum_coeffs(NtruIntPoly *a) {
     int16_t sum = 0;
     uint16_t i;
     for (i=1; i<a->N; i++)

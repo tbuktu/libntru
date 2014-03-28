@@ -323,13 +323,13 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
         ntru_add_int(&mtrin, &mask);
 
         /*
-         * If df and dr are close to N/3, and the absolute value of sum_coeffs(mtrin) is
+         * If df and dr are close to N/3, and the absolute value of ntru_sum_coeffs(mtrin) is
          * large enough, the message becomes vulnerable to a meet-in-the-middle attack.
          * To prevent this, we set the constant coefficient to zero but first check to ensure
-         * sum_coeffs() is small enough to keep the likelihood of a decryption failure low.
+         * ntru_sum_coeffs() is small enough to keep the likelihood of a decryption failure low.
          */
         if (maxm1 > 0) {
-            if (sum_coeffs(&mtrin) > maxm1)
+            if (ntru_sum_coeffs(&mtrin) > maxm1)
                 continue;
             mtrin.coeffs[0] = 0;
         }
