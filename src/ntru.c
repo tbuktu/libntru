@@ -7,11 +7,11 @@
 #include "idxgen.h"
 #include "mgf.h"
 
-const int8_t COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
-const int8_t COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
-const uint8_t BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
-const uint8_t BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
-const uint8_t BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
+const int8_t NTRU_COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
+const int8_t NTRU_COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
+const uint8_t NTRU_BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
+const uint8_t NTRU_BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
+const uint8_t NTRU_BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
 
 uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
     uint16_t N = params->N;
@@ -134,8 +134,8 @@ void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, uint16_t skip, NtruI
         for (j=0; j<8 && coeff_idx<N-1; j++) {
             /* process 3 bits at a time in the inner loop */
             uint8_t coeff_tbl_idx = ((chunk&1)<<2) + (chunk&2) + ((chunk&4)>>2);   /* low 3 bits in reverse order */
-            poly->coeffs[coeff_idx++] = COEFF1_TABLE[coeff_tbl_idx];
-            poly->coeffs[coeff_idx++] = COEFF2_TABLE[coeff_tbl_idx];
+            poly->coeffs[coeff_idx++] = NTRU_COEFF1_TABLE[coeff_tbl_idx];
+            poly->coeffs[coeff_idx++] = NTRU_COEFF2_TABLE[coeff_tbl_idx];
             chunk >>= 3;
         }
     }
@@ -176,7 +176,7 @@ uint8_t ntru_to_sves(NtruIntPoly *poly, uint16_t skip, uint8_t *data) {
             return NTRU_ERR_INVALID_ENCODING;
         int16_t bit_tbl_index = coeff1*3 + coeff2;
         uint8_t j;
-        uint8_t bits[] = {BIT1_TABLE[bit_tbl_index], BIT2_TABLE[bit_tbl_index], BIT3_TABLE[bit_tbl_index]};
+        uint8_t bits[] = {NTRU_BIT1_TABLE[bit_tbl_index], NTRU_BIT2_TABLE[bit_tbl_index], NTRU_BIT3_TABLE[bit_tbl_index]};
         for (j=0; j<3; j++) {
             data[byte_index] |= bits[j] << bit_index;
             if (bit_index == 7) {
