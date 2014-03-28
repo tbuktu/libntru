@@ -13,8 +13,8 @@
 
 #ifdef WIN32
 uint8_t ntru_rand_wincrypt(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
-    static HCRYPTPROV hCryptProv = NULL;
-    if (hCryptProv == NULL) {
+    static HCRYPTPROV hCryptProv = 0;
+    if (hCryptProv == 0) {
         uint8_t result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0);
         if (!result) {
             if (GetLastError() == NTE_BAD_KEYSET)   // see http://support.microsoft.com/kb/238187
