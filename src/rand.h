@@ -15,7 +15,7 @@
  * @param rand_ctx ignored
  * @return 0 for error, 1 otherwise
  */
-uint8_t ntru_rand_wincrypt(unsigned rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_wincrypt(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 
 #else
 
@@ -29,7 +29,7 @@ uint8_t ntru_rand_wincrypt(unsigned rand_data[], uint16_t len, NtruRandContext *
  * @param rand_ctx ignored
  * @return 0 for error, 1 otherwise
  */
-uint8_t ntru_rand_devrandom(unsigned rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_devrandom(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 
 /**
  * @brief /dev/urandom-based RNG
@@ -41,7 +41,7 @@ uint8_t ntru_rand_devrandom(unsigned rand_data[], uint16_t len, NtruRandContext 
  * @param rand_ctx ignored
  * @return 0 for error, 1 otherwise
  */
-uint8_t ntru_rand_devurandom(unsigned rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_devurandom(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 #endif // WIN32
 
 /**
@@ -55,7 +55,7 @@ uint8_t ntru_rand_devurandom(unsigned rand_data[], uint16_t len, NtruRandContext
  * @param rand_ctx ignored
  * @return 0 for error, 1 otherwise
  */
-uint8_t ntru_rand_default(unsigned rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_default(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 
 /**
  * @brief deterministic RNG based on IGF-2
@@ -67,6 +67,6 @@ uint8_t ntru_rand_default(unsigned rand_data[], uint16_t len, NtruRandContext *r
  * @param rand_ctx pointer to a NtruRandContext struct
  * @return 0 for error, 1 otherwise
  */
-uint8_t ntru_rand_igf2(unsigned rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_igf2(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 
 #endif   /* NTRU_RAND_H */

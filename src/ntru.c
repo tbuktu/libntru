@@ -13,7 +13,7 @@ const uint8_t BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
 const uint8_t BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
 const uint8_t BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
 
-uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
+uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t df1 = params->df1;
@@ -89,11 +89,11 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
     return NTRU_SUCCESS;
 }
 
-uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*)) {
+uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*)) {
     return ntru_gen_key_pair_internal(params, kp, rng, NULL);
 }
 
-uint8_t ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len) {
+uint8_t ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len) {
     void *rand_state = NULL;
     NtruRandContext rand_ctx = {seed, seed_len, &rand_state};
     uint8_t result = ntru_gen_key_pair_internal(params, kp, rng, &rand_ctx);
@@ -269,7 +269,7 @@ void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params
     }
 }
 
-uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx, uint8_t *enc) {
+uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx, uint8_t *enc) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t maxm1 = params->maxm1;
@@ -286,7 +286,7 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
     for (;;) {
         /* M = b|octL|msg|p0 */
         uint8_t b[db/8];
-        if (!rng(&b, db/8/sizeof(int), rand_ctx))
+        if (!rng(b, db/8, rand_ctx))
             return NTRU_ERR_PRNG;
 
         uint16_t M_len = (buf_len_bits+7) / 8;
@@ -351,11 +351,11 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
     }
 }
 
-uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), uint8_t *enc) {
+uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *enc) {
     return ntru_encrypt_internal(msg, msg_len, pub, params, rng, NULL, enc);
 }
 
-uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len, uint8_t *enc) {
+uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len, uint8_t *enc) {
     void *rand_state;
     rand_state = NULL;
     NtruRandContext rand_ctx = {seed, seed_len, &rand_state};

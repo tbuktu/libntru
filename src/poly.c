@@ -11,24 +11,24 @@ uint8_t ntru_num_bits(uint16_t n) {
     return b;
 }
 
-uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
+uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
     int16_t coeffs[N];
     memset(&coeffs, 0, N * sizeof coeffs[0]);
 
     uint16_t rand_len = num_ones + num_neg_ones + 10;   /* 10 more to avoid re-reading /dev/random for up to 10 collisions */
-    unsigned rand_data[rand_len];
-    if (!rng(rand_data, rand_len, rand_ctx))
+    uint16_t rand_data[rand_len*2];
+    if (!rng((uint8_t*)rand_data, rand_len*2, rand_ctx))
         return 0;
     uint16_t r_idx = 0;   /* index into rand_data */
 
     uint16_t bits = ntru_num_bits(N);
     uint16_t i = 0;
     while (i < num_ones) {
-        int r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
+        uint16_t r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
         r_idx++;
         /* refill rand_data if we run out */
         if (r_idx >= rand_len) {
-            if (!rng(rand_data, rand_len, rand_ctx))
+            if (!rng((uint8_t*)rand_data, rand_len*2, rand_ctx))
                 return 0;
             r_idx = 0;
         }
@@ -41,11 +41,11 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
 
     i = 0;
     while (i < num_neg_ones) {
-        int r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
+        uint16_t r = rand_data[r_idx] >> (8*sizeof r - bits);   /* 0 <= r < 2^bits */
         r_idx++;
         /* refill rand_data if we run out */
         if (r_idx >= rand_len) {
-            if (!rng(rand_data, rand_len, rand_ctx))
+            if (!rng((uint8_t*)rand_data, rand_len*2, rand_ctx))
                 return 0;
             r_idx = 0;
         }
@@ -63,7 +63,7 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
     return 1;
 }
 
-uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
+uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
     poly->N = N;
     uint8_t result = ntru_rand_tern(N, df1, df1, &poly->f1, rng, rand_ctx);
     result &= ntru_rand_tern(N, df2, df2, &poly->f2, rng, rand_ctx);

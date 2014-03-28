@@ -73,17 +73,17 @@ uint8_t test_keygen() {
     return valid;
 }
 
-uint8_t test_encr_decr_param(NtruEncParams *params) {
+/* tests ntru_encrypt() */
+uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     NtruEncKeyPair kp;
     uint8_t valid = ntru_gen_key_pair(params, &kp, ntru_rand_default) == NTRU_SUCCESS;
 
-    /* test ntru_encrypt() */
     uint16_t enc_len = ntru_enc_len(params->N, params->q);
     char plain_char[19];
     strcpy(plain_char, "test message 12345");
-    uint16_t i;
     size_t plain_len = strlen(plain_char);
     uint8_t plain[plain_len];
+    uint16_t i;
     for (i=0; i<plain_len; i++)
         plain[i] = plain_char[i];
     uint8_t encrypted[enc_len];
@@ -93,8 +93,13 @@ uint8_t test_encr_decr_param(NtruEncParams *params) {
     valid &= ntru_decrypt((uint8_t*)&encrypted, &kp, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
     valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
 
-    /* test ntru_encrypt_det() */
-    valid &= gen_key_pair_det("seed value for key generation", params, &kp) == NTRU_SUCCESS;
+    return valid;
+}
+
+/* tests ntru_encrypt_det() */
+uint8_t test_encr_decr_det(NtruEncParams *params) {
+    NtruEncKeyPair kp;
+    uint8_t valid = gen_key_pair_det("seed value for key generation", params, &kp) == NTRU_SUCCESS;
     uint8_t pub_arr[ntru_pub_len(params->N, params->q)];
     ntru_export_pub(&kp.pub, pub_arr);
     NtruEncPubKey pub2;
@@ -103,8 +108,17 @@ uint8_t test_encr_decr_param(NtruEncParams *params) {
     char seed_char[11];
     strcpy(seed_char, "seed value");
     uint8_t seed[11];
+    uint16_t enc_len = ntru_enc_len(params->N, params->q);
+    char plain_char[19];
+    strcpy(plain_char, "test message 12345");
+    size_t plain_len = strlen(plain_char);
+    uint8_t plain[plain_len];
+    uint16_t i;
+    for (i=0; i<plain_len; i++)
+        plain[i] = plain_char[i];
     for (i=0; i<strlen(seed_char); i++)
         seed[i] = seed_char[i];
+    uint8_t encrypted[enc_len];
     valid &= ntru_encrypt_det((uint8_t*)&plain, plain_len, &kp.pub, params, ntru_rand_igf2, seed, strlen(seed_char), (uint8_t*)&encrypted) == NTRU_SUCCESS;
     char plain2_char[19];
     strcpy(plain2_char, "test message 12345");
@@ -126,8 +140,16 @@ uint8_t test_encr_decr() {
     NtruEncParams param_arr[] = ALL_PARAM_SETS;
     uint8_t valid = 1;
     uint8_t i;
-    for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++)
-        valid &= test_encr_decr_param(&param_arr[i]);
+    for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++) {
+        valid &= test_encr_decr_nondet(&param_arr[i]);
+        valid &= test_encr_decr_det(&param_arr[i]);
+    }
+
+#ifndef WIN32
+    /* test encryption with ntru_rand_devrandom */
+    NtruEncParams params = EES401EP2;
+    valid &= test_encr_decr_nondet(&params);
+#endif
 
     print_result("test_encr_decr", valid);
     return valid;

@@ -18,7 +18,7 @@
               with random data. See the ntru_rand_* functions.
  * @return 1 for success, 0 for failure
  */
-uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
 
 /**
  * @brief Random product-form polynomial
@@ -35,7 +35,7 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
  *            with random data. See the ntru_rand_* functions.
  * @return 1 for success, 0 for failure
  */
-uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(unsigned[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
 
 /**
  * @brief Ternary to general integer polynomial
