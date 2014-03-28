@@ -78,7 +78,7 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     NtruEncKeyPair kp;
     uint8_t valid = ntru_gen_key_pair(params, &kp, ntru_rand_default) == NTRU_SUCCESS;
 
-    uint16_t enc_len = ntru_enc_len(params->N, params->q);
+    uint16_t enc_len = ntru_enc_len(params);
     char plain_char[19];
     strcpy(plain_char, "test message 12345");
     size_t plain_len = strlen(plain_char);
@@ -100,7 +100,7 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
 uint8_t test_encr_decr_det(NtruEncParams *params) {
     NtruEncKeyPair kp;
     uint8_t valid = gen_key_pair_det("seed value for key generation", params, &kp) == NTRU_SUCCESS;
-    uint8_t pub_arr[ntru_pub_len(params->N, params->q)];
+    uint8_t pub_arr[ntru_pub_len(params)];
     ntru_export_pub(&kp.pub, pub_arr);
     NtruEncPubKey pub2;
     ntru_import_pub(pub_arr, &pub2);
@@ -108,7 +108,7 @@ uint8_t test_encr_decr_det(NtruEncParams *params) {
     char seed_char[11];
     strcpy(seed_char, "seed value");
     uint8_t seed[11];
-    uint16_t enc_len = ntru_enc_len(params->N, params->q);
+    uint16_t enc_len = ntru_enc_len(params);
     char plain_char[19];
     strcpy(plain_char, "test message 12345");
     size_t plain_len = strlen(plain_char);

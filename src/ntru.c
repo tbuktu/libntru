@@ -208,7 +208,7 @@ void ntru_get_seed(uint8_t *msg, uint16_t msg_len, NtruIntPoly *h, uint8_t *b, N
     uint16_t oid_len = sizeof params->oid;
     uint16_t pklen = params->pklen;
 
-    uint8_t bh[ntru_enc_len(params->N, params->q)];
+    uint8_t bh[ntru_enc_len(params)];
     ntru_to_arr(h, params->q, (uint8_t*)&bh);
     uint8_t htrunc[pklen/8];
     memcpy(&htrunc, &bh, pklen/8);

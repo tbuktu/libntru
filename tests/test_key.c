@@ -15,7 +15,7 @@ uint8_t test_key() {
         ntru_gen_key_pair(&params, &kp, ntru_rand_default);
 
         /* test public key */
-        uint8_t pub_arr[ntru_pub_len(params.N, params.q)];
+        uint8_t pub_arr[ntru_pub_len(&params)];
         ntru_export_pub(&kp.pub, pub_arr);
         NtruEncPubKey pub;
         ntru_import_pub(pub_arr, &pub);

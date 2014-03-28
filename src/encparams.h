@@ -480,6 +480,8 @@ typedef struct NtruEncParams {
     256            /* pklen */\
 }
 
-uint16_t ntru_enc_len(uint16_t N, uint16_t q);
+uint16_t ntru_enc_len(NtruEncParams *params);
+
+uint16_t ntru_enc_len_Nq(uint16_t N, uint16_t q);
 
 #endif   /* NTRU_ENCPARAMS_H */

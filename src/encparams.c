@@ -1,6 +1,10 @@
 #include "encparams.h"
 
-uint16_t ntru_enc_len(uint16_t N, uint16_t q) {
+uint16_t ntru_enc_len(NtruEncParams *params) {
+    return ntru_enc_len_Nq(params->N, params->q);
+}
+
+uint16_t ntru_enc_len_Nq(uint16_t N, uint16_t q) {
     /* make sure q is a power of 2 */
     if (q & (q-1))
         return -1;

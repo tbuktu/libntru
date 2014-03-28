@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     double per_sec = 1000000000.0 / time;
     printf("%f key generations/sec\n", per_sec);
 
-    uint16_t enc_len = ntru_enc_len(params.N, params.q);
+    uint16_t enc_len = ntru_enc_len(&params);
     char plain_char[33];
     strcpy(plain_char, "test message secret test message");
     uint8_t plain[strlen(plain_char)];

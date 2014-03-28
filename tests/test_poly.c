@@ -145,7 +145,7 @@ uint8_t test_inv() {
 
 uint8_t test_arr() {
     NtruEncParams params = EES439EP1;
-    uint8_t a[ntru_enc_len(params.N, params.q)];
+    uint8_t a[ntru_enc_len(&params)];
     NtruIntPoly p1;
     uint8_t valid = rand_int(params.N, 11, &p1, ntru_rand_default, NULL);
     ntru_to_arr(&p1, params.q, a);

@@ -43,13 +43,13 @@ uint16_t ntru_import_pub(uint8_t *arr, NtruEncPubKey *key) {
 
     /* read h */
     ntru_from_arr(arr_head, N, q, &key->h);
-    arr_head += ntru_enc_len(N, q);
+    arr_head += ntru_enc_len_Nq(N, q);
 
     return arr_head - arr;
 }
 
-uint16_t ntru_pub_len(uint16_t N, uint16_t q) {
-    return 4 + ntru_enc_len(N, q);
+uint16_t ntru_pub_len(NtruEncParams *params) {
+    return 4 + ntru_enc_len(params);
 }
 
 uint16_t ntru_tern_to_arr(NtruTernPoly *poly, uint8_t *arr) {

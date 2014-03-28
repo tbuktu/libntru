@@ -35,7 +35,7 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
     /* encryption */
     uint8_t msg[9];
     strcpy(msg, "whatever");
-    uint8_t enc[ntru_enc_len(params.N, params.q)];
+    uint8_t enc[ntru_enc_len(&params)];
     if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, ntru_rand_default, enc) != NTRU_SUCCESS)
         printf("encrypt fail\n");
 
@@ -46,7 +46,7 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
         printf("decrypt fail\n");
 
     /* export key to uint8_t array */
-    uint8_t pub_arr[ntru_pub_len(params.N, params.q)];
+    uint8_t pub_arr[ntru_pub_len(&params)];
     ntru_export_pub(&kp.pub, pub_arr);
 
     /* import key from uint8_t array */

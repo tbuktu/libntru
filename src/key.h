@@ -12,7 +12,7 @@ uint16_t ntru_export_priv(NtruEncPrivKey *key, uint8_t *arr);
 
 void ntru_import_priv(uint8_t *arr, NtruEncPrivKey *key);
 
-uint16_t ntru_pub_len(uint16_t N, uint16_t q);
+uint16_t ntru_pub_len(NtruEncParams *params);
 
 uint16_t ntru_priv_len(NtruEncParams *params);
 
