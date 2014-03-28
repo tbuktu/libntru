@@ -27,29 +27,29 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
         printf("keygen fail\n");
 
     /* deterministic key generation from password */
-    char seed[17];
+    uint8_t seed[17];
     strcpy(seed, "my test password");
     if (ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed)) != NTRU_SUCCESS)
         printf("keygen fail\n");
 
     /* encryption */
-    char msg[9];
+    uint8_t msg[9];
     strcpy(msg, "whatever");
-    char enc[ntru_enc_len(params.N, params.q)];
+    uint8_t enc[ntru_enc_len(params.N, params.q)];
     if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, ntru_rand_default, enc) != NTRU_SUCCESS)
         printf("encrypt fail\n");
 
     /* decryption */
-    char dec[ntru_max_msg_len(&params)];
-    int dec_len;
-    if (ntru_decrypt((char*)&enc, &kp, &params, (unsigned char*)&dec, &dec_len) != NTRU_SUCCESS)
+    uint8_t dec[ntru_max_msg_len(&params)];
+    uint16_t dec_len;
+    if (ntru_decrypt((uint8_t*)&enc, &kp, &params, (uint8_t*)&dec, &dec_len) != NTRU_SUCCESS)
         printf("decrypt fail\n");
 
-    /* export key to char array */
-    char pub_arr[ntru_pub_len(params.N, params.q)];
+    /* export key to uint8_t array */
+    uint8_t pub_arr[ntru_pub_len(params.N, params.q)];
     ntru_export_pub(&kp.pub, pub_arr);
 
-    /* import key from char array */
+    /* import key from uint8_t array */
     NtruEncPubKey pub;
     ntru_import_pub(pub_arr, &pub);
 
