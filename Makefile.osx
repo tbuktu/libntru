@@ -1,6 +1,5 @@
 CC?=gcc
 CFLAGS=-g -Wall -O2
-LDFLAGS=-lrt
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o sha1.o sha2.o
@@ -11,11 +10,11 @@ TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
 
 .PHONY: lib
 lib: $(LIB_OBJS_PATHS)
-	$(CC) $(CFLAGS) -shared -Wl,-soname,libntru.so -o libntru.so $(LIB_OBJS_PATHS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -dylib -dynamiclib -o libntru.dylib $(LIB_OBJS_PATHS) $(LDFLAGS)
 
 test: lib $(TEST_OBJS_PATHS)
 	$(CC) $(CFLAGS) -o test $(TEST_OBJS_PATHS) -L. -lntru -lm
-	LD_LIBRARY_PATH=. ./test
+	DYLD_LIBRARY_PATH=. ./test
 
 bench: lib $(SRCDIR)/bench.o
 	$(CC) $(CFLAGS) -o bench $(SRCDIR)/bench.o -L. -lntru

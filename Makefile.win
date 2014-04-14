@@ -1,3 +1,4 @@
+CC?=gcc
 CFLAGS=-g -Wall -O2
 SRCDIR=src
 TESTDIR=tests
@@ -28,8 +29,10 @@ clean:
 	@if exist $(SRCDIR)\*.o del $(SRCDIR)\*.o
 	@if exist $(TESTDIR)\*.o del $(TESTDIR)\*.o
 	@if exist libntru.dll del libntru.dll
-	@if exist libntru.so del libntru.so
 	@if exist test.exe del test.exe
-	@if exist test del test
 	@if exist bench.exe del bench.exe
+	@rem ***** clean files generated on other OSes *****
+	@if exist libntru.so del libntru.so
+	@if exist libntru.dylib del libntru.dylib
+	@if exist test del test
 	@if exist bench del bench
