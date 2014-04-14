@@ -17,7 +17,7 @@ uint8_t ntru_rand_wincrypt(uint8_t rand_data[], uint16_t len, NtruRandContext *r
     if (hCryptProv == 0) {
         uint8_t result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0);
         if (!result) {
-            if (GetLastError() == NTE_BAD_KEYSET)   // see http://support.microsoft.com/kb/238187
+            if (GetLastError() == (DWORD)NTE_BAD_KEYSET)   // see http://support.microsoft.com/kb/238187
                 result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
             if (!result)
                 return 0;

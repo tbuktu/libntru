@@ -1,5 +1,5 @@
 CC?=gcc
-CFLAGS=-g -Wall -O2
+CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -O2
 LDFLAGS=-lrt
 SRCDIR=src
 TESTDIR=tests
