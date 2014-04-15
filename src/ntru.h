@@ -3,7 +3,6 @@
 
 #include "types.h"
 #include "key.h"
-#include "poly.h"
 #include "encparams.h"
 #include "rand.h"
 #include "err.h"
