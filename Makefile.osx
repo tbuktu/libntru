@@ -1,4 +1,4 @@
-CC?=gcc
+CC=gcc
 CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -O2
 SRCDIR=src
 TESTDIR=tests
@@ -16,7 +16,7 @@ all: lib
 
 .PHONY: lib
 lib: $(LIB_OBJS_PATHS)
-	$(CC) $(CFLAGS) -dylib -dynamiclib -o libntru.dylib $(LIB_OBJS_PATHS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -dynamiclib -o libntru.dylib $(LIB_OBJS_PATHS) $(LDFLAGS)
 
 .PHONY: install
 install: lib
