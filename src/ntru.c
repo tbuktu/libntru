@@ -360,7 +360,7 @@ uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, Ntr
     rand_state = NULL;
     NtruRandContext rand_ctx = {seed, seed_len, &rand_state};
     uint8_t result = ntru_encrypt_internal(msg, msg_len, pub, params, rng, &rand_ctx, enc);
-    if (rand_state == NULL)
+    if (rand_state != NULL)
         free(rand_state);
     return result;
 }
