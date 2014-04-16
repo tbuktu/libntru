@@ -1,6 +1,7 @@
 CC?=gcc
-CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -O2
-LDFLAGS=-lrt
+CFLAGS?=-g -O2
+CFLAGS+=-Wall -Wextra -Wno-unused-parameter
+LIBS+=-lrt
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o sha1.o sha2.o
@@ -18,7 +19,7 @@ all: lib
 
 .PHONY: lib
 lib: $(LIB_OBJS_PATHS)
-	$(CC) $(CFLAGS) -shared -Wl,-soname,libntru.so -o libntru.so $(LIB_OBJS_PATHS) $(LDFLAGS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -Wl,-soname,libntru.so -o libntru.so $(LIB_OBJS_PATHS) $(LDFLAGS) $(LIBS)
 
 .PHONY: install
 install: lib
@@ -57,17 +58,17 @@ dist:
 	rm -rf $(DIST_NAME)
 
 test: lib $(TEST_OBJS_PATHS)
-	$(CC) $(CFLAGS) -o test $(TEST_OBJS_PATHS) -L. -lntru -lm
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o test $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -lntru -lm
 	LD_LIBRARY_PATH=. ./test
 
 bench: lib $(SRCDIR)/bench.o
-	$(CC) $(CFLAGS) -o bench $(SRCDIR)/bench.o -L. -lntru
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.o $(LDFLAGS) -L. -lntru
 
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -c -fPIC $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
 
 tests/%.o: tests/%.c
-	$(CC) $(CFLAGS) -fPIC -I$(SRCDIR) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -I$(SRCDIR) -c $< -o $@
 
 .PHONY: clean
 clean:
