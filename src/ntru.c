@@ -17,13 +17,16 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t df1 = params->df1;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     uint16_t df2 = params->df2;
     uint16_t df3 = params->df3;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
     NtruIntPoly fq;
 
     /* choose a random f that is invertible mod q */
     NtruIntPoly f;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (params->prod_flag) {
         NtruProdPoly t;
         for (;;) {
@@ -43,7 +46,9 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
         NtruProdPoly prod = {N, t.f1, t.f2, t.f3};
         kp->priv.t.prod = prod;
     }
-    else {
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    {
         NtruTernPoly t;
         for (;;) {
             /* choose random t, calculate f=3t+1 */
@@ -257,13 +262,16 @@ void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params
     NtruIGFState s;
     ntru_IGF_init(seed, seed_len, params, &s);
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (params->prod_flag) {
         r->prod.N = s.N;
         ntru_gen_tern_poly(&s, params->df1, &r->prod.f1);
         ntru_gen_tern_poly(&s, params->df2, &r->prod.f2);
         ntru_gen_tern_poly(&s, params->df3, &r->prod.f3);
     }
-    else {
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    {
         r->tern.N = s.N;
         ntru_gen_tern_poly(&s, params->df1, &r->tern);
     }
@@ -310,9 +318,11 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
         NtruIntPoly R;
         NtruPrivPoly r;
         ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &r);
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
         if (params->prod_flag)
             ntru_mult_prod(&pub->h, &r.prod, &R);
         else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
             ntru_mult_tern(&pub->h, &r.tern, &R);
         ntru_mod(&R, q);
         uint16_t oR4_len = (N*2+7) / 8;
@@ -366,9 +376,11 @@ uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, Ntr
 }
 
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (priv->prod_flag)
         ntru_mult_prod(e, &priv->t.prod, d);
     else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
         ntru_mult_tern(e, &priv->t.tern, d);
     ntru_mod(d, q);
     ntru_mult_fac(d, 3);
@@ -444,9 +456,11 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     NtruPrivPoly cr;
     ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &cr);
     NtruIntPoly cR_prime;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (params->prod_flag)
         ntru_mult_prod(&kp->pub.h, &cr.prod, &cR_prime);
     else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
         ntru_mult_tern(&kp->pub.h, &cr.tern, &cR_prime);
     ntru_mod(&cR_prime, q);
     if (!ntru_equals_int(&cR_prime, &cR))

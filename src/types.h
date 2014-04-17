@@ -21,6 +21,7 @@ typedef struct NtruTernPoly {
     uint16_t neg_ones[NTRU_MAX_ONES];
 } NtruTernPoly;
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
  * A product-form polynomial, i.e. a polynomial of the form f1*f2+f3
  * where f1,f2,f3 are very sparsely populated ternary polynomials.
@@ -29,11 +30,14 @@ typedef struct NtruProdPoly {
     uint16_t N;
     NtruTernPoly f1, f2, f3;
 } NtruProdPoly;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /** Private polynomial, can be ternary or product-form */
 typedef union {
     NtruTernPoly tern;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     NtruProdPoly prod;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 } NtruPrivPoly;
 
 /**

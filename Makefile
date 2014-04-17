@@ -16,6 +16,7 @@ INST_HEADERS=ntru.h types.h key.h encparams.h hash.h rand.h err.h
 LIB_OBJS_PATHS=$(patsubst %,$(SRCDIR)/%,$(LIB_OBJS))
 TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
 DIST_NAME=libntru-$(VERSION)
+MAKEFILENAME=$(lastword $(MAKEFILE_LIST))
 
 .PHONY: all
 all: lib
@@ -60,9 +61,25 @@ dist:
 	tar cf $(DIST_NAME).tar.xz $(DIST_NAME) --lzma
 	rm -rf $(DIST_NAME)
 
-test: lib $(TEST_OBJS_PATHS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o test $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -lntru -lm
-	LD_LIBRARY_PATH=. ./test
+.PHONY: test
+test:
+	$(MAKE) -f $(MAKEFILENAME) testnoham
+	@echo
+	@echo Testing patent-reduced build
+	LD_LIBRARY_PATH=. ./testnoham
+	$(MAKE) -f $(MAKEFILENAME) testham
+	@echo
+	@echo Testing full build
+	LD_LIBRARY_PATH=. ./testham
+
+testham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testham $(TEST_OBJS_PATHS) -L. -lntru -lm
+
+testnoham: CFLAGS += -DNTRU_AVOID_HAMMING_WT_PATENT
+testnoham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testnoham $(TEST_OBJS_PATHS) -L. -lntru -lm
 
 bench: lib $(SRCDIR)/bench.o
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.o $(LDFLAGS) -L. -lntru
@@ -76,7 +93,7 @@ tests/%.o: tests/%.c
 .PHONY: clean
 clean:
 	@# also clean files generated on other OSes
-	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll test test.exe bench bench.exe
+	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe
 
 .PHONY: distclean
 distclean: clean

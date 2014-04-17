@@ -4,8 +4,8 @@ An implementation of the public-key encryption scheme NTRUEncrypt in C.
 
 NTRU's main strengths are high performance and resistance to quantum computer
 attacks. Its main drawback is that it is patent encumbered. The patents expire
-in 2020; it is possible to modify this implementation so it becomes patent-free
-in 2017.
+in 2020; when built with the NTRU_AVOID_HAMMING_WT_PATENT flag, libntru becomes
+patent-free in 2017.
 For more information on the NTRUEncrypt algorithm, see the NTRU introduction
 page:
 

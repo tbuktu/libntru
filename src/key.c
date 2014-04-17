@@ -85,7 +85,11 @@ uint16_t ntru_export_priv(NtruEncPrivKey *key, uint8_t *arr) {
     uint8_t prod_flag = key->prod_flag;
 
     /* write N */
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     uint16_t N_endian = prod_flag ? htons(key->t.prod.N) : htons(key->t.tern.N);
+#else
+    uint16_t N_endian = htons(key->t.tern.N);
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     memcpy(arr_head, &N_endian, sizeof N_endian);
     arr_head += sizeof N_endian;
 
@@ -99,12 +103,14 @@ uint16_t ntru_export_priv(NtruEncPrivKey *key, uint8_t *arr) {
     arr_head++;
 
     /* write f1, f2, f3 */
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (prod_flag) {
         arr_head += ntru_tern_to_arr(&key->t.prod.f1, arr_head);
         arr_head += ntru_tern_to_arr(&key->t.prod.f2, arr_head);
         arr_head += ntru_tern_to_arr(&key->t.prod.f3, arr_head);
     }
     else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
         arr_head += ntru_tern_to_arr(&key->t.tern, arr_head);
 
     return arr_head - arr;
@@ -160,13 +166,16 @@ void ntru_import_priv(uint8_t *arr, NtruEncPrivKey *key) {
     key->prod_flag = (flags&4) != 0;
     arr++;
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (key->prod_flag) {
         key->t.prod.N = N;
         arr += ntru_tern_from_arr(arr, N, &key->t.prod.f1);
         arr += ntru_tern_from_arr(arr, N, &key->t.prod.f2);
         arr += ntru_tern_from_arr(arr, N, &key->t.prod.f3);
     }
-    else {
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    {
         key->t.tern.N = N;
         arr += ntru_tern_from_arr(arr, key->t.tern.N, &key->t.tern);
     }

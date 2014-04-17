@@ -10,9 +10,11 @@ void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *
 }
 
 void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (priv->prod_flag)
         ntru_mult_prod(e, &priv->t.prod, d);
     else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
         ntru_mult_tern(e, &priv->t.tern, d);
     ntru_mod(d, q);
     ntru_mult_fac(d, 3);
@@ -147,7 +149,7 @@ uint8_t test_encr_decr() {
 
 #ifndef WIN32
     /* test encryption with ntru_rand_devrandom */
-    NtruEncParams params = EES401EP2;
+    NtruEncParams params = EES401EP1;
     valid &= test_encr_decr_nondet(&params);
 #endif
 

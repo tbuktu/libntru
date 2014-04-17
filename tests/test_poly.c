@@ -77,6 +77,7 @@ uint8_t test_mult_tern() {
     return valid;
 }
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /* tests ntru_mult_prod() */
 uint8_t test_mult_prod() {
     uint8_t valid = 1;
@@ -98,6 +99,7 @@ uint8_t test_mult_prod() {
     print_result("test_mult_prod", valid);
     return valid;
 }
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 uint8_t verify_inverse(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
     NtruIntPoly c;
@@ -144,7 +146,7 @@ uint8_t test_inv() {
 }
 
 uint8_t test_arr() {
-    NtruEncParams params = EES439EP1;
+    NtruEncParams params = EES1087EP1;
     uint8_t a[ntru_enc_len(&params)];
     NtruIntPoly p1;
     uint8_t valid = rand_int(params.N, 11, &p1, ntru_rand_default, NULL);
@@ -162,7 +164,9 @@ uint8_t test_poly() {
     uint8_t valid = 1;
     valid &= test_mult_int();
     valid &= test_mult_tern();
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     valid &= test_mult_prod();
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     valid &= test_inv();
     valid &= test_arr();
     return valid;

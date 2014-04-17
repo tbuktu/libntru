@@ -63,6 +63,7 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
     return 1;
 }
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
     poly->N = N;
     uint8_t result = ntru_rand_tern(N, df1, df1, &poly->f1, rng, rand_ctx);
@@ -70,6 +71,7 @@ uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones
     result &= ntru_rand_tern(N, df3_ones, df3_neg_ones, &poly->f3, rng, rand_ctx);
     return result;
 }
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 void ntru_add_tern(NtruIntPoly *a, NtruTernPoly *b) {
     uint16_t i;
@@ -160,6 +162,7 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
     return 1;
 }
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
     uint16_t N = a->N;
     if (N != b->N)
@@ -176,6 +179,7 @@ uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
 
     return 1;
 }
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
     memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
@@ -188,6 +192,7 @@ void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
     b->N = a->N;
 }
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b) {
     memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
     b->N = a->N;
@@ -196,6 +201,7 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b) {
     ntru_mult_tern(&c, &a->f2, b);
     ntru_add_tern(b, &a->f3);
 }
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     uint8_t bits_coeff = 0;

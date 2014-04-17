@@ -5,7 +5,11 @@
 #include "encparams.h"
 
 uint8_t test_key() {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     NtruEncParams param_arr[] = {EES439EP1, EES1087EP2};
+#else
+    NtruEncParams param_arr[] = {EES1087EP2};
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     uint8_t valid = 1;
 
     uint8_t i;
@@ -28,11 +32,14 @@ uint8_t test_key() {
         NtruEncPrivKey priv;
         ntru_import_priv(priv_arr, &priv);
         NtruIntPoly t_int1, t_int2;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
         if (params.prod_flag) {
             ntru_prod_to_int(&priv.t.prod, &t_int1);
             ntru_prod_to_int(&kp.priv.t.prod, &t_int2);
         }
-        else {
+        else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+        {
             ntru_tern_to_int(&priv.t.tern, &t_int1);
             ntru_tern_to_int(&kp.priv.t.tern, &t_int2);
         }

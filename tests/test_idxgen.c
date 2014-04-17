@@ -23,7 +23,11 @@ uint8_t test_idxgen() {
     for (i=0; i<sizeof seed; i++)
         seed[i] = rand();
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     NtruEncParams params[] = {EES743EP1, EES1087EP2};
+#else
+    NtruEncParams params[] = {EES1087EP2};
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     uint8_t valid = 1;
     for (i=0; i<sizeof(params)/sizeof(params[0]); i++) {
         double avg = 0;

@@ -384,6 +384,7 @@ typedef struct NtruEncParams {
     256            /* pklen */\
 }
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /*
  * A product-form parameter set that gives 112 bits of security.
  */
@@ -479,6 +480,7 @@ typedef struct NtruEncParams {
     32,            /* hlen */\
     256            /* pklen */\
 }
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 uint16_t ntru_enc_len(NtruEncParams *params);
 

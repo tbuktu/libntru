@@ -20,6 +20,7 @@
  */
 uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
  * @brief Random product-form polynomial
  *
@@ -36,6 +37,7 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
  * @return 1 for success, 0 for failure
  */
 uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**
  * @brief Ternary to general integer polynomial
@@ -81,6 +83,7 @@ void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
  */
 void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b);
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
  * @brief Product-form to general polynomial
  *
@@ -90,6 +93,7 @@ void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b);
  * @param b output parameter; a pointer to store the new polynomial
  */
 void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b);
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**
  * @brief General polynomial by ternary polynomial multiplication
@@ -104,6 +108,7 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b);
  */
 uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
  * @brief General polynomial by product-form polynomial multiplication
  *
@@ -116,6 +121,7 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
 uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c);
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**
  * @brief Polynomial to binary

@@ -1,40 +1,49 @@
 CC?=gcc
-CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -O2
+CFLAGS?=-g -O2
+CFLAGS+=-Wall -Wextra -Wno-unused-parameter
+LIBS+=-lrt
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o sha1.o sha2.o
 TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
 VERSION=0.2
 INST_PFX=%PROGRAMFILES%
+INST_LIBDIR=$(INST_PFX)\libntru
+INST_INCLUDE=$(INST_PFX)\libntru\include
+INST_DOCDIR=$(INST_PFX)\libntru
 INST_HEADERS=ntru.h types.h key.h encparams.h hash.h rand.h err.h
 
 LIB_OBJS_PATHS=$(patsubst %,$(SRCDIR)/%,$(LIB_OBJS))
 TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
 DIST_NAME=libntru-$(VERSION)
+MAKEFILENAME=$(lastword $(MAKEFILE_LIST))
 
 .PHONY: all
 all: lib
 
 .PHONY: lib
 lib: $(LIB_OBJS_PATHS)
-	$(CC) $(CFLAGS) -shared -o libntru.dll $(LIB_OBJS_PATHS) -lws2_32 -ladvapi32
+	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -o libntru.dll $(LIB_OBJS_PATHS) -lws2_32 -ladvapi32
 
 .PHONY: install
 install: lib
-	if not exist "%PROGRAMFILES%\libntru" mkdir "%PROGRAMFILES%\libntru"
-	if not exist "%PROGRAMFILES%\libntru\include" mkdir "%PROGRAMFILES%\libntru\include"
-	copy libntru.dll "%PROGRAMFILES%\libntru"
-	copy README.md "%PROGRAMFILES%\libntru"
+	if not exist "$(DESTDIR)$(INST_PFX)" mkdir "$(DESTDIR)$(INST_PFX)"
+	if not exist "$(DESTDIR)$(INST_LIBDIR)" mkdir "$(DESTDIR)$(INST_LIBDIR)"
+	if not exist "$(DESTDIR)$(INST_INCLUDE)" mkdir "$(DESTDIR)$(INST_INCLUDE)"
+	if not exist "$(DESTDIR)$(INST_DOCDIR)" mkdir "$(DESTDIR)$(INST_DOCDIR)"
+	copy libntru.dll "$(DESTDIR)$(INST_LIBDIR)"
+	copy README.md "$(DESTDIR)$(INST_DOCDIR)"
 	for %%h in ($(INST_HEADERS)) do \
-	    copy $(SRCDIR)\%%h "%PROGRAMFILES%\libntru\include"
+	    copy $(SRCDIR)\%%h "$(INST_INCLUDE)"
 
 uninstall:
-	if exist "%PROGRAMFILES%\libntru\libntru.dll" del "%PROGRAMFILES%\libntru\libntru.dll"
-	if exist "%PROGRAMFILES%\libntru\README.md" del "%PROGRAMFILES%\libntru\README.md"
-	for %%h in ($(INST_HEADERS)) do \
-	    if exist "%PROGRAMFILES%\libntru\include\%%h" del "%PROGRAMFILES%\libntru\include\%%h"
-	if exist "%PROGRAMFILES%\libntru\include" rmdir "%PROGRAMFILES%\libntru\include"
-	if exist "%PROGRAMFILES%\libntru" rmdir "%PROGRAMFILES%\libntru"
+	if exist "$(DESTDIR)$(INST_LIBDIR)\libntru.dll" del "$(DESTDIR)$(INST_LIBDIR)\libntru.dll"
+	if exist "$(DESTDIR)$(INST_DOCDIR)\README.md" del "$(DESTDIR)$(INST_DOCDIR)\README.md"
+	for %%h in ($(DESTDIR)$(INST_HEADERS)) do \
+	    if exist "$(DESTDIR)$(INST_INCLUDE)\%%h" del "$(DESTDIR)$(INST_INCLUDE)\%%h"
+	if exist "$(DESTDIR)$(INST_INCLUDE)" rmdir "$(DESTDIR)$(INST_INCLUDE)"
+	if exist "$(DESTDIR)$(INST_LIBDIR)" rmdir "$(DESTDIR)$(INST_LIBDIR)"
+	if exist "$(DESTDIR)$(INST_DOCDIR)" rmdir "$(DESTDIR)$(INST_DOCDIR)"
 
 .PHONY: dist
 dist:
@@ -62,30 +71,48 @@ dist:
 	@rem zip is provided by MinGW
 	zip -rm $(DIST_NAME).zip $(DIST_NAME)
 
-test: lib $(TEST_OBJS_PATHS)
-	$(CC) $(CFLAGS) -o test.exe $(TEST_OBJS_PATHS) -L. -lntru -lm
-	test.exe
+.PHONY: test
+test:
+	$(MAKE) -f $(MAKEFILENAME) testnoham
+	@echo.
+	@echo Testing patent-reduced build
+	testnoham.exe
+	$(MAKE) -f $(MAKEFILENAME) testham
+	@echo.
+	@echo Testing full build
+	testham.exe
+
+testham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testham.exe $(TEST_OBJS_PATHS) -L. -lntru -lm
+
+testnoham: CFLAGS += -DNTRU_AVOID_HAMMING_WT_PATENT
+testnoham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testnoham.exe $(TEST_OBJS_PATHS) -L. -lntru -lm
 
 bench: lib $(SRCDIR)/bench.o
-	$(CC) $(CFLAGS) -o bench $(SRCDIR)/bench.o -L. -lntru
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.o -L. -lntru
 
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(TESTDIR)/%.o: tests/%.c
-	$(CC) $(CFLAGS) -I$(SRCDIR) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -I$(SRCDIR) -c $< -o $@
 
 .PHONY: clean
 clean:
 	@if exist $(SRCDIR)\*.o del $(SRCDIR)\*.o
 	@if exist $(TESTDIR)\*.o del $(TESTDIR)\*.o
 	@if exist libntru.dll del libntru.dll
-	@if exist test.exe del test.exe
+	@if exist testham.exe del testham.exe
+	@if exist testnoham.exe del testnoham.exe
 	@if exist bench.exe del bench.exe
 	@rem ***** clean files generated on other OSes *****
 	@if exist libntru.so del libntru.so
 	@if exist libntru.dylib del libntru.dylib
-	@if exist test del test
+	@if exist testham del testnoham
+	@if exist testnoham del testnoham
 	@if exist bench del bench
 
 .PHONY: distclean
