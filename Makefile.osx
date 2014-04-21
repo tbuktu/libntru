@@ -17,14 +17,13 @@ TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
 DIST_NAME=libntru-$(VERSION)
 MAKEFILENAME=$(lastword $(MAKEFILE_LIST))
 
-.PHONY: all
+.PHONY: all lib install uninstall dist test clean distclean
+
 all: lib
 
-.PHONY: lib
 lib: $(LIB_OBJS_PATHS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -dynamiclib -o libntru.dylib $(LIB_OBJS_PATHS) $(LDFLAGS) $(LIBS)
 
-.PHONY: install
 install: lib
 	test -d "$(DESTDIR)$(INST_PFX)" || mkdir -p "$(DESTDIR)$(INST_PFX)"
 	test -d "$(DESTDIR)$(INST_LIBDIR)" || mkdir "$(DESTDIR)$(INST_LIBDIR)"
@@ -36,7 +35,6 @@ install: lib
 	    install -m 0644 "$(SRCDIR)/$$header" "$(DESTDIR)$(INST_INCLUDE)/" ; \
 	done
 
-.PHONY: uninstall
 uninstall:
 	rm -f "$(DESTDIR)$(INST_LIBDIR)/libntru.so"
 	rm -f "$(DESTDIR)$(INST_DOCDIR)/README.md"
@@ -46,7 +44,6 @@ uninstall:
 	done
 	rmdir "$(DESTDIR)$(INST_INCLUDE)/"
 
-.PHONY: dist
 dist:
 	rm -rf $(DIST_NAME)
 	mkdir $(DIST_NAME)
@@ -60,7 +57,6 @@ dist:
 	tar cf $(DIST_NAME).tar.xz $(DIST_NAME) --lzma
 	rm -rf $(DIST_NAME)
 
-.PHONY: test
 test:
 	$(MAKE) -f $(MAKEFILENAME) testnoham
 	@echo
@@ -89,12 +85,10 @@ $(SRCDIR)/%.o: $(SRCDIR)/%.c
 tests/%.o: tests/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -I$(SRCDIR) -c $< -o $@
 
-.PHONY: clean
 clean:
 	@# also clean files generated on other OSes
 	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe
 
-.PHONY: distclean
 distclean: clean
 	rm -rf $(DIST_NAME)
 	rm -f $(DIST_NAME).tar.xz $(DIST_NAME).zip
