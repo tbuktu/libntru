@@ -18,14 +18,13 @@ TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
 DIST_NAME=libntru-$(VERSION)
 MAKEFILENAME=$(lastword $(MAKEFILE_LIST))
 
-.PHONY: all
+.PHONY: all lib install dist test clean distclean
+
 all: lib
 
-.PHONY: lib
 lib: $(LIB_OBJS_PATHS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -o libntru.dll $(LIB_OBJS_PATHS) -lws2_32 -ladvapi32
 
-.PHONY: install
 install: lib
 	if not exist "$(DESTDIR)$(INST_PFX)" mkdir "$(DESTDIR)$(INST_PFX)"
 	if not exist "$(DESTDIR)$(INST_LIBDIR)" mkdir "$(DESTDIR)$(INST_LIBDIR)"
@@ -45,7 +44,6 @@ uninstall:
 	if exist "$(DESTDIR)$(INST_LIBDIR)" rmdir "$(DESTDIR)$(INST_LIBDIR)"
 	if exist "$(DESTDIR)$(INST_DOCDIR)" rmdir "$(DESTDIR)$(INST_DOCDIR)"
 
-.PHONY: dist
 dist:
 	@if exist $(DIST_NAME)\$(SRCDIR)\*.c del $(DIST_NAME)\$(SRCDIR)\*.c
 	@if exist $(DIST_NAME)\$(SRCDIR)\*.h del $(DIST_NAME)\$(SRCDIR)\*.h
@@ -71,7 +69,6 @@ dist:
 	@rem zip is provided by MinGW
 	zip -rm $(DIST_NAME).zip $(DIST_NAME)
 
-.PHONY: test
 test:
 	$(MAKE) -f $(MAKEFILENAME) testnoham
 	@echo.
@@ -100,7 +97,6 @@ $(SRCDIR)/%.o: $(SRCDIR)/%.c
 $(TESTDIR)/%.o: tests/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -I$(SRCDIR) -c $< -o $@
 
-.PHONY: clean
 clean:
 	@if exist $(SRCDIR)\*.o del $(SRCDIR)\*.o
 	@if exist $(TESTDIR)\*.o del $(TESTDIR)\*.o
@@ -115,7 +111,6 @@ clean:
 	@if exist testnoham del testnoham
 	@if exist bench del bench
 
-.PHONY: distclean
 distclean: clean
 	@if exist $(DIST_NAME)\$(SRCDIR)\*.c del $(DIST_NAME)\$(SRCDIR)\*.c
 	@if exist $(DIST_NAME)\$(SRCDIR)\*.h del $(DIST_NAME)\$(SRCDIR)\*.h
