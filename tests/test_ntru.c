@@ -26,9 +26,7 @@ void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly 
 uint8_t gen_key_pair_det(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
     uint16_t seed_len = strlen(seed);
     uint8_t seed_uint8[seed_len];
-    uint16_t i;
-    for (i=0; i<seed_len; i++)
-        seed_uint8[i] = seed[i];
+    str_to_uint8(seed, seed_uint8);
     return ntru_gen_key_pair_det(params, kp, ntru_rand_igf2, seed_uint8, seed_len);
 }
 
@@ -63,9 +61,7 @@ uint8_t test_keygen() {
         char seed2_char[19];
         strcpy(seed2_char, "my test password");
         uint8_t seed2[strlen(seed2_char)];
-        uint16_t j;
-        for (j=0; j<strlen(seed2_char); j++)
-            seed2[j] = seed2_char[j];
+        str_to_uint8(seed2_char, seed2);
         NtruEncKeyPair kp2;
         valid &= ntru_gen_key_pair_det(&params, &kp2, ntru_rand_igf2, seed2, strlen(seed2_char)) == NTRU_SUCCESS;
         valid &= equals_key_pair(&kp, &kp2);
@@ -85,9 +81,7 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     strcpy(plain_char, "test message 12345");
     size_t plain_len = strlen(plain_char);
     uint8_t plain[plain_len];
-    uint16_t i;
-    for (i=0; i<plain_len; i++)
-        plain[i] = plain_char[i];
+    str_to_uint8(plain_char, plain);
     uint8_t encrypted[enc_len];
     valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &kp.pub, params, ntru_rand_default, (uint8_t*)&encrypted) == NTRU_SUCCESS;
     uint8_t decrypted[plain_len];
@@ -115,23 +109,18 @@ uint8_t test_encr_decr_det(NtruEncParams *params) {
     strcpy(plain_char, "test message 12345");
     size_t plain_len = strlen(plain_char);
     uint8_t plain[plain_len];
-    uint16_t i;
-    for (i=0; i<plain_len; i++)
-        plain[i] = plain_char[i];
-    for (i=0; i<strlen(seed_char); i++)
-        seed[i] = seed_char[i];
+    str_to_uint8(plain_char, plain);
+    str_to_uint8(seed_char, seed);
     uint8_t encrypted[enc_len];
     valid &= ntru_encrypt_det((uint8_t*)&plain, plain_len, &kp.pub, params, ntru_rand_igf2, seed, strlen(seed_char), (uint8_t*)&encrypted) == NTRU_SUCCESS;
     char plain2_char[19];
     strcpy(plain2_char, "test message 12345");
     uint8_t plain2[plain_len];
-    for (i=0; i<plain_len; i++)
-        plain2[i] = plain2_char[i];
+    str_to_uint8(plain2_char, plain2);
     char seed2_char[11];
     strcpy(seed2_char, "seed value");
     uint8_t seed2[11];
-    for (i=0; i<strlen(seed2_char); i++)
-        seed2[i] = seed2_char[i];
+    str_to_uint8(seed2_char, seed2);
     uint8_t encrypted2[enc_len];
     valid &= ntru_encrypt_det((uint8_t*)&plain2, plain_len, &pub2, params, ntru_rand_igf2, seed2, strlen(seed2_char), (uint8_t*)&encrypted2) == NTRU_SUCCESS;
     valid &= memcmp(encrypted, encrypted2, enc_len) == 0;

@@ -7,9 +7,7 @@ uint8_t test_hash() {
     char* test_string_char = "The quick brown fox jumps over the lazy dog";
     size_t len = strlen(test_string_char);
     uint8_t test_string[len];
-    size_t i;
-    for (i=0; i<len; i++)
-        test_string[i] = (uint8_t)test_string_char[i];
+    str_to_uint8(test_string_char, test_string);
     uint8_t sha1[] = {
         0x2f, 0xd4, 0xe1, 0xc6, 0x7a, 0x2d, 0x28, 0xfc, 0xed, 0x84, 0x9e, 0xe1,
         0xbb, 0x76, 0xe7, 0x39, 0x1b, 0x93, 0xeb, 0x12

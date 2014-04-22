@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "test_util.h"
 
 uint8_t equals_int(NtruIntPoly *a, NtruIntPoly *b) {
@@ -86,6 +87,13 @@ uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, uint8_t (*rng)(u
         poly->coeffs[N] = rand_data[N] >> shift;
 
     return 1;
+}
+
+void str_to_uint8(char *in, uint8_t *out) {
+    size_t len = strlen(in);
+    size_t i;
+    for (i=0; i<len; i++)
+        out[i] = (uint8_t)in[i];
 }
 
 void print_result(char *test_name, uint8_t valid) {

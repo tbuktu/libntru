@@ -22,6 +22,17 @@ uint8_t equals_arr(uint8_t *arr1, uint8_t *arr2, uint16_t len);
 
 uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
 
+/**
+ * @brief string to uint8_t array
+ *
+ * Converts a char array to a uint8_t array. If char is longer than uint8_t,
+ * only the least significant 8 bits of each element are copied.
+ *
+ * @param in the NtruEncrypt parameters to use
+ * @param out pointer to write the key pair to (output parameter)
+ */
+void str_to_uint8(char *in, uint8_t *out);
+
 void print_result(char *test_name, uint8_t valid);
 
 #endif
