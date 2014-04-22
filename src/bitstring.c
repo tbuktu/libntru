@@ -1,7 +1,7 @@
 #include <string.h>
 #include "bitstring.h"
 
-void ntru_append_char(NtruBitStr *a, uint8_t b) {
+void ntru_append_byte(NtruBitStr *a, uint8_t b) {
     if (a->num_bytes == 0) {
         a->num_bytes = 1;
         a->buf[0] = b;
@@ -19,7 +19,7 @@ void ntru_append_char(NtruBitStr *a, uint8_t b) {
 void ntru_append(NtruBitStr *a, uint8_t *b, uint16_t blen) {
     uint16_t i;
     for (i=0; i<blen; i++)
-        ntru_append_char(a, b[i]);
+        ntru_append_byte(a, b[i]);
 }
 
 void ntru_trailing(NtruBitStr *a, uint8_t num_bits, NtruBitStr *b) {
