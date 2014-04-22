@@ -1,7 +1,7 @@
-ifeq ($(shell uname), Darwin)
-    include Makefile.osx
-else ifeq ($(OS), Windows_NT)
+ifeq ($(OS), Windows_NT)
     include Makefile.win
+else ifeq ($(shell uname), Darwin)
+    include Makefile.osx
 else
     include Makefile.linux
 endif
