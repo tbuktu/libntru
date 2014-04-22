@@ -101,7 +101,7 @@ void clock_gettime(uint32_t X, struct timespec *ts)
         usePerformanceCounter = QueryPerformanceFrequency(&performanceFrequency);
         if (usePerformanceCounter) {
             QueryPerformanceCounter(&offset);
-            frequencyToNanoseconds = (double)performanceFrequency.QuadPart / 1000.;
+            frequencyToNanoseconds = (double)performanceFrequency.QuadPart / 1000000000.;
         } else {
             offset = getFILETIMEoffset();
             frequencyToNanoseconds = 0.010;
