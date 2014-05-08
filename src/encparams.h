@@ -402,7 +402,7 @@ typedef struct NtruEncParams {
     10,            /* min_calls_r */\
     6,             /* min_calls_mask */\
     1,             /* hash_seed */\
-    {0, 2, 10},    /* oid */\
+    {0, 2, 16},    /* oid */\
     1,             /* sparse */\
     ntru_sha1,     /* hash */\
     20,            /* hlen */\
@@ -426,7 +426,7 @@ typedef struct NtruEncParams {
     15,            /* min_calls_r */\
     6,             /* min_calls_mask */\
     1,             /* hash_seed */\
-    {0, 3, 10},    /* oid */\
+    {0, 3, 16},    /* oid */\
     1,             /* sparse */\
     ntru_sha1,     /* hash */\
     20,            /* hlen */\
@@ -450,7 +450,7 @@ typedef struct NtruEncParams {
     12,            /* min_calls_r */\
     5,             /* min_calls_mask */\
     1,             /* hash_seed */\
-    {0, 5, 10},    /* oid */\
+    {0, 5, 16},    /* oid */\
     1,             /* sparse */\
     ntru_sha256,   /* hash */\
     32,            /* hlen */\
@@ -474,7 +474,7 @@ typedef struct NtruEncParams {
     12,            /* min_calls_r */\
     7,             /* min_calls_mask */\
     1,             /* hash_seed */\
-    {0, 6, 10},    /* oid */\
+    {0, 6, 16},    /* oid */\
     1,             /* sparse */\
     ntru_sha256,   /* hash */\
     32,            /* hlen */\
