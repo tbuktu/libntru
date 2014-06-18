@@ -395,7 +395,7 @@ typedef struct NtruEncParams {
     8,             /* df1 */\
     8,             /* df2 */\
     6,             /* df3 */\
-    0,             /* dm0 */\
+    101,           /* dm0 */\
     136,           /* maxm1 */\
     112,           /* db */\
     11,            /* c */\
@@ -419,7 +419,7 @@ typedef struct NtruEncParams {
     9,             /* df1 */\
     8,             /* df2 */\
     5,             /* df3 */\
-    0,             /* dm0 */\
+    112,           /* dm0 */\
     126,           /* maxm1 */\
     128,           /* db */\
     9,             /* c */\
@@ -443,7 +443,7 @@ typedef struct NtruEncParams {
     10,            /* df1 */\
     10,            /* df2 */\
     8,             /* df3 */\
-    0,             /* dm0 */\
+    158,           /* dm0 */\
     90,            /* maxm1 */\
     192,           /* db */\
     11,            /* c */\
@@ -467,7 +467,7 @@ typedef struct NtruEncParams {
     11,            /* df1 */\
     11,            /* df2 */\
     15,            /* df3 */\
-    0,             /* dm0 */\
+    204,           /* dm0 */\
     60,            /* maxm1 */\
     256,           /* db */\
     12,            /* c */\
