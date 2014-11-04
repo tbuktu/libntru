@@ -44,7 +44,8 @@ uint8_t ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t
  * See P1363.1 section 9.2.2.
  *
  * @param msg The message to encrypt
- * @param msg_len length of msg
+ * @param msg_len length of msg. Must not exceed ntru_max_msg_len(params). To encrypt
+ *                bulk data, encrypt with a symmetric key, then NTRU-encrypt that key.
  * @param pub the public key to encrypt the message with
  * @param params the NtruEncrypt parameters to use
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
@@ -62,7 +63,8 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
  * See P1363.1 section 9.2.2.
  *
  * @param msg The message to encrypt
- * @param msg_len length of msg
+ * @param msg_len length of msg. Must not exceed ntru_max_msg_len(params). To encrypt
+ *                bulk data, encrypt with a symmetric key, then NTRU-encrypt that key.
  * @param pub the public key to encrypt the message with
  * @param params the NtruEncrypt parameters to use
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
@@ -92,6 +94,17 @@ uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, Ntr
  */
 uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, uint8_t *dec, uint16_t *dec_len);
 
+/**
+ * @brief Maximum message length
+ *
+ * Returns the maximum length a plaintext message can be.
+ * Depending on the parameter set, the maximum lengths for the predefined
+ * parameter sets are between 60 and 248.
+ * For longer messages, use hybrid encryption.
+ *
+ * @param params an NtruEncrypt parameter set
+ * @return the maximum number of bytes in a message
+ */
 uint8_t ntru_max_msg_len(NtruEncParams *params);
 
 #endif   /* NTRU_NTRU_H */
