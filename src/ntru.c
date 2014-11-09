@@ -187,7 +187,7 @@ uint8_t ntru_to_sves(NtruIntPoly *poly, uint16_t skip, uint8_t *data) {
             if (bit_index == 7) {
                 bit_index = 0;
                 byte_index++;
-                data[byte_index] = 0;
+//                data[byte_index] = 0;
             }
             else
                 bit_index++;
