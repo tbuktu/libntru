@@ -146,6 +146,8 @@ int main(int argc, char **argv) {
     char plain_char[33];
     strcpy(plain_char, "test message secret test message");
     uint8_t plain[strlen(plain_char)];
+    for (i=0; i<strlen(plain_char); i++)
+        plain[i] = plain_char[i];
     uint8_t encrypted[enc_len];
     uint8_t decrypted[strlen(plain_char)];
     clock_gettime(CLOCK_REALTIME, &t1);
