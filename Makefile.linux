@@ -77,8 +77,8 @@ testnoham: clean lib $(TEST_OBJS_PATHS)
 	@echo CFLAGS=$(CFLAGS)
 	$(CC) $(CFLAGS) -o testnoham $(TEST_OBJS_PATHS) -L. -lntru -lm
 
-bench: lib $(SRCDIR)/bench.o
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.o $(LDFLAGS) -L. -lntru
+bench: lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c $(LDFLAGS) -L. -lntru
 
 hybrid: lib
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) -L. -lntru -lcrypto
