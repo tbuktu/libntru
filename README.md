@@ -53,6 +53,8 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
     NtruEncPubKey pub;
     ntru_import_pub(pub_arr, &pub);
 
+For encryption of messages longer than `ntru_max_msg_len(...)`, see `src/hybrid.c`
+(requires OpenSSL lib+headers, use `make hybrid` to build).
 
 ## Supported Platforms
   libntru has been tested on Linux, Mac OS X and Windows (MingW).

@@ -91,6 +91,9 @@ testnoham: clean lib $(TEST_OBJS_PATHS)
 bench: lib $(SRCDIR)/bench.o
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.o -L. -lntru
 
+hybrid: lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) -L. -lntru -lcrypto -lgdi32
+
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
@@ -110,6 +113,8 @@ clean:
 	@if exist testham del testnoham
 	@if exist testnoham del testnoham
 	@if exist bench del bench
+	@if exist hybrid del hybrid
+	@if exist hybrid.exe del hybrid.exe
 
 distclean: clean
 	@if exist $(DIST_NAME)\$(SRCDIR)\*.c del $(DIST_NAME)\$(SRCDIR)\*.c

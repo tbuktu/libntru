@@ -80,6 +80,9 @@ testnoham: clean lib $(TEST_OBJS_PATHS)
 bench: lib $(SRCDIR)/bench.o
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.o $(LDFLAGS) -L. -lntru
 
+hybrid: lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) -L. -lntru -lcrypto
+
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
 
@@ -88,7 +91,7 @@ tests/%.o: tests/%.c
 
 clean:
 	@# also clean files generated on other OSes
-	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe
+	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
 
 distclean: clean
 	rm -rf $(DIST_NAME)
