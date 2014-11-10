@@ -13,7 +13,7 @@ int openssl_encr_decr(uint8_t *inbuf, int inlen, uint8_t *outbuf, int *outlen, u
     EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL, do_encrypt);
     EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
     int retval = EVP_CipherUpdate(&ctx, outbuf, outlen, inbuf, inlen);
-    int pad_bytes;
+    int pad_bytes = 0;
     if (retval && !EVP_CipherFinal_ex(&ctx, outbuf+*outlen, &pad_bytes))
         retval = 0;
     *outlen += pad_bytes;
