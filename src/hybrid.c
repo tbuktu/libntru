@@ -33,7 +33,7 @@ int openssl_encr_decr(uint8_t *inbuf, int inlen, uint8_t *outbuf, int *outlen, u
  * @param rng a pointer to a function that takes an array and an array size, and fills the array
  *            with random data. See the ntru_rand_* functions.
  * @param enc output parameter; a pointer to store the encrypted message. Must accommodate
- *            ntru_enc_len(params)+sizeof msg+16 bytes.
+ *            ntru_enc_len(params)+msg_len+16 bytes.
  * @param enc_len output parameter; number of bytes written
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure; 99 for OpenSSL error
  */
@@ -84,9 +84,9 @@ int main(int arc, char **argv) {
     char plain_char[123];
     strcpy(plain_char, "This text is too long to fit in a NTRU message, so we'll use " \
                        "symmetric encryption and then NTRU-encrypt the symmetric key.");
-    uint8_t plain[sizeof plain_char];
+    uint8_t plain[strlen(plain_char)];
     unsigned i;
-    for (i=0; i<sizeof plain; i++)
+    for (i=0; i<strlen(plain_char); i++)
         plain[i] = plain_char[i];
 
     /* generate an NTRU key */
@@ -96,7 +96,7 @@ int main(int arc, char **argv) {
         printf("keygen fail\n");
 
     /* encrypt */
-    uint8_t enc[ntru_enc_len(&params)+sizeof plain+16];
+    uint8_t enc[ntru_enc_len(&params)+strlen(plain_char)+16];
     int enc_len;
     if (ntru_encrypt_hybrid(plain, strlen(plain_char), &kp.pub, &params, ntru_rand_default, enc, &enc_len) != NTRU_SUCCESS)
         printf("encrypt fail\n");
