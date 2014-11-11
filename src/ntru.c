@@ -28,12 +28,12 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
     NtruIntPoly f;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (params->prod_flag) {
-        NtruProdPoly t;
+        NtruProdPoly *t = &kp->priv.t.prod;
         for (;;) {
             /* choose random t, calculate f=3t+1 */
-            if (!ntru_rand_prod(N, df1, df2, df3, df3, &t, rng, rand_ctx))
+            if (!ntru_rand_prod(N, df1, df2, df3, df3, t, rng, rand_ctx))
                 return NTRU_ERR_PRNG;
-            ntru_prod_to_int(&t, &f);
+            ntru_prod_to_int(t, &f);
             ntru_mult_fac(&f, 3);
             f.coeffs[0] += 1;
 
@@ -43,18 +43,17 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
 
         kp->priv.q = q;
         kp->priv.prod_flag = 1;
-        NtruProdPoly prod = {N, t.f1, t.f2, t.f3};
-        kp->priv.t.prod = prod;
+        kp->priv.t.prod.N = N;
     }
     else
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     {
-        NtruTernPoly t;
+        NtruTernPoly *t = &kp->priv.t.tern;
         for (;;) {
             /* choose random t, calculate f=3t+1 */
-            if (!ntru_rand_tern(N, df1, df1, &t, rng, rand_ctx))
+            if (!ntru_rand_tern(N, df1, df1, t, rng, rand_ctx))
                 return NTRU_ERR_PRNG;
-            ntru_tern_to_int(&t, &f);
+            ntru_tern_to_int(t, &f);
             ntru_mult_fac(&f, 3);
             f.coeffs[0] += 1;
 
@@ -64,7 +63,6 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
 
         kp->priv.q = q;
         kp->priv.prod_flag = 0;
-        kp->priv.t.tern = t;
     }
 
     /* choose a random g that is invertible mod q */
@@ -79,17 +77,16 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
             break;
     }
 
-    NtruIntPoly h;
-    if (!ntru_mult_tern(&fq, &g, &h))
+    NtruIntPoly *h = &kp->pub.h;
+    if (!ntru_mult_tern(&fq, &g, h))
         return NTRU_ERR_PRNG;
-    ntru_mult_fac(&h, 3);
-    ntru_mod(&h, q);
+    ntru_mult_fac(h, 3);
+    ntru_mod(h, q);
 
     ntru_clear_tern(&g);
     ntru_clear_int(&fq);
 
-    NtruEncPubKey pub = {q, h};
-    kp->pub = pub;
+    kp->pub.q = q;
 
     return NTRU_SUCCESS;
 }
