@@ -129,7 +129,11 @@ int main(int argc, char **argv) {
 
     NtruEncKeyPair kp;
 
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     NtruEncParams params = EES439EP1;
+#else
+    NtruEncParams params = EES761EP1;
+#endif
     uint8_t success = 1;
     uint32_t i;
     struct timespec t1;

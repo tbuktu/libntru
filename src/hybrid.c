@@ -90,7 +90,11 @@ int main(int arc, char **argv) {
         plain[i] = plain_char[i];
 
     /* generate an NTRU key */
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
     struct NtruEncParams params = EES439EP1;
+#else
+    struct NtruEncParams params = EES449EP1;
+#endif
     NtruEncKeyPair kp;
     if (ntru_gen_key_pair(&params, &kp, ntru_rand_default) != NTRU_SUCCESS)
         printf("keygen fail\n");
