@@ -22,22 +22,33 @@ Run ```make``` to build the library, or ```make test``` to run unit tests.
 
     /* key generation */
     struct NtruEncParams params = EES449EP1; /*see encparams.h for more*/
+    NtruRandGen rng_def = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx_def;
+    ntru_rand_init(&rand_ctx_def, &rng_def);
     NtruEncKeyPair kp;
-    if (ntru_gen_key_pair(&params, &kp, ntru_rand_default) != NTRU_SUCCESS)
+    if (ntru_gen_key_pair(&params, &kp, &rand_ctx_def) != NTRU_SUCCESS)
         printf("keygen fail\n");
 
     /* deterministic key generation from password */
     uint8_t seed[17];
     strcpy(seed, "my test password");
-    if (ntru_gen_key_pair_det(&params, &kp, ntru_rand_igf2, seed, strlen(seed)) != NTRU_SUCCESS)
+    NtruRandGen rng_igf2 = NTRU_RNG_IGF2;
+    NtruRandContext rand_ctx_igf2;
+    ntru_rand_init_det(&rand_ctx_igf2, &rng_igf2, seed, strlen(seed));
+    if (ntru_gen_key_pair(&params, &kp, &rand_ctx_igf2) != NTRU_SUCCESS)
         printf("keygen fail\n");
+    ntru_rand_release(&rand_ctx_igf2);
 
     /* encryption */
     uint8_t msg[9];
     strcpy(msg, "whatever");
     uint8_t enc[ntru_enc_len(&params)];
-    if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, ntru_rand_default, enc) != NTRU_SUCCESS)
+    if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, &rand_ctx_def, enc) != NTRU_SUCCESS)
         printf("encrypt fail\n");
+
+    /* release RNG resources */
+    ntru_rand_release(&rand_ctx_def);
+    ntru_rand_release(&rand_ctx_igf2);
 
     /* decryption */
     uint8_t dec[ntru_max_msg_len(&params)];

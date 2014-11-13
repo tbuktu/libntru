@@ -14,11 +14,10 @@
  * @param num_ones number of ones
  * @param num_neg_ones number of negative ones
  * @param poly output parameter; a pointer to store the new polynomial
- * @param rng a pointer to a function that takes an array and an array size, and fills the array
-              with random data. See the ntru_rand_* functions.
+ * @param rand_ctx a random number generator
  * @return 1 for success, 0 for failure
  */
-uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, NtruTernPoly *poly, NtruRandContext *rand_ctx);
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
@@ -32,11 +31,10 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
  * @param df3_ones number of ones ones in the third ternary polynomial
  * @param df3_neg_ones number of negative ones in the third ternary polynomial
  * @param poly output parameter; a pointer to store the new polynomial
- * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with random data. See the ntru_rand_* functions.
+ * @param rand_ctx a random number generator
  * @return 1 for success, 0 for failure
  */
-uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones, uint16_t df3_neg_ones, NtruProdPoly *poly, NtruRandContext *rand_ctx);
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**

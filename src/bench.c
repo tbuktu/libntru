@@ -138,8 +138,11 @@ int main(int argc, char **argv) {
     uint32_t i;
     struct timespec t1;
     clock_gettime(CLOCK_REALTIME, &t1);
+    NtruRandGen rng = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx;
+    ntru_rand_init(&rand_ctx, &rng);
     for (i=0; i<NUM_ITER_KEYGEN; i++)
-        success &= ntru_gen_key_pair(&params, &kp, ntru_rand_default) == 0;
+        success &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == 0;
     struct timespec t2;
     clock_gettime(CLOCK_REALTIME, &t2);
     double time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_KEYGEN;
@@ -156,11 +159,12 @@ int main(int argc, char **argv) {
     uint8_t decrypted[strlen(plain_char)];
     clock_gettime(CLOCK_REALTIME, &t1);
     for (i=0; i<NUM_ITER_ENCDEC; i++)
-        success &= ntru_encrypt((uint8_t*)&plain, strlen(plain_char), &kp.pub, &params, ntru_rand_default, (uint8_t*)&encrypted) == 0;
+        success &= ntru_encrypt((uint8_t*)&plain, strlen(plain_char), &kp.pub, &params, &rand_ctx, (uint8_t*)&encrypted) == 0;
     clock_gettime(CLOCK_REALTIME, &t2);
     time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_ENCDEC;
     per_sec = 1000000000.0 / time;
     printf("%f encryptions/sec\n", per_sec);
+    ntru_rand_release(&rand_ctx);
 
     uint16_t dec_len;
     clock_gettime(CLOCK_REALTIME, &t1);

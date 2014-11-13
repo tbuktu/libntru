@@ -62,9 +62,13 @@ uint8_t test_mult_int() {
 /* tests ntru_mult_tern() */
 uint8_t test_mult_tern() {
     NtruTernPoly a;
-    uint8_t valid = ntru_rand_tern(11, 3, 3, &a, ntru_rand_default, NULL);
+    NtruRandGen rng = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx;
+    ntru_rand_init(&rand_ctx, &rng);
+    uint8_t valid = ntru_rand_tern(11, 3, 3, &a, &rand_ctx);
     NtruIntPoly b;
-    valid &= rand_int(11, 5, &b, ntru_rand_default, NULL);
+    valid &= rand_int(11, 5, &b, &rand_ctx);
+    ntru_rand_release(&rand_ctx);
     NtruIntPoly c_tern;
     ntru_mult_tern(&b, &a, &c_tern);
     NtruIntPoly a_int;
@@ -82,11 +86,14 @@ uint8_t test_mult_tern() {
 uint8_t test_mult_prod() {
     uint8_t valid = 1;
     uint16_t i;
+    NtruRandGen rng = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx;
+    ntru_rand_init(&rand_ctx, &rng);
     for (i=0; i<10; i++) {
         NtruProdPoly a;
-        valid &= ntru_rand_prod(853, 8, 8, 8, 9, &a, ntru_rand_default, NULL);
+        valid &= ntru_rand_prod(853, 8, 8, 8, 9, &a, &rand_ctx);
         NtruIntPoly b;
-        valid &= rand_int(853, 11, &b, ntru_rand_default, NULL);
+        valid &= rand_int(853, 11, &b, &rand_ctx);
         NtruIntPoly c_prod;
         ntru_mult_prod(&b, &a, &c_prod);
         NtruIntPoly a_int;
@@ -95,6 +102,7 @@ uint8_t test_mult_prod() {
         ntru_mult_int(&a_int, &b, &c_int);
         valid &= ntru_equals_int(&c_prod, &c_int);
     }
+    ntru_rand_release(&rand_ctx);
 
     print_result("test_mult_prod", valid);
     return valid;
@@ -123,9 +131,12 @@ uint8_t test_inv() {
 
     /* test 3 random polynomials */
     uint16_t num_invertible = 0;
+    NtruRandGen rng = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx;
+    ntru_rand_init(&rand_ctx, &rng);
     while (num_invertible < 3) {
         NtruIntPoly a_int;
-        rand_int(853, 11, &a_int, ntru_rand_default, NULL);
+        rand_int(853, 11, &a_int, &rand_ctx);
 
         NtruIntPoly b;
         uint8_t invertible = ntru_invert(&a_int, 2048, &b);
@@ -134,6 +145,7 @@ uint8_t test_inv() {
             num_invertible++;
         }
     }
+    ntru_rand_release(&rand_ctx);
 
     /* test a non-invertible polynomial */
     NtruIntPoly a2 = {11, {-1, 0, 1, 1, 0, 0, -1, 0, -1, 0, 1}};
@@ -149,8 +161,12 @@ uint8_t test_arr() {
     NtruEncParams params = EES1087EP1;
     uint8_t a[ntru_enc_len(&params)];
     NtruIntPoly p1;
-    uint8_t valid = rand_int(params.N, 11, &p1, ntru_rand_default, NULL);
+    NtruRandGen rng = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx;
+    ntru_rand_init(&rand_ctx, &rng);
+    uint8_t valid = rand_int(params.N, 11, &p1, &rand_ctx);
     ntru_to_arr(&p1, params.q, a);
+    ntru_rand_release(&rand_ctx);
 
     NtruIntPoly p2;
     ntru_from_arr(a, params.N, params.q, &p2);

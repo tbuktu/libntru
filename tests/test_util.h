@@ -20,7 +20,7 @@ uint8_t equals_key_pair(NtruEncKeyPair *kp1, NtruEncKeyPair *kp2);
 
 uint8_t equals_arr(uint8_t *arr1, uint8_t *arr2, uint16_t len);
 
-uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx);
+uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, NtruRandContext *rand_ctx);
 
 /**
  * @brief string to uint8_t array

@@ -64,14 +64,4 @@ typedef struct NtruEncKeyPair {
     NtruEncPrivKey priv;
     NtruEncPubKey pub;
 } NtruEncKeyPair;
-
-/**
- * Seed and state for deterministic random number generators
- */
-typedef struct NtruRandContext {
-    uint8_t *seed;
-    uint16_t seed_len;
-    void **rand_state;
-} NtruRandContext;
-
 #endif   /* NTRU_TYPES_H */

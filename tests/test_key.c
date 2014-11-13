@@ -16,7 +16,10 @@ uint8_t test_key() {
     for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++) {
         NtruEncParams params = param_arr[i];
         NtruEncKeyPair kp;
-        ntru_gen_key_pair(&params, &kp, ntru_rand_default);
+        NtruRandContext rand_ctx;
+        NtruRandGen rng = NTRU_RNG_DEFAULT;
+        ntru_rand_init(&rand_ctx, &rng);
+        ntru_gen_key_pair(&params, &kp, &rand_ctx);
 
         /* test public key */
         uint8_t pub_arr[ntru_pub_len(&params)];

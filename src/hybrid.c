@@ -30,18 +30,16 @@ int openssl_encr_decr(uint8_t *inbuf, int inlen, uint8_t *outbuf, int *outlen, u
  * @param msg_len length of msg
  * @param pub the public key to encrypt the message with
  * @param params the NtruEncrypt parameters to use
- * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with random data. See the ntru_rand_* functions.
+ * @param rand_ctx an initialized random number generator. See ntru_rand_init() in rand.h.
  * @param enc output parameter; a pointer to store the encrypted message. Must accommodate
  *            ntru_enc_len(params)+msg_len+16 bytes.
  * @param enc_len output parameter; number of bytes written
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure; 99 for OpenSSL error
  */
-uint8_t ntru_encrypt_hybrid(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *enc, int *enc_len) {
+uint8_t ntru_encrypt_hybrid(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc, int *enc_len) {
     uint8_t key_iv[32];   // key + iv
-    NtruRandContext rand_ctx;
-    rng(key_iv, 32, &rand_ctx);
-    int retval = ntru_encrypt(key_iv, 32, pub, params, rng, enc);   // put encrypted sym key + iv at the beginning
+    rand_ctx->rand_gen->generate(key_iv, 32, rand_ctx);
+    int retval = ntru_encrypt(key_iv, 32, pub, params, rand_ctx, enc);   // put encrypted sym key + iv at the beginning
     int outlen;
     if (!openssl_encr_decr(msg, msg_len, enc+ntru_enc_len(params), &outlen, key_iv, key_iv+16, 1))   // followed by the encrypted msg
         retval = 99;
@@ -96,13 +94,16 @@ int main(int arc, char **argv) {
     struct NtruEncParams params = EES449EP1;
 #endif
     NtruEncKeyPair kp;
-    if (ntru_gen_key_pair(&params, &kp, ntru_rand_default) != NTRU_SUCCESS)
+    NtruRandGen rng = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx;
+    ntru_rand_init(&rand_ctx, &rng);
+    if (ntru_gen_key_pair(&params, &kp, &rand_ctx) != NTRU_SUCCESS)
         printf("keygen fail\n");
 
     /* encrypt */
     uint8_t enc[ntru_enc_len(&params)+strlen(plain_char)+16];
     int enc_len;
-    if (ntru_encrypt_hybrid(plain, strlen(plain_char), &kp.pub, &params, ntru_rand_default, enc, &enc_len) != NTRU_SUCCESS)
+    if (ntru_encrypt_hybrid(plain, strlen(plain_char), &kp.pub, &params, &rand_ctx, enc, &enc_len) != NTRU_SUCCESS)
         printf("encrypt fail\n");
 
     /* decrypt */
@@ -111,6 +112,7 @@ int main(int arc, char **argv) {
     if (ntru_decrypt_hybrid((uint8_t*)&enc, enc_len, &kp, &params, (uint8_t*)&dec, &dec_len) != NTRU_SUCCESS)
         printf("decrypt fail\n");
     dec[dec_len] = 0;   // string terminator
+    ntru_rand_release(&rand_ctx);
 
     printf("encryption+decryption ");
     printf(strcmp((char*)plain, (char*)dec)==0 ? "successful\n" : "failed\n");

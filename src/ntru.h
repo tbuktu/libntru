@@ -10,37 +10,23 @@
 /**
  * @brief Key generation
  *
- * Generates a (non-deterministically) random NtruEncrypt key pair.
+ * Generates a NtruEncrypt key pair.
+ * If a deterministic RNG is used, the key pair will be deterministic for a given random seed;
+ * otherwise, the key pair will be completely random.
  *
  * @param params the NtruEncrypt parameters to use
  * @param kp pointer to write the key pair to (output parameter)
- * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with random data. See the ntru_rand_* functions.
+ * @param rand_ctx an initialized random number generator. See ntru_rand_init() in rand.h.
  * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
  */
-uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*));
-
-/**
- * @brief Deterministic key generation
- *
- * Generates an NtruEncrypt key pair which is determined by a random seed.
- * For a given set of NTRU parameters and a given random seed, the key pair
- * will always be the same.
- *
- * @param params the NtruEncrypt parameters to use
- * @param kp pointer to write the key pair to (output parameter)
- * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with pseudo-random data determined by the NtruRandContext. See the ntru_rand_* functions.
- * @param seed seed value
- * @param seed_len length of the seed parameter
- * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
- */
-uint8_t ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len);
+uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx);
 
 /**
  * @brief Encryption
  *
  * Encrypts a message.
+ * If a deterministic RNG is used, the encrypted message will also be deterministic for a given
+ * combination of plain text, key, and random seed.
  * See P1363.1 section 9.2.2.
  *
  * @param msg The message to encrypt
@@ -48,34 +34,12 @@ uint8_t ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t
  *                bulk data, encrypt with a symmetric key, then NTRU-encrypt that key.
  * @param pub the public key to encrypt the message with
  * @param params the NtruEncrypt parameters to use
- * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with random data. See the ntru_rand_* functions.
+ * @param rand_ctx an initialized random number generator. See ntru_rand_init() in rand.h.
  * @param enc output parameter; a pointer to store the encrypted message. Must accommodate
               ntru_enc_len(params) bytes.
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
  */
-uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *enc);
-
-/**
- * @brief Deterministic encryption
- *
- * Encrypts a message. Produces the same output for a given plain text, key, and random seed.
- * See P1363.1 section 9.2.2.
- *
- * @param msg The message to encrypt
- * @param msg_len length of msg. Must not exceed ntru_max_msg_len(params). To encrypt
- *                bulk data, encrypt with a symmetric key, then NTRU-encrypt that key.
- * @param pub the public key to encrypt the message with
- * @param params the NtruEncrypt parameters to use
- * @param rng a pointer to a function that takes an array and an array size, and fills the array
- *            with pseudo-random data determined by the NtruRandContext. See the ntru_rand_* functions.
- * @param seed seed value
- * @param seed_len length of the seed parameter
- * @param enc output parameter; a pointer to store the encrypted message. Must accommodate
-              ntru_enc_len(params) bytes.
- * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
- */
-uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len, uint8_t *enc);
+uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc);
 
 /**
  * @brief Decryption

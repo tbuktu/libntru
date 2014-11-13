@@ -13,7 +13,7 @@ const uint8_t NTRU_BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
 const uint8_t NTRU_BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
 const uint8_t NTRU_BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
 
-uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx) {
+uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t df1 = params->df1;
@@ -31,7 +31,7 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
         NtruProdPoly *t = &kp->priv.t.prod;
         for (;;) {
             /* choose random t, calculate f=3t+1 */
-            if (!ntru_rand_prod(N, df1, df2, df3, df3, t, rng, rand_ctx))
+            if (!ntru_rand_prod(N, df1, df2, df3, df3, t, rand_ctx))
                 return NTRU_ERR_PRNG;
             ntru_prod_to_int(t, &f);
             ntru_mult_fac(&f, 3);
@@ -51,7 +51,7 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
         NtruTernPoly *t = &kp->priv.t.tern;
         for (;;) {
             /* choose random t, calculate f=3t+1 */
-            if (!ntru_rand_tern(N, df1, df1, t, rng, rand_ctx))
+            if (!ntru_rand_tern(N, df1, df1, t, rand_ctx))
                 return NTRU_ERR_PRNG;
             ntru_tern_to_int(t, &f);
             ntru_mult_fac(&f, 3);
@@ -69,7 +69,7 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
     NtruTernPoly g;
     uint16_t dg = N / 3;
     for (;;) {
-        if (!ntru_rand_tern(N, dg, dg-1, &g, rng, rand_ctx))
+        if (!ntru_rand_tern(N, dg, dg-1, &g, rand_ctx))
             return NTRU_ERR_PRNG;
         NtruIntPoly g_int;
         ntru_tern_to_int(&g, &g_int);
@@ -89,19 +89,6 @@ uint8_t ntru_gen_key_pair_internal(NtruEncParams *params, NtruEncKeyPair *kp, ui
     kp->pub.q = q;
 
     return NTRU_SUCCESS;
-}
-
-uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*)) {
-    return ntru_gen_key_pair_internal(params, kp, rng, NULL);
-}
-
-uint8_t ntru_gen_key_pair_det(NtruEncParams *params, NtruEncKeyPair *kp, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len) {
-    void *rand_state = NULL;
-    NtruRandContext rand_ctx = {seed, seed_len, &rand_state};
-    uint8_t result = ntru_gen_key_pair_internal(params, kp, rng, &rand_ctx);
-    if (rand_state != NULL)
-        free(rand_state);
-    return result;
 }
 
 /**
@@ -273,7 +260,7 @@ void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params
     }
 }
 
-uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), NtruRandContext *rand_ctx, uint8_t *enc) {
+uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t maxm1 = params->maxm1;
@@ -290,7 +277,7 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
     for (;;) {
         /* M = b|octL|msg|p0 */
         uint8_t b[db/8];
-        if (!rng(b, db/8, rand_ctx))
+        if (!rand_ctx->rand_gen->generate(b, db/8, rand_ctx))
             return NTRU_ERR_PRNG;
 
         uint16_t M_len = (buf_len_bits+7) / 8;
@@ -355,20 +342,6 @@ uint8_t ntru_encrypt_internal(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub
         ntru_to_arr(&R, q, enc);
         return NTRU_SUCCESS;
     }
-}
-
-uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *enc) {
-    return ntru_encrypt_internal(msg, msg_len, pub, params, rng, NULL, enc);
-}
-
-uint8_t ntru_encrypt_det(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, uint8_t (*rng)(uint8_t[], uint16_t, NtruRandContext*), uint8_t *seed, uint16_t seed_len, uint8_t *enc) {
-    void *rand_state;
-    rand_state = NULL;
-    NtruRandContext rand_ctx = {seed, seed_len, &rand_state};
-    uint8_t result = ntru_encrypt_internal(msg, msg_len, pub, params, rng, &rand_ctx, enc);
-    if (rand_state != NULL)
-        free(rand_state);
-    return result;
 }
 
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
