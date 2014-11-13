@@ -88,11 +88,7 @@ int main(int arc, char **argv) {
         plain[i] = plain_char[i];
 
     /* generate an NTRU key */
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    struct NtruEncParams params = EES439EP1;
-#else
     struct NtruEncParams params = EES449EP1;
-#endif
     NtruEncKeyPair kp;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
