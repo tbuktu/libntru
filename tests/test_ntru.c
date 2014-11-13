@@ -94,7 +94,6 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     NtruRandContext rand_ctx;
     ntru_rand_init(&rand_ctx, &rng);
     uint8_t valid = ntru_gen_key_pair(params, &kp, &rand_ctx) == NTRU_SUCCESS;
-    ntru_rand_release(&rand_ctx);
 
     uint16_t enc_len = ntru_enc_len(params);
     char plain_char[19];
@@ -109,6 +108,7 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     valid &= ntru_decrypt((uint8_t*)&encrypted, &kp, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
     valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
 
+    ntru_rand_release(&rand_ctx);
     return valid;
 }
 

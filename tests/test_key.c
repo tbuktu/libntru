@@ -20,6 +20,7 @@ uint8_t test_key() {
         NtruRandGen rng = NTRU_RNG_DEFAULT;
         ntru_rand_init(&rand_ctx, &rng);
         ntru_gen_key_pair(&params, &kp, &rand_ctx);
+        ntru_rand_release(&rand_ctx);
 
         /* test public key */
         uint8_t pub_arr[ntru_pub_len(&params)];
