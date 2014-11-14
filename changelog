@@ -1,3 +1,9 @@
+0.3 (11/14/2014)
+ * option to exclude code that is patented beyond 2017
+ * RNG-related API changes for thread safety and closeability of OS handles
+ * several bugs fixed
+ * sample code for NTRU+AES encryption
+
 0.2 (3/30/2014)
  * supports all EES parameter sets
  * supports deterministic encryption and key generation
