@@ -163,12 +163,6 @@ uint8_t test_encr_decr() {
         valid &= test_encr_decr_det(&param_arr[i]);
     }
 
-#ifndef WIN32
-    /* test encryption with ntru_rand_devrandom */
-    NtruEncParams params = EES401EP1;
-    valid &= test_encr_decr_nondet(&params);
-#endif
-
     print_result("test_encr_decr", valid);
     return valid;
 }
