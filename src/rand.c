@@ -77,6 +77,29 @@ uint8_t ntru_rand_devurandom_generate(uint8_t rand_data[], uint16_t len, NtruRan
 uint8_t ntru_rand_devurandom_release(NtruRandContext *rand_ctx) {
     return 1;
 }
+
+uint8_t ntru_rand_devrandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
+    return 1;
+}
+
+uint8_t ntru_rand_devrandom_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
+    int rand_fd = open("/dev/random", O_RDONLY);
+    if (rand_fd < 0)
+        return 0;
+    uint16_t tot_bytes = 0;
+    while (tot_bytes < len) {
+        ssize_t bytes_read = read(rand_fd, ((uint8_t*)rand_data)+tot_bytes, len-tot_bytes);
+        if (bytes_read <= 0)
+            return 0;
+        tot_bytes += bytes_read;
+    }
+    close(rand_fd);
+    return tot_bytes == len;
+}
+
+uint8_t ntru_rand_devrandom_release(NtruRandContext *rand_ctx) {
+    return 1;
+}
 #endif // !WIN32
 
 uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {

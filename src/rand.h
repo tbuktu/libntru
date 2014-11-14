@@ -38,13 +38,16 @@ uint8_t ntru_rand_wincrypt_release(NtruRandContext *rand_ctx);
 #else
 
 #define NTRU_RNG_DEVURANDOM {ntru_rand_devurandom_init, ntru_rand_devurandom_generate, ntru_rand_devurandom_release}
+#define NTRU_RNG_DEVRANDOM {ntru_rand_devrandom_init, ntru_rand_devrandom_generate, ntru_rand_devrandom_release}
 /** default RNG (/dev/urandom on *nix) */
 #define NTRU_RNG_DEFAULT NTRU_RNG_DEVURANDOM
 
 /* /dev/random-based RNG */
-uint8_t ntru_rand_devrandom(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_devrandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
+uint8_t ntru_rand_devrandom_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_devrandom_release(NtruRandContext *rand_ctx);
 
-/* @brief /dev/urandom-based RNG */
+/* /dev/urandom-based RNG */
 uint8_t ntru_rand_devurandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
 uint8_t ntru_rand_devurandom_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 uint8_t ntru_rand_devurandom_release(NtruRandContext *rand_ctx);
