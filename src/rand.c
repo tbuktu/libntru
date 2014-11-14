@@ -32,8 +32,8 @@ uint8_t ntru_rand_release(NtruRandContext *rand_ctx) {
 }
 
 #ifdef WIN32
-uint8_t ntru_rand_wincrypt_init(NtruRandContext *rand_ctx) {
-    HCRYPTPROV *hCryptProv = malloc(sizeof hCryptProv);
+uint8_t ntru_rand_wincrypt_init(NtruRandContext *rand_ctx, NtruRandGen *rand_gen) {
+    HCRYPTPROV *hCryptProv = malloc(sizeof(HCRYPTPROV));
     if (hCryptProv == NULL)
         return 0;
     uint8_t result = CryptAcquireContext(hCryptProv, NULL, NULL, PROV_RSA_FULL, 0);
@@ -43,26 +43,22 @@ uint8_t ntru_rand_wincrypt_init(NtruRandContext *rand_ctx) {
         if (!result)
             return 0;
     }
-    rand_ctx->rand_state = hCryptProv;
+    rand_ctx->state = hCryptProv;
     return 1;
 }
 
 uint8_t ntru_rand_wincrypt_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
-    HCRYPTPROV *hCryptProv = (HCRYPTPROV)rand_ctx->rand_state;
-    if (hCryptProv==NULL && !ntru_rand_wincrypt_init(rand_ctx))
-        return 0;
-    return CryptGenRandom(hCryptProv, len, rand_data);
+    HCRYPTPROV *hCryptProv = (HCRYPTPROV*)rand_ctx->state;
+    return CryptGenRandom(*hCryptProv, len, rand_data);
 }
 
 uint8_t ntru_rand_wincrypt_release(NtruRandContext *rand_ctx) {
-    HCRYPTPROV *hCryptProv = (HCRYPTPROV)rand_ctx->rand_state;
-    uint8_t result = CryptReleaseContext(hCryptProv, 0);
+    HCRYPTPROV *hCryptProv = (HCRYPTPROV*)rand_ctx->state;
+    uint8_t result = CryptReleaseContext(*hCryptProv, 0);
     free(hCryptProv);
     return result;
 }
 
-NtruRandGen NTRU_RNG_WINCRYPT = {ntru_rand_wincrypt_init, ntru_rand_wincrypt_generate, ntru_rand_wincrypt_release};
-NtruRandGen NTRU_RNG_DEFAULT = NTRU_RNG_WINCRYPT;
 #else
 
 uint8_t ntru_rand_devurandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
@@ -81,7 +77,7 @@ uint8_t ntru_rand_devurandom_generate(uint8_t rand_data[], uint16_t len, NtruRan
 uint8_t ntru_rand_devurandom_release(NtruRandContext *rand_ctx) {
     return 1;
 }
-#endif // WIN32
+#endif // !WIN32
 
 uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
     rand_ctx->state = malloc(sizeof(struct NtruIGFState));
