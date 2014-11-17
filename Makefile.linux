@@ -11,7 +11,7 @@ VERSION=0.3
 INST_PFX=/usr
 INST_LIBDIR=$(INST_PFX)/lib
 INST_INCLUDE=$(INST_PFX)/include/libntru
-INST_DOCDIR=$(INST_PFX)/share/doc/libntru
+INST_DOCDIR=$(INST_PFX)/share/doc/libntru-$(VERSION)
 INST_HEADERS=ntru.h types.h key.h encparams.h hash.h rand.h err.h
 
 LIB_OBJS_PATHS=$(patsubst %,$(SRCDIR)/%,$(LIB_OBJS))
