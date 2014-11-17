@@ -22,7 +22,9 @@ MAKEFILENAME=$(lastword $(MAKEFILE_LIST))
 
 all: lib
 
-lib: $(LIB_OBJS_PATHS)
+lib: libntru.so
+
+libntru.so: $(LIB_OBJS_PATHS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -Wl,-soname,libntru.so -o libntru.so $(LIB_OBJS_PATHS) $(LDFLAGS) $(LIBS)
 
 install: lib
