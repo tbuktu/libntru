@@ -117,7 +117,7 @@ tests/%.o: tests/%.c
 
 clean:
 	@# also clean files generated on other OSes
-	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
+	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.a libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
 
 distclean: clean
 	rm -rf $(DIST_NAME)
