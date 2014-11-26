@@ -11,7 +11,6 @@ typedef struct NtruRandContext {
     void *state;
 } NtruRandContext;
 
-//struct NtruRandGen _NtruRandGen;
 typedef struct NtruRandGen {
     uint8_t (*init)(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
     /* a pointer to a function that takes an array and an array size, and fills the array with random data */
