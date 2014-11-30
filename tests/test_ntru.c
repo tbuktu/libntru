@@ -5,17 +5,17 @@
 #include "rand.h"
 
 void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, uint16_t q) {
-    ntru_mult_tern(h, r, e);
+    ntru_mult_tern(h, r, e, q);
     ntru_add_int_mod(e, m, q);
 }
 
-void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
+void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d, uint16_t modulus) {
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (priv->prod_flag)
-        ntru_mult_prod(e, &priv->t.prod, d);
+        ntru_mult_prod(e, &priv->t.prod, d, modulus);
     else
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-        ntru_mult_tern(e, &priv->t.tern, d);
+        ntru_mult_tern(e, &priv->t.tern, d, modulus);
     ntru_mod(d, q);
     ntru_mult_fac(d, 3);
     ntru_add_int(d, e);
@@ -65,7 +65,7 @@ uint8_t test_keygen() {
 
         /* decrypt and verify */
         NtruIntPoly c;
-        decrypt_poly(&e, &kp.priv, params.q, &c);
+        decrypt_poly(&e, &kp.priv, params.q, &c, params.q);
         valid &= ntru_equals_int(&m_int, &c);
 
         /* test deterministic key generation */

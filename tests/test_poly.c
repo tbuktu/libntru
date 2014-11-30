@@ -61,21 +61,48 @@ uint8_t test_mult_int() {
 
 /* tests ntru_mult_tern() */
 uint8_t test_mult_tern() {
-    NtruTernPoly a;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
     ntru_rand_init(&rand_ctx, &rng);
+
+    NtruTernPoly a;
     uint8_t valid = ntru_rand_tern(11, 3, 3, &a, &rand_ctx);
     NtruIntPoly b;
     valid &= rand_int(11, 5, &b, &rand_ctx);
-    ntru_rand_release(&rand_ctx);
-    NtruIntPoly c_tern;
-    ntru_mult_tern(&b, &a, &c_tern);
     NtruIntPoly a_int;
     ntru_tern_to_int(&a, &a_int);
     NtruIntPoly c_int;
     ntru_mult_int(&a_int, &b, &c_int);
-    valid &= ntru_equals_int(&c_tern, &c_int);
+    NtruIntPoly c_tern;
+    ntru_mult_tern_16(&b, &a, &c_tern, 32);
+    valid &= equals_int_mod(&c_tern, &c_int, 32);
+    ntru_mult_tern_64(&b, &a, &c_tern, 32);
+    valid &= equals_int_mod(&c_tern, &c_int, 32);
+
+    int i;
+    for (i=0; i<10; i++) {
+        uint16_t N;
+        valid &= rand_ctx.rand_gen->generate((uint8_t*)&N, sizeof N, &rand_ctx);
+        N = 100 + (N%(NTRU_MAX_N-100));
+        uint16_t num_ones;
+        valid &= rand_ctx.rand_gen->generate((uint8_t*)&num_ones, sizeof num_ones, &rand_ctx);
+        num_ones %= N/2;
+        num_ones %= NTRU_MAX_ONES;
+        uint16_t num_neg_ones;
+        valid &= rand_ctx.rand_gen->generate((uint8_t*)&num_neg_ones, sizeof num_neg_ones, &rand_ctx);
+        num_neg_ones %= N/2;
+        num_neg_ones %= NTRU_MAX_ONES;
+        valid &= ntru_rand_tern(N, num_ones, num_neg_ones, &a, &rand_ctx);
+        valid &= rand_int(N, 11, &b, &rand_ctx);
+        ntru_tern_to_int(&a, &a_int);
+        ntru_mult_int(&a_int, &b, &c_int);
+        ntru_mult_tern_16(&b, &a, &c_tern, 2048);
+        valid &= equals_int_mod(&c_tern, &c_int, 2048);
+        ntru_mult_tern_64(&b, &a, &c_tern, 2048);
+        valid &= equals_int_mod(&c_tern, &c_int, 2048);
+    }
+
+    ntru_rand_release(&rand_ctx);
 
     print_result("test_mult_tern", valid);
     return valid;
@@ -89,18 +116,20 @@ uint8_t test_mult_prod() {
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
     ntru_rand_init(&rand_ctx, &rng);
+    uint16_t log_modulus = 11;
+    uint16_t modulus = 1 << log_modulus;
     for (i=0; i<10; i++) {
         NtruProdPoly a;
         valid &= ntru_rand_prod(853, 8, 8, 8, 9, &a, &rand_ctx);
         NtruIntPoly b;
-        valid &= rand_int(853, 11, &b, &rand_ctx);
+        valid &= rand_int(853, 1<<log_modulus, &b, &rand_ctx);
         NtruIntPoly c_prod;
-        ntru_mult_prod(&b, &a, &c_prod);
+        ntru_mult_prod(&b, &a, &c_prod, modulus);
         NtruIntPoly a_int;
-        ntru_prod_to_int(&a, &a_int);
+        ntru_prod_to_int(&a, &a_int, modulus);
         NtruIntPoly c_int;
         ntru_mult_int(&a_int, &b, &c_int);
-        valid &= ntru_equals_int(&c_prod, &c_int);
+        valid &= equals_int_mod(&c_prod, &c_int, log_modulus);
     }
     ntru_rand_release(&rand_ctx);
 

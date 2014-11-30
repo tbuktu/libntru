@@ -129,7 +129,15 @@ uint8_t ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
     return 1;
 }
 
-uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
+uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
+#ifdef _LP64
+    return ntru_mult_tern_64(a, b, c, modulus);
+#else
+    return ntru_mult_tern_16(a, b, c, modulus);
+#endif
+}
+
+uint8_t ntru_mult_tern_16(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
@@ -159,11 +167,125 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c) {
         }
     }
 
+    ntru_mod(c, modulus);
+    return 1;
+}
+
+uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
+    uint16_t N = a->N;
+    if (N != b->N)
+        return 0;
+    if (modulus & (modulus-1))   // check that modulus is a power of 2
+        return 0;
+
+    uint16_t N4 = N / 4;
+    uint16_t clen = (N+3) / 4 * 2;   // double capacity for intermediate result
+
+    uint16_t mod_mask_16 = modulus - 1;
+    uint64_t mod_mask_64 = mod_mask_16 + (mod_mask_16<<16);
+    mod_mask_64 += mod_mask_64 << 32;
+    typedef uint64_t __attribute__((__may_alias__)) uint64_t_alias;
+
+    /* make sure a.coeffs[i] < modulus */
+    uint16_t i;
+    for (i=0; i<N; i++)
+        a->coeffs[i] &= mod_mask_16;
+
+    uint64_t c_coeffs64[4][clen];   /* use one array for each possible value of b->ones[i]%4 so we're 64-bit aligned */
+    memset(&c_coeffs64, 0, clen*4*8);
+    uint16_t overflow_ctr_start = (1<<16)/modulus - 1;
+    uint16_t overflow_ctr_rem = overflow_ctr_start;
+    /* add coefficients that are multiplied by 1 */
+    for (i=0; i<b->num_ones; i++) {
+        uint16_t b_idx = b->ones[i];
+        uint64_t *c_coeffs_ofs = c_coeffs64[b_idx%4];
+        uint16_t j;
+        for (j=0; j<N4; j++)
+            c_coeffs_ofs[b_idx/4+j] += *((uint64_t_alias*)(&a->coeffs[4*j]));
+        /* there are up to 3 coefficients left; add them */
+        for (j=0; j<N%4; j++)
+            c_coeffs_ofs[b_idx/4+N4] += ((uint64_t_alias)a->coeffs[N4*4+j]) << j*16;
+
+        overflow_ctr_rem--;
+        if (!overflow_ctr_rem) {
+            uint8_t k;
+            for (k=0; k<4; k++)
+                for (j=0; j<clen; j++)
+                    c_coeffs64[k][j] &= mod_mask_64;
+            overflow_ctr_rem = overflow_ctr_start;
+        }
+    }
+
+    /* use inverse mask for subtraction */
+    mod_mask_64 = ~mod_mask_64;
+    uint8_t k;
+    for (k=0; k<4; k++) {
+        uint16_t j;
+        for (j=0; j<clen; j++)
+            c_coeffs64[k][j] |= mod_mask_64;
+    }
+    /* subtract coefficients that are multiplied by -1 */
+    overflow_ctr_rem = overflow_ctr_start;
+    for (i=0; i<b->num_neg_ones; i++) {
+        uint16_t b_idx = b->neg_ones[i];
+        uint64_t *c_coeffs_ofs = c_coeffs64[b_idx%4];
+        uint16_t j;
+        for (j=0; j<N4; j++)
+            c_coeffs_ofs[b_idx/4+j] -= *((uint64_t_alias*)(&a->coeffs[4*j]));
+        /* there are up to 3 coefficients left; subtract them */
+        for (j=0; j<N%4; j++)
+            c_coeffs_ofs[b_idx/4+N4] -= ((uint64_t_alias)a->coeffs[N4*4+j]) << j*16;
+
+        overflow_ctr_rem--;
+        if (!overflow_ctr_rem) {
+            uint8_t k;
+            for (k=0; k<4; k++)
+                for (j=0; j<clen; j++)
+                    c_coeffs64[k][j] |= mod_mask_64;
+            overflow_ctr_rem = overflow_ctr_start;
+        }
+    }
+
+    /* switch back to the original mask for adding the 4 c_coeffs64 vectors */
+    mod_mask_64 = ~mod_mask_64;
+    for (k=0; k<4; k++) {
+        uint16_t j;
+        for (j=0; j<clen; j++)
+            c_coeffs64[k][j] &= mod_mask_64;
+    }
+    /* add the four vectors, c_coeffs64[0] + ... + c_coeffs64[3] */
+    for (i=0; i<clen; i++) {
+        c_coeffs64[0][i] += c_coeffs64[1][i] << 16;
+        c_coeffs64[0][i+1] += c_coeffs64[1][i] >> 48;
+    }
+    for (i=0; i<clen; i++) {
+        c_coeffs64[0][i] += c_coeffs64[2][i] << 32;
+        c_coeffs64[0][i+1] += c_coeffs64[2][i] >> 32;
+    }
+    for (i=0; i<clen; i++) {
+        c_coeffs64[0][i] += c_coeffs64[3][i] << 48;
+        c_coeffs64[0][i+1] += c_coeffs64[3][i] >> 16;
+    }
+    /* take indices mod N */
+    for (i=0; i<(N+3)/4; i++) {
+        uint16_t* ci = (uint16_t*)&c_coeffs64[0][i];
+        c_coeffs64[0][i] += *((uint64_t*)(ci+N));
+    }
+    /* take values mod modulus */
+    for (k=0; k<4; k++) {
+        uint16_t j;
+        for (j=0; j<(N+3)/4; j++)
+            c_coeffs64[k][j] &= mod_mask_64;
+    }
+
+    memcpy(&c->coeffs, c_coeffs64, N * sizeof c->coeffs[0]);
+    c->N = N;
+
     return 1;
 }
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
-uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
+uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
@@ -171,12 +293,13 @@ uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c) {
     memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
 
     NtruIntPoly temp;
-    ntru_mult_tern(a, &b->f1, &temp);
-    ntru_mult_tern(&temp, &b->f2, c);
+    ntru_mult_tern(a, &b->f1, &temp, modulus);
+    ntru_mult_tern(&temp, &b->f2, c, modulus);
     NtruIntPoly f3a;
-    ntru_mult_tern(a, &b->f3, &f3a);
+    ntru_mult_tern(a, &b->f3, &f3a, modulus);
     ntru_add_int(c, &f3a);
 
+    ntru_mod(c, modulus);
     return 1;
 }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
@@ -193,12 +316,12 @@ void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
 }
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
-void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b) {
+void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b, uint16_t modulus) {
     memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
     b->N = a->N;
     NtruIntPoly c;
     ntru_tern_to_int(&a->f1, &c);
-    ntru_mult_tern(&c, &a->f2, b);
+    ntru_mult_tern(&c, &a->f2, b, modulus);
     ntru_add_tern(b, &a->f3);
 }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */

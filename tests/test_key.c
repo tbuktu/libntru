@@ -38,8 +38,8 @@ uint8_t test_key() {
         NtruIntPoly t_int1, t_int2;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
         if (params.prod_flag) {
-            ntru_prod_to_int(&priv.t.prod, &t_int1);
-            ntru_prod_to_int(&kp.priv.t.prod, &t_int2);
+            ntru_prod_to_int(&priv.t.prod, &t_int1, params.q);
+            ntru_prod_to_int(&kp.priv.t.prod, &t_int2, params.q);
         }
         else
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */

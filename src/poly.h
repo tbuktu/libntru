@@ -89,8 +89,9 @@ void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b);
  *
  * @param a a product-form polynomial
  * @param b output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
  */
-void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b);
+void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b, uint16_t modulus);
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**
@@ -102,9 +103,55 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b);
  * @param a a general polynomial
  * @param b a ternary polynomial
  * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
+uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+
+/**
+ * @brief General polynomial by ternary polynomial multiplication
+ *
+ * Multiplies a NtruIntPoly by a NtruTernPoly. The number of coefficients
+ * must be the same for both polynomials.
+ * Uses 16-bit arithmetic.
+ *
+ * @param a a general polynomial
+ * @param b a ternary polynomial
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_tern_16(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+
+/**
+ * @brief General polynomial by ternary polynomial multiplication
+ *
+ * Multiplies a NtruIntPoly by a NtruTernPoly. The number of coefficients
+ * must be the same for both polynomials.
+ * Uses 64-bit arithmetic.
+ *
+ * @param a a general polynomial
+ * @param b a ternary polynomial
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+
+/**
+ * @brief General polynomial by ternary polynomial multiplication, 64-bit version
+ *
+ * Multiplies a NtruIntPoly by a NtruTernPoly. The number of coefficients
+ * must be the same for both polynomials.
+ * This variant is optimized for 64-bit environments.
+ *
+ * @param a a general polynomial
+ * @param b a ternary polynomial
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
@@ -116,9 +163,10 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c);
  * @param a a general polynomial
  * @param b a product-form polynomial
  * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c);
+uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t modulus);
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**

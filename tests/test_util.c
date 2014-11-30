@@ -20,7 +20,7 @@ uint8_t equals_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
 
     uint16_t i;
     for (i=0; i<a->N; i++)
-        if (a->coeffs[i]%modulus != b->coeffs[i]%modulus)
+        if ((a->coeffs[i]-b->coeffs[i]) % modulus)
             return 0;
 
     return 1;
