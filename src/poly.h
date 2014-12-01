@@ -216,7 +216,37 @@ void ntru_mult_fac(NtruIntPoly *a, int16_t factor);
  * @param modulus the modulus to apply to the coefficients of c
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+
+/**
+ * @brief Multiplication of two general polynomials with a modulus
+ *
+ * Multiplies a NtruIntPoly by another, taking the coefficient values modulo an integer.
+ * The number of coefficients must be the same for both polynomials.
+ * Uses 16-bit arithmetic.
+ *
+ * @param a input and output parameter; coefficients are overwritten
+ * @param b a polynomial to multiply by
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus to apply to the coefficients of c
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+
+/**
+ * @brief Multiplication of two general polynomials with a modulus
+ *
+ * Multiplies a NtruIntPoly by another, taking the coefficient values modulo an integer.
+ * The number of coefficients must be the same for both polynomials.
+ * Uses 64-bit arithmetic.
+ *
+ * @param a input and output parameter; coefficients are overwritten
+ * @param b a polynomial to multiply by
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus to apply to the coefficients of c
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 /**
  * @brief Reduction modulo an integer

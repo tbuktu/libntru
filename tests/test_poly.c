@@ -17,7 +17,7 @@
  * @param c output parameter; a pointer to store the new polynomial
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
+uint8_t ntru_mult_int_nomod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
@@ -34,7 +34,7 @@ uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c) {
     return 1;
 }
 
-/** tests ntru_mult_int_mod() */
+/** tests ntru_mult_int() */
 uint8_t test_mult_int() {
     uint8_t valid = 1;
 
@@ -42,19 +42,39 @@ uint8_t test_mult_int() {
     NtruIntPoly a1 = {11, {-1, 1, 1, 0, -1, 0, 1, 0, 0, 1, -1}};
     NtruIntPoly b1 = {11, {14, 11, 26, 24, 14, 16, 30, 7, 25, 6, 19}};
     NtruIntPoly c1;
-    ntru_mult_int_mod(&a1, &b1, &c1, 32);
+    ntru_mult_int(&a1, &b1, &c1, 32);
     NtruIntPoly c1_exp = {11, {3, 25, -10, 21, 10, 7, 6, 7, 5, 29, -7}};
-    valid &= ntru_equals_int(&c1_exp, &c1);
+    valid &= equals_int_mod(&c1_exp, &c1, 32);
 
-    /* ntru_mult_mod should give the same result as ntru_mult_int followed by ntru_mod */
-    NtruIntPoly a3 = {11, {1, 0, -1, 1, 0, 1, 1, 1, -1, 1, -1}};
-    NtruIntPoly b3 = {11, {0, 1, 1, 0, 0, -1, -1, 1, 1, -1, 1}};
-    NtruIntPoly c3, c3_exp;
-    ntru_mult_int_mod(&a3, &b3, &c3, 20);
-    ntru_mult_int(&a3, &b3, &c3_exp);
-    ntru_mod(&c3_exp, 20);
-    valid &= equals_int_mod(&c3_exp, &c3, 20);
+    /* ntru_mult_mod should give the same result as ntru_mult_int_nomod followed by ntru_mod */
+    NtruIntPoly a2 = {5, {1278, 1451, 850, 1071, 942}};
+    NtruIntPoly b2 = {5, {571, 52, 1096, 1800, 662}};
+    NtruIntPoly c2, c2_exp;
+    valid &= ntru_mult_int(&a2, &b2, &c2, 2048);
+    valid &= ntru_mult_int_nomod(&a2, &b2, &c2_exp);
+    ntru_mod(&c2_exp, 2048);
+    valid &= equals_int_mod(&c2_exp, &c2, 2048);
 
+    NtruRandGen rng = NTRU_RNG_DEFAULT;
+    NtruRandContext rand_ctx;
+    ntru_rand_init(&rand_ctx, &rng);
+    int i;
+    for (i=0; i<10; i++) {
+        uint16_t N;
+        valid &= rand_ctx.rand_gen->generate((uint8_t*)&N, sizeof N, &rand_ctx);
+        N = 100 + (N%(NTRU_MAX_N-100));
+        NtruIntPoly a3, b3, c3, c3_exp;
+        valid &= rand_int(N, 11, &a3, &rand_ctx);
+        valid &= rand_int(N, 11, &b3, &rand_ctx);
+        valid &= ntru_mult_int_nomod(&a3, &b3, &c3_exp);
+        ntru_mod(&c3_exp, 2048);
+        valid &= ntru_mult_int_16(&a3, &b3, &c3, 2048);
+        valid &= equals_int_mod(&c3_exp, &c3, 2048);
+        valid &= ntru_mult_int_64(&a3, &b3, &c3, 2048);
+        valid &= equals_int_mod(&c3_exp, &c3, 2048);
+    }
+
+    ntru_rand_release(&rand_ctx);
     print_result("test_mult_int", valid);
     return valid;
 }
@@ -72,7 +92,7 @@ uint8_t test_mult_tern() {
     NtruIntPoly a_int;
     ntru_tern_to_int(&a, &a_int);
     NtruIntPoly c_int;
-    ntru_mult_int(&a_int, &b, &c_int);
+    ntru_mult_int(&a_int, &b, &c_int, 32);
     NtruIntPoly c_tern;
     ntru_mult_tern_16(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
@@ -95,7 +115,7 @@ uint8_t test_mult_tern() {
         valid &= ntru_rand_tern(N, num_ones, num_neg_ones, &a, &rand_ctx);
         valid &= rand_int(N, 11, &b, &rand_ctx);
         ntru_tern_to_int(&a, &a_int);
-        ntru_mult_int(&a_int, &b, &c_int);
+        ntru_mult_int_nomod(&a_int, &b, &c_int);
         ntru_mult_tern_16(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
         ntru_mult_tern_64(&b, &a, &c_tern, 2048);
@@ -128,7 +148,7 @@ uint8_t test_mult_prod() {
         NtruIntPoly a_int;
         ntru_prod_to_int(&a, &a_int, modulus);
         NtruIntPoly c_int;
-        ntru_mult_int(&a_int, &b, &c_int);
+        ntru_mult_int(&a_int, &b, &c_int, modulus);
         valid &= equals_int_mod(&c_prod, &c_int, log_modulus);
     }
     ntru_rand_release(&rand_ctx);
@@ -140,7 +160,7 @@ uint8_t test_mult_prod() {
 
 uint8_t verify_inverse(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
     NtruIntPoly c;
-    ntru_mult_int_mod(a, b, &c, modulus);
+    ntru_mult_int(a, b, &c, modulus);
     ntru_mod(&c, modulus);
     return ntru_equals1(&c);
 }
@@ -155,7 +175,7 @@ uint8_t test_inv() {
     uint8_t invertible = ntru_invert(&a1, 32, &b1);
     NtruIntPoly b_exp = {11, {5, -23, 6, 16, 4, 15, 16, -10, -12, -14, -2}};
     valid &= invertible;
-    valid &= ntru_equals_int(&b_exp, &b1);
+    valid &= equals_int_mod(&b_exp, &b1, 32);
     valid &= verify_inverse(&a1, &b1, 32);
 
     /* test 3 random polynomials */

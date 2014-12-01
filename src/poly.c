@@ -3,6 +3,7 @@
 #include "poly.h"
 #include "rand.h"
 #include "err.h"
+#include "arith.h"
 
 uint8_t ntru_num_bits(uint16_t n) {
     uint8_t b = 1;
@@ -111,7 +112,15 @@ void ntru_sub_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
         a->coeffs[i] = (a->coeffs[i]-b->coeffs[i]) % modulus;
 }
 
-uint8_t ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+#ifdef _LP64
+    return ntru_mult_int_64(a, b, c, modulus);
+#else
+    return ntru_mult_int_16(a, b, c, modulus);
+#endif
+}
+
+uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
@@ -125,6 +134,71 @@ uint8_t ntru_mult_int_mod(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
             ck += b->coeffs[i] * a->coeffs[(N+k-i)%N];
         c->coeffs[k] = ck % modulus;
     }
+
+    return 1;
+}
+
+uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+    uint16_t N = a->N;
+    uint16_t N2 = (N+1) / 2;
+    if (N != b->N)
+        return 0;
+    if (modulus & (modulus-1))   // check that modulus is a power of 2
+        return 0;
+    uint16_t mod_mask_16 = modulus - 1;
+    uint64_t mod_mask_64 = mod_mask_16 + (mod_mask_16<<25);
+
+    /* make 64-bit versions of a->coeffs and b->coeffs */
+    uint64_t a_coeffs64[N2];
+    uint64_t b_coeffs64[N2];
+    uint16_t i;
+    for (i=0; i<N/2; i++) {
+        a_coeffs64[i] = (a->coeffs[2*i]&mod_mask_16) + (((uint64_t)(a->coeffs[2*i+1]&mod_mask_16))<<25);
+        b_coeffs64[i] = (b->coeffs[2*i]&mod_mask_16) + (((uint64_t)(b->coeffs[2*i+1]&mod_mask_16))<<25);
+    }
+    if (N%2 == 1) {
+        a_coeffs64[N2-1] = a->coeffs[N-1] & mod_mask_16;
+        b_coeffs64[N2-1] = b->coeffs[N-1] & mod_mask_16;
+    }
+
+    /* multiply a_coeffs64 by b_coeffs64 */
+    uint16_t clen = 2 * N2;   /* double capacity for intermediate result */
+    uint64_t c_coeffs64[clen];
+    memset(&c_coeffs64, 0, clen*8);
+    uint16_t overflow_ctr_start = (1<<(25-ntru_log2(modulus))) - 1;
+    uint16_t overflow_ctr_rem = overflow_ctr_start;
+    for (i=0; i<N2; i++) {
+        uint64_t j;
+        for (j=0; j<N2; j++) {
+            uint64_t ck = a_coeffs64[i] * b_coeffs64[j];
+            c_coeffs64[i+j] += ck & mod_mask_64;
+            c_coeffs64[i+j+1] += ck >> 50;
+            overflow_ctr_rem--;
+            if (!overflow_ctr_rem) {
+                uint16_t k;
+                for (k=0; k<clen; k++)
+                    c_coeffs64[k] &= mod_mask_64;
+                overflow_ctr_rem = overflow_ctr_start;
+            }
+        }
+    }
+
+    /* transform c_coeffs64 into NtruIntPoly representation */
+    c->N = N;
+    memset(&c->coeffs, 0, N*2);
+    uint16_t k = 0;
+    for (i=0; i<clen; i++) {
+        c->coeffs[k] += c_coeffs64[i];
+        if (++k >= N)
+            k = 0;
+        c->coeffs[k] += c_coeffs64[i] >> 25;
+        if (++k >= N)
+            k = 0;
+    }
+
+    /* take values mod modulus */
+    for (i=0; i<N; i++)
+        c->coeffs[i] &= mod_mask_16;
 
     return 1;
 }
@@ -558,8 +632,8 @@ void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, uint16_t q) {
         v *= 2;
         memcpy(&temp, Fq, sizeof *Fq);
         ntru_mult_2(&temp, v);
-        ntru_mult_int_mod(Fq, a, &temp2, v);
-        ntru_mult_int_mod(&temp2, Fq, &temp3, v);
+        ntru_mult_int(Fq, a, &temp2, v);
+        ntru_mult_int(&temp2, Fq, &temp3, v);
         ntru_sub_int_mod(&temp, &temp3, v);
         memcpy(Fq, &temp, sizeof temp);
     }
