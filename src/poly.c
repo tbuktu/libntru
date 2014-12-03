@@ -106,10 +106,10 @@ void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b) {
         a->coeffs[i] -= b->coeffs[i];
 }
 
-void ntru_sub_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
+void ntru_neg_mod(NtruIntPoly *a, uint16_t modulus) {
     uint16_t i;
-    for (i=0; i<b->N; i++)
-        a->coeffs[i] = (a->coeffs[i]-b->coeffs[i]) % modulus;
+    for (i=0; i<a->N; i++)
+        a->coeffs[i] = modulus - a->coeffs[i];
 }
 
 uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
@@ -626,16 +626,15 @@ void ntru_clear_int(NtruIntPoly *p) {
 }
 
 void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, uint16_t q) {
-    uint16_t v = 2;
-    NtruIntPoly temp, temp2, temp3;
+    NtruIntPoly temp1, temp2;
+    uint32_t v = 2;
     while (v < q) {
-        v *= 2;
-        memcpy(&temp, Fq, sizeof *Fq);
-        ntru_mult_2(&temp, v);
-        ntru_mult_int(Fq, a, &temp2, v);
-        ntru_mult_int(&temp2, Fq, &temp3, v);
-        ntru_sub_int_mod(&temp, &temp3, v);
-        memcpy(Fq, &temp, sizeof temp);
+        v *= v;
+        ntru_mult_int(a, Fq, &temp1, q);
+        ntru_neg_mod(&temp1, q);
+        temp1.coeffs[0] += 2;
+        memcpy(&temp2, Fq, sizeof *Fq);
+        ntru_mult_int(&temp1, &temp2, Fq, q);
     }
 }
 
