@@ -378,6 +378,15 @@ uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t
 }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
+uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    if (a->prod_flag)
+        return ntru_mult_prod(b, &a->poly.prod, c, modulus);
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+        return ntru_mult_tern(b, &a->poly.tern, c, modulus);
+}
+
 void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
     memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
     uint16_t i;
@@ -399,6 +408,15 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b, uint16_t modulus) {
     ntru_add_tern(b, &a->f3);
 }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+
+void ntru_priv_to_int(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    if (a->prod_flag)
+        ntru_prod_to_int(&a->poly.prod, b, modulus);
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+        ntru_tern_to_int(&a->poly.tern, b);
+}
 
 void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     uint8_t bits_coeff = 0;
@@ -619,18 +637,45 @@ void ntru_clear_tern(NtruTernPoly *p) {
     memset(&p->neg_ones, 0, p->num_neg_ones * sizeof p->neg_ones[0]);
 }
 
+void ntru_clear_priv(NtruPrivPoly *p) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    if (p->prod_flag) {
+        ntru_clear_tern(&p->poly.prod.f1);
+        ntru_clear_tern(&p->poly.prod.f2);
+        ntru_clear_tern(&p->poly.prod.f3);
+    }
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+        ntru_clear_tern(&p->poly.tern);
+}
+
 void ntru_clear_int(NtruIntPoly *p) {
     uint16_t i;
     for (i=0; i<p->N; i++)
         p->coeffs[i] = 0;
 }
 
-void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, uint16_t q) {
+/**
+ * @brief Lift inverse
+ *
+ * Given a polynomial a and the inverse of (1+3a) mod 2, this function
+ * calculates the inverse of (1+3a) mod q.
+ *
+ * @param a a polynomial such that Fq = (1+3a)^(-1) (mod 2)
+ * @param Fq the inverse of 1+3a modulo 2
+ * @param q the modulus
+ */
+void ntru_mod2_to_modq(NtruPrivPoly *a, NtruIntPoly *Fq, uint16_t q) {
     NtruIntPoly temp1, temp2;
     uint32_t v = 2;
     while (v < q) {
         v *= v;
-        ntru_mult_int(a, Fq, &temp1, q);
+
+        /* temp1 = (1+3a)*Fq */
+        ntru_mult_priv(a, Fq, &temp1, q);
+        ntru_mult_fac(&temp1, 3);
+        ntru_add_int(&temp1, Fq);
+
         ntru_neg_mod(&temp1, q);
         temp1.coeffs[0] += 2;
         memcpy(&temp2, Fq, sizeof *Fq);
@@ -638,10 +683,14 @@ void ntru_mod2_to_modq(NtruIntPoly *a, NtruIntPoly *Fq, uint16_t q) {
     }
 }
 
-uint8_t ntru_invert(NtruIntPoly *a, uint16_t q, NtruIntPoly *Fq) {
+uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     uint8_t invertible;
     int16_t i;
-    uint16_t N = a->N;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    uint16_t N = a->prod_flag ? a->poly.prod.N : a->poly.tern.N;
+#else
+    uint16_t N = a->poly.tern.N;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     uint16_t k = 0;
     NtruIntPoly *b = ntru_zero_poly(N+1);
     if (!b)
@@ -652,14 +701,18 @@ uint8_t ntru_invert(NtruIntPoly *a, uint16_t q, NtruIntPoly *Fq) {
         free(b);
         return NTRU_ERR_OUT_OF_MEMORY;
     }
-    NtruIntPoly *f = ntru_clone(a);
+    NtruIntPoly *f = malloc(sizeof(NtruIntPoly));
     if (!f) {
         free(b);
         free(c);
         return NTRU_ERR_OUT_OF_MEMORY;
     }
-    f->coeffs[f->N] = 0;   /* index N wasn't cloned */
-    f->N++;   /* add one coefficient for a total of N+1 */
+    /* f=3a+1; skip multiplication by 3 because f is taken mod 2 later */
+    ntru_priv_to_int(a, f, q);
+    f->coeffs[0] += 1;
+    /* add one coefficient for a total of N+1 */
+    f->coeffs[f->N] = 0;
+    f->N++;
     ntru_mod2(f);
     /* set g(x) = x^N − 1 */
     NtruIntPoly *g = ntru_zero_poly(N+1);
@@ -730,10 +783,14 @@ done:
     return invertible;
 }
 
-uint8_t ntru_is_invertible_pow2(NtruIntPoly *a) {
+uint8_t ntru_is_invertible_pow2(NtruPrivPoly *a) {
     uint8_t invertible;
-    uint16_t i;
-    uint16_t N = a->N;
+    int16_t i;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    uint16_t N = a->prod_flag ? a->poly.prod.N : a->poly.tern.N;
+#else
+    uint16_t N = a->poly.tern.N;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     uint16_t k = 0;
     NtruIntPoly *b = ntru_zero_poly(N+1);
     if (!b)
@@ -744,14 +801,18 @@ uint8_t ntru_is_invertible_pow2(NtruIntPoly *a) {
         free(b);
         return NTRU_ERR_OUT_OF_MEMORY;
     }
-    NtruIntPoly *f = ntru_clone(a);
+    NtruIntPoly *f = malloc(sizeof(NtruIntPoly));
     if (!f) {
         free(b);
         free(c);
         return NTRU_ERR_OUT_OF_MEMORY;
     }
-    f->coeffs[f->N] = 0;   /* index N wasn't cloned */
-    f->N++;   /* add one coefficient for a total of N+1 */
+    /* f=3a+1; skip multiplication by 3 because f is taken mod 2 later */
+    ntru_priv_to_int(a, f, 2);
+    f->coeffs[0] += 1;
+    /* add one coefficient for a total of N+1 */
+    f->coeffs[f->N] = 0;
+    f->N++;
     ntru_mod2(f);
     /* set g(x) = x^N − 1 */
     NtruIntPoly *g = ntru_zero_poly(N+1);
@@ -793,6 +854,10 @@ uint8_t ntru_is_invertible_pow2(NtruIntPoly *a) {
         ntru_add_int_mod2(b, c);
     }
 
+    if (b->coeffs[N] != 0) {
+        invertible = 0;
+        goto done;
+    }
     invertible = b->coeffs[N] == 0;
 
 done:

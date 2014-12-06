@@ -158,10 +158,14 @@ uint8_t test_mult_prod() {
 }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
-uint8_t verify_inverse(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
-    NtruIntPoly c;
-    ntru_mult_int(a, b, &c, modulus);
-    ntru_mod(&c, modulus);
+uint8_t verify_inverse(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus) {
+    NtruIntPoly c, a_int;
+
+    ntru_priv_to_int(a, &a_int, modulus);
+    ntru_mult_fac(&a_int, 3);
+    a_int.coeffs[0] += 1;
+
+    ntru_mult_int(&a_int, b, &c, modulus);
     return ntru_equals1(&c);
 }
 
@@ -169,13 +173,11 @@ uint8_t verify_inverse(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
 uint8_t test_inv() {
     uint8_t valid = 1;
 
-    /* Verify an example from the NTRU tutorial */
-    NtruIntPoly a1 = {11, {-1, 1, 1, 0, -1, 0, 1, 0, 0, 1, -1}};
+    /* Verify a short polynomial */
+    NtruPrivPoly a1 = {0, {{11, 4, 4, {1, 2, 6, 9}, {0, 3, 4, 10}}}};
     NtruIntPoly b1;
     uint8_t invertible = ntru_invert(&a1, 32, &b1);
-    NtruIntPoly b_exp = {11, {5, -23, 6, 16, 4, 15, 16, -10, -12, -14, -2}};
     valid &= invertible;
-    valid &= equals_int_mod(&b_exp, &b1, 32);
     valid &= verify_inverse(&a1, &b1, 32);
 
     /* test 3 random polynomials */
@@ -184,20 +186,36 @@ uint8_t test_inv() {
     NtruRandContext rand_ctx;
     ntru_rand_init(&rand_ctx, &rng);
     while (num_invertible < 3) {
-        NtruIntPoly a_int;
-        rand_int(853, 11, &a_int, &rand_ctx);
+        NtruPrivPoly a2;
+        a2.prod_flag = 0;   /* ternary */
+        ntru_rand_tern(853, 100, 100, &a2.poly.tern, &rand_ctx);
 
         NtruIntPoly b;
-        uint8_t invertible = ntru_invert(&a_int, 2048, &b);
+        uint8_t invertible = ntru_invert(&a2, 2048, &b);
         if (invertible) {
-            valid &= verify_inverse(&a_int, &b, 2048);
+            valid &= verify_inverse(&a2, &b, 2048);
             num_invertible++;
         }
     }
+#ifdef NTRU_AVOID_HAMMING_WT_PATENT
+    num_invertible = 0;
+    while (num_invertible < 3) {
+        NtruPrivPoly a3;
+        a3.prod_flag = 0;   /* ternary */
+        ntru_rand_tern(853, 100, 100, &a3.poly.tern, &rand_ctx);
+
+        NtruIntPoly b;
+        uint8_t invertible = ntru_invert(&a3, 2048, &b);
+        if (invertible) {
+            valid &= verify_inverse(&a3, &b, 2048);
+            num_invertible++;
+        }
+    }
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     ntru_rand_release(&rand_ctx);
 
     /* test a non-invertible polynomial */
-    NtruIntPoly a2 = {11, {-1, 0, 1, 1, 0, 0, -1, 0, -1, 0, 1}};
+    NtruPrivPoly a2 = {0, {{11, 2, 3, {3, 10}, {0, 6, 8}}}};
     NtruIntPoly b2;
     invertible = ntru_invert(&a2, 32, &b2);
     valid &= !invertible;

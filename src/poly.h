@@ -95,6 +95,18 @@ void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b, uint16_t modulus);
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**
+ * @brief Private polynomial to general polynomial
+ *
+ * Converts a NtruPrivPoly (i.e. a NtruTernPoly or NtruProdPoly) to an
+ * equivalent NtruIntPoly.
+ *
+ * @param a a "private" polynomial
+ * @param b output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
+ */
+void ntru_priv_to_int(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus);
+
+/**
  * @brief General polynomial by ternary polynomial multiplication
  *
  * Multiplies a NtruIntPoly by a NtruTernPoly. The number of coefficients
@@ -168,6 +180,21 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
  */
 uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t modulus);
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+
+/**
+ * @brief General polynomial by private polynomial multiplication
+ *
+ * Multiplies a NtruIntPoly by a NtruPrivPoly, i.e. a NtruTernPoly or
+ * a NtruProdPoly. The number of coefficients must be the same for both
+ * polynomials.
+ *
+ * @param a a "private" polynomial
+ * @param b a general polynomial
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus; must be a power of two
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 /**
  * @brief Polynomial to binary
@@ -314,13 +341,14 @@ uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b);
 uint16_t ntru_count(NtruIntPoly *p, int16_t value);
 
 /**
- * @brief Erases a ternary polynomial
+ * @brief Erases a private polynomial
  *
- * Overwrites all coefficients of a ternary polynomial with zeros.
+ * Overwrites all coefficients of a private (i.e., ternary or product-form)
+ * polynomial with zeros.
  *
  * @param p a polynomial
  */
-void ntru_clear_tern(NtruTernPoly *p);
+void ntru_clear_priv(NtruPrivPoly *p);
 
 /**
  * @brief Erases a general polynomial
@@ -334,19 +362,19 @@ void ntru_clear_int(NtruIntPoly *p);
 /**
  * @brief Inverse modulo q
  *
- * Computes the inverse mod q; q must be a power of 2.
+ * Computes the inverse of 1+3a mod q; q must be a power of 2.
  * Returns 0 if the polynomial is not invertible, 1 otherwise.
  * The algorithm is described in "Almost Inverses and Fast NTRU Key Generation" at
  * http://www.securityinnovation.com/uploads/Crypto/NTRUTech014.pdf
  *
- * @param a a polynomial
+ * @param a a ternary or product-form polynomial
  * @param q the modulus
  * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t ntru_invert(NtruIntPoly *a, uint16_t q, NtruIntPoly *Fq);
+uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
 
-uint8_t ntru_is_invertible_pow2(NtruIntPoly *a);
+uint8_t ntru_is_invertible_pow2(NtruPrivPoly *a);
 
 /**
  * @brief Sum of coefficients

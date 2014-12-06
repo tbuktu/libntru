@@ -55,10 +55,10 @@ uint8_t equals_key_pair(NtruEncKeyPair *kp1, NtruEncKeyPair *kp2) {
     if (kp1->priv.q != kp2->priv.q)
         return 0;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    if (kp1->priv.prod_flag && !equals_prod(&kp1->priv.t.prod, &kp2->priv.t.prod))
+    if (kp1->priv.t.prod_flag && !equals_prod(&kp1->priv.t.poly.prod, &kp2->priv.t.poly.prod))
         return 0;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-    if (!kp1->priv.prod_flag && !equals_tern(&kp1->priv.t.tern, &kp2->priv.t.tern))
+    if (!kp1->priv.t.prod_flag && !equals_tern(&kp1->priv.t.poly.tern, &kp2->priv.t.poly.tern))
         return 0;
     if (kp1->pub.q != kp2->pub.q)
         return 0;

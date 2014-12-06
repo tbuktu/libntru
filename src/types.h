@@ -33,11 +33,14 @@ typedef struct NtruProdPoly {
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /** Private polynomial, can be ternary or product-form */
-typedef union {
-    NtruTernPoly tern;
+typedef struct {
+    uint8_t prod_flag;   /* whether the polynomial is in product form */
+    union {
+        NtruTernPoly tern;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    NtruProdPoly prod;
+        NtruProdPoly prod;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    } poly;
 } NtruPrivPoly;
 
 /**
@@ -45,7 +48,6 @@ typedef union {
  */
 typedef struct NtruEncPrivKey {
     uint16_t q;
-    uint8_t prod_flag;   /* whether t is in product form */
     NtruPrivPoly t;
 } NtruEncPrivKey;
 
