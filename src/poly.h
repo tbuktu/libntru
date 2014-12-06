@@ -374,6 +374,38 @@ void ntru_clear_int(NtruIntPoly *p);
  */
 uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
 
+/**
+ * @brief Inverse modulo q
+ *
+ * Computes the inverse of 1+3a mod q; q must be a power of 2.
+ * Returns 0 if the polynomial is not invertible, 1 otherwise.
+ * The algorithm is described in "Almost Inverses and Fast NTRU Key Generation" at
+ * http://www.securityinnovation.com/uploads/Crypto/NTRUTech014.pdf
+ * This function uses 16-bit arithmetic.
+ *
+ * @param a a ternary or product-form polynomial
+ * @param q the modulus
+ * @param Fq output parameter; a pointer to store the new polynomial
+ * @return 1 if a is invertible, 0 otherwise
+ */
+uint8_t ntru_invert_16(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+
+/**
+ * @brief Inverse modulo q
+ *
+ * Computes the inverse of 1+3a mod q; q must be a power of 2.
+ * Returns 0 if the polynomial is not invertible, 1 otherwise.
+ * The algorithm is described in "Almost Inverses and Fast NTRU Key Generation" at
+ * http://www.securityinnovation.com/uploads/Crypto/NTRUTech014.pdf
+ * This function uses 64-bit arithmetic.
+ *
+ * @param a a ternary or product-form polynomial
+ * @param q the modulus
+ * @param Fq output parameter; a pointer to store the new polynomial
+ * @return 1 if a is invertible, 0 otherwise
+ */
+uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+
 uint8_t ntru_is_invertible_pow2(NtruPrivPoly *a);
 
 /**

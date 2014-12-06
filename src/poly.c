@@ -100,6 +100,12 @@ void ntru_add_int_mod2(NtruIntPoly *a, NtruIntPoly *b) {
         a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) & 1;
 }
 
+void ntru_add_int_mod2_64(uint64_t *a, uint64_t *b, uint16_t len) {
+    uint16_t i;
+    for (i=0; i<len; i++)
+        a[i] ^= b[i];
+}
+
 void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b) {
     uint16_t i;
     for (i=0; i<b->N; i++)
@@ -596,12 +602,28 @@ uint8_t ntru_equals0(NtruIntPoly *p) {
     return 1;
 }
 
+uint8_t ntru_equals0_64(uint64_t *p, uint16_t len) {
+    uint16_t i;
+    for (i=0; i<len; i++)
+        if (p[i] != 0)
+            return 0;
+    return 1;
+}
+
 uint8_t ntru_equals1(NtruIntPoly *p) {
     uint16_t i;
     for (i=1; i<p->N; i++)
         if (p->coeffs[i] != 0)
             return 0;
     return p->coeffs[0] == 1;
+}
+
+uint8_t ntru_equals1_64(uint64_t *p, uint16_t len) {
+    uint16_t i;
+    for (i=1; i<len; i++)
+        if (p[i] != 0)
+            return 0;
+    return p[0] == 1;
 }
 
 uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
@@ -619,6 +641,18 @@ uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
 uint16_t ntru_deg(NtruIntPoly *p) {
     uint16_t deg = p->N - 1;
     while (deg>0 && p->coeffs[deg]==0)
+        deg--;
+    return deg;
+}
+
+uint16_t ntru_deg_64(uint64_t *coeffs, uint16_t len) {
+    uint16_t deg = 64*len - 1;
+    len--;
+    while (len>0 && coeffs[len]==0) {
+        len--;
+        deg -= 64;
+    }
+    while (coeffs[len]>>(deg%64)==0 && deg>0)
         deg--;
     return deg;
 }
@@ -684,6 +718,15 @@ void ntru_mod2_to_modq(NtruPrivPoly *a, NtruIntPoly *Fq, uint16_t q) {
 }
 
 uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
+#ifdef _LP64
+    return ntru_invert_64(a, q, Fq);
+#else
+    return ntru_invert_16(a, q, Fq);
+#endif
+}
+
+uint8_t ntru_invert_16(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
+return ntru_invert_64(a, q, Fq);
     uint8_t invertible;
     int16_t i;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
@@ -779,6 +822,129 @@ done:
     free(c);
     free(f);
     free(g);
+
+    return invertible;
+}
+
+void ntru_int_to_bin64(NtruIntPoly *a, uint64_t *coeffs64) {
+    uint16_t N = a->N;
+    uint16_t i;
+    for (i=0; i<(N+63)/64; i++)
+        coeffs64[i] = 0;
+    for (i=0; i<N; i++)
+        coeffs64[i/64] |= ((uint64_t)a->coeffs[i]&1) << (i%64);
+}
+
+void ntru_bin64_to_int(uint64_t *coeffs64, uint16_t N, NtruIntPoly *a) {
+    uint16_t i;
+    for (i=0; i<N; i++)
+        a->coeffs[i] = 0;
+    for (i=0; i<N; i++)
+        a->coeffs[i] = (coeffs64[i/64]>>(i%64)) & 1;
+    a->N = N;
+}
+
+uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
+    uint8_t invertible;
+    int16_t i;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    uint16_t N = a->prod_flag ? a->poly.prod.N : a->poly.tern.N;
+#else
+    uint16_t N = a->poly.tern.N;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    uint16_t k = 0;
+    uint16_t N64 = (N+1+63) / 64;   /* #uint64_t's needed for N+1 coeffs */
+
+    /* b = 1 */
+    uint64_t b_coeffs64_arr[N64];
+    uint64_t *b_coeffs64 = b_coeffs64_arr;
+    memset(b_coeffs64+1, 0, (N64-1)*8);
+    b_coeffs64[0] = 1;
+
+    /* c = 0 */
+    uint64_t c_coeffs64_arr[N64];
+    uint64_t *c_coeffs64 = c_coeffs64_arr;
+    memset(c_coeffs64, 0, N64*8);
+
+    NtruIntPoly *f = malloc(sizeof(NtruIntPoly));
+    if (!f) {
+        return NTRU_ERR_OUT_OF_MEMORY;
+    }
+    /* f=3a+1; skip multiplication by 3 because f is taken mod 2 later */
+    ntru_priv_to_int(a, f, q);
+    f->coeffs[0] += 1;
+    /* add one coefficient for a total of N+1 */
+    f->coeffs[f->N] = 0;
+    f->N++;
+    ntru_mod2(f);
+    uint64_t f_coeffs64_arr[N64];
+    uint64_t *f_coeffs64 = f_coeffs64_arr;
+    /* g(x) = x^N − 1 */
+    uint64_t g_coeffs64_arr[N64];
+    uint64_t *g_coeffs64 = g_coeffs64_arr;
+    memset(g_coeffs64, 0, N64*8);
+    g_coeffs64[0] = 1;
+    g_coeffs64[N/64] |= ((uint64_t)1) << (N%64);
+
+    ntru_int_to_bin64(f, f_coeffs64);
+    for (;;) {
+        while ((f_coeffs64[0]&1) == 0) {
+            /* c(x) = c(x) * x */
+            for (i=N64-1; i>0; i--) {
+                c_coeffs64[i] <<= 1;
+                c_coeffs64[i] |= c_coeffs64[i-1] >> 63;
+            }
+            c_coeffs64[0] <<= 1;
+            /* f(x) = f(x) / x */
+            for (i=1; i<N64; i++) {
+                f_coeffs64[i-1] >>= 1;
+                f_coeffs64[i-1] |= f_coeffs64[i] << 63;
+            }
+            f_coeffs64[i-1] >>= 1;
+            k++;
+            if (ntru_equals0_64(f_coeffs64, N64)) {
+                invertible = 0;
+                goto done;
+            }
+        }
+        if (ntru_equals1_64(f_coeffs64, N64))
+            break;
+        if (ntru_deg_64(f_coeffs64, N64) < ntru_deg_64(g_coeffs64, N64)) {
+            /* exchange f and g */
+            uint64_t *temp_coeffs = f_coeffs64;
+            f_coeffs64 = g_coeffs64;
+            g_coeffs64 = temp_coeffs;
+            /* exchange b and c */
+            temp_coeffs = b_coeffs64;
+            b_coeffs64 = c_coeffs64;
+            c_coeffs64 = temp_coeffs;
+        }
+        ntru_add_int_mod2_64(f_coeffs64, g_coeffs64, N64);
+        ntru_add_int_mod2_64(b_coeffs64, c_coeffs64, N64);
+    }
+
+    if ((b_coeffs64[(N+1-1)/64]&(((uint64_t)1)<<((N+1-1)%64))) != 0) {   /* if (b[N]!=0) */
+        invertible = 0;
+        goto done;
+    }
+    invertible = 1;
+
+    /* Fq(x) = x^(N-k) * b(x) */
+    memset(&Fq->coeffs, 0, N * sizeof Fq->coeffs[0]);
+    Fq->N = N;
+    int16_t j = 0;
+    k %= N;
+    for (i=N-1; i>=0; i--) {
+        j = i - k;
+        if (j < 0)
+            j += N;
+        Fq->coeffs[j] = (b_coeffs64[i/64]>>(i%64)) & 1;   /* Fq->coeffs[j]=b[i] */
+    }
+
+    ntru_mod2_to_modq(a, Fq, q);
+
+done:
+    free(f);
 
     return invertible;
 }
