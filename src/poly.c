@@ -942,23 +942,35 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     g_coeffs64[N/64] |= ((uint64_t)1) << (N%64);
 
     for (;;) {
-        while ((f_coeffs64[0]&1) == 0) {
-            /* c(x) = c(x) * x */
-            for (i=N64-1; i>0; i--) {
-                c_coeffs64[i] <<= 1;
-                c_coeffs64[i] |= c_coeffs64[i-1] >> 63;
-            }
-            c_coeffs64[0] <<= 1;
-            /* f(x) = f(x) / x */
-            for (i=1; i<N64; i++) {
-                f_coeffs64[i-1] >>= 1;
-                f_coeffs64[i-1] |= f_coeffs64[i] << 63;
-            }
-            f_coeffs64[i-1] >>= 1;
-            k++;
-            if (ntru_equals0_64(f_coeffs64, N64))   /* not invertible */
-                return 0;
+        uint16_t num_zeros = 0;
+        /* while f[0]==0 */
+        while ((f_coeffs64[num_zeros/64]&(((uint64_t)1)<<(num_zeros%64)))==0 && num_zeros<=N)
+            num_zeros++;
+        if (num_zeros >= N)   /* not invertible */
+            return 0;
+        k += num_zeros;
+
+        /* right-shift f, left-shift c num_zeros coefficients each */
+        if (num_zeros >= 64) {
+            memmove(f_coeffs64+num_zeros/64, f_coeffs64, N-num_zeros/64*8);
+            memset(f_coeffs64+N-num_zeros/64*8, 0, num_zeros/64*8);
+            num_zeros %= 64;
         }
+        if (num_zeros > 0) {
+            /* c(x) = c(x)*(x^num_zeros) */
+            for (i=N64-1; i>0; i--) {
+                c_coeffs64[i] <<= num_zeros;
+                c_coeffs64[i] |= c_coeffs64[i-1] >> (64-num_zeros);
+            }
+            c_coeffs64[0] <<= num_zeros;
+            /* f(x) = f(x)/(x^num_zeros) */
+            for (i=1; i<N64; i++) {
+                f_coeffs64[i-1] >>= num_zeros;
+                f_coeffs64[i-1] |= f_coeffs64[i] << (64-num_zeros);
+            }
+            f_coeffs64[i-1] >>= num_zeros;
+        }
+
         if (ntru_equals1_64(f_coeffs64, N64))
             break;
         if (ntru_deg_64(f_coeffs64, N64) < ntru_deg_64(g_coeffs64, N64)) {
