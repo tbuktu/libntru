@@ -682,14 +682,6 @@ uint8_t ntru_equals1(NtruIntPoly *p) {
     return p->coeffs[0] == 1;
 }
 
-uint8_t ntru_equals1_64(uint64_t *p, uint16_t len) {
-    uint16_t i;
-    for (i=1; i<len; i++)
-        if (p[i] != 0)
-            return 0;
-    return p[0] == 1;
-}
-
 uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
     if (a->N != b->N)
         return 0;
@@ -941,6 +933,8 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     g_coeffs64[0] = 1;
     g_coeffs64[N/64] |= ((uint64_t)1) << (N%64);
 
+    uint16_t deg_f = ntru_deg_64(f_coeffs64, N64);
+    uint16_t deg_g = N;
     for (;;) {
         uint16_t num_zeros = 0;
         /* while f[0]==0 */
@@ -970,14 +964,18 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
             }
             f_coeffs64[i-1] >>= num_zeros;
         }
+        deg_f -= num_zeros;
 
-        if (ntru_equals1_64(f_coeffs64, N64))
+        if (deg_f==0 && f_coeffs64[0]==1)   /* if f==1 */
             break;
-        if (ntru_deg_64(f_coeffs64, N64) < ntru_deg_64(g_coeffs64, N64)) {
+        if (deg_f < deg_g) {
             /* exchange f and g */
             uint64_t *temp_coeffs = f_coeffs64;
             f_coeffs64 = g_coeffs64;
             g_coeffs64 = temp_coeffs;
+            uint16_t temp = deg_f;
+            deg_f = deg_g;
+            deg_g = temp;
             /* exchange b and c */
             temp_coeffs = b_coeffs64;
             b_coeffs64 = c_coeffs64;
