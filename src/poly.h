@@ -406,8 +406,6 @@ uint8_t ntru_invert_16(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
  */
 uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
 
-uint8_t ntru_is_invertible_pow2(NtruPrivPoly *a);
-
 /**
  * @brief Sum of coefficients
  *

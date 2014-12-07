@@ -7,6 +7,9 @@
 #include "idxgen.h"
 #include "mgf.h"
 
+/** Whether to ensure g is invertible when generating a key */
+#define NTRU_CHECK_INVERTIBILITY_G 0
+
 const int8_t NTRU_COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
 const int8_t NTRU_COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
 const uint8_t NTRU_BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
@@ -69,7 +72,11 @@ uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandCon
             return NTRU_ERR_PRNG;
         g.prod_flag = 0;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-        if (ntru_is_invertible_pow2(&g))
+
+        if (!NTRU_CHECK_INVERTIBILITY_G)
+            break;
+        NtruIntPoly gq;
+        if (ntru_invert(&g, q, &gq))
             break;
     }
 
