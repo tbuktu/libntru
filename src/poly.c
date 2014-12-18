@@ -257,110 +257,76 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
         return 0;
     if (modulus & (modulus-1))   // check that modulus is a power of 2
         return 0;
+    memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
+    c->N = N;
 
-    uint16_t N4 = N / 4;
-    uint16_t clen = (N+3) / 4 * 2;   // double capacity for intermediate result
-
-    uint16_t mod_mask_16 = modulus - 1;
-    uint64_t mod_mask_64 = mod_mask_16 + (mod_mask_16<<16);
+    uint64_t mod_mask_64 = modulus - 1;
+    mod_mask_64 += mod_mask_64 << 16;
     mod_mask_64 += mod_mask_64 << 32;
     typedef uint64_t __attribute__((__may_alias__)) uint64_t_alias;
 
     /* make sure a.coeffs[i] < modulus */
-    uint16_t i;
-    for (i=0; i<N; i++)
-        a->coeffs[i] &= mod_mask_16;
+    ntru_mod(a, modulus);
 
-    uint64_t c_coeffs64[4][clen];   /* use one array for each possible value of b->ones[i]%4 so we're 64-bit aligned */
-    memset(&c_coeffs64, 0, clen*4*8);
     uint16_t overflow_ctr_start = (1<<16)/modulus - 1;
     uint16_t overflow_ctr_rem = overflow_ctr_start;
+
     /* add coefficients that are multiplied by 1 */
+    uint16_t i;
     for (i=0; i<b->num_ones; i++) {
-        uint16_t b_idx = b->ones[i];
-        uint64_t *c_coeffs_ofs = c_coeffs64[b_idx%4];
-        uint16_t j;
-        for (j=0; j<N4; j++)
-            c_coeffs_ofs[b_idx/4+j] += *((uint64_t_alias*)(&a->coeffs[4*j]));
-        /* there are up to 3 coefficients left; add them */
-        for (j=0; j<N%4; j++)
-            c_coeffs_ofs[b_idx/4+N4] += ((uint64_t_alias)a->coeffs[N4*4+j]) << j*16;
+        int16_t j;
+        int16_t k = b->ones[i];
+        uint16_t j_end = N-4<b->ones[i] ? 0 : N-4-b->ones[i];
+        for (j=0; j<j_end; j+=4,k+=4)
+            *((uint64_t_alias*)&c->coeffs[k]) += *((uint64_t_alias*)&a->coeffs[j]);
+        for (; k<N; k++,j++)
+            c->coeffs[k] += a->coeffs[j];
+        for (k=0; j<N-4; j+=4,k+=4)
+            *((uint64_t_alias*)&c->coeffs[k]) += *((uint64_t_alias*)&a->coeffs[j]);
+        for (; j<N; j++,k++)
+            c->coeffs[k] += a->coeffs[j];
 
         overflow_ctr_rem--;
         if (!overflow_ctr_rem) {
-            uint8_t k;
-            for (k=0; k<4; k++)
-                for (j=0; j<clen; j++)
-                    c_coeffs64[k][j] &= mod_mask_64;
+            ntru_mod(c, modulus);
             overflow_ctr_rem = overflow_ctr_start;
         }
     }
 
     /* use inverse mask for subtraction */
     mod_mask_64 = ~mod_mask_64;
-    uint8_t k;
-    for (k=0; k<4; k++) {
-        uint16_t j;
-        for (j=0; j<clen; j++)
-            c_coeffs64[k][j] |= mod_mask_64;
-    }
+    for (i=0; i<N-4; i+=4)
+        *((uint64_t_alias*)&c->coeffs[i]) |= mod_mask_64;
+    for (; i<N; i++)
+        c->coeffs[i] |= mod_mask_64;
+
     /* subtract coefficients that are multiplied by -1 */
     overflow_ctr_rem = overflow_ctr_start;
     for (i=0; i<b->num_neg_ones; i++) {
-        uint16_t b_idx = b->neg_ones[i];
-        uint64_t *c_coeffs_ofs = c_coeffs64[b_idx%4];
-        uint16_t j;
-        for (j=0; j<N4; j++)
-            c_coeffs_ofs[b_idx/4+j] -= *((uint64_t_alias*)(&a->coeffs[4*j]));
-        /* there are up to 3 coefficients left; subtract them */
-        for (j=0; j<N%4; j++)
-            c_coeffs_ofs[b_idx/4+N4] -= ((uint64_t_alias)a->coeffs[N4*4+j]) << j*16;
+        int16_t j;
+        int16_t k = b->neg_ones[i];
+        uint16_t j_end = N-4<b->neg_ones[i] ? 0 : N-4-b->neg_ones[i];
+        for (j=0; j<j_end; j+=4,k+=4)
+            *((uint64_t_alias*)&c->coeffs[k]) -= *((uint64_t_alias*)&a->coeffs[j]);
+        for (; k<N; k++,j++)
+            c->coeffs[k] -= a->coeffs[j];
+        for (k=0; j<N-4; j+=4,k+=4)
+            *((uint64_t_alias*)&c->coeffs[k]) -= *((uint64_t_alias*)&a->coeffs[j]);
+        for (; j<N; j++,k++)
+            c->coeffs[k] -= a->coeffs[j];
 
         overflow_ctr_rem--;
         if (!overflow_ctr_rem) {
-            uint8_t k;
-            for (k=0; k<4; k++)
-                for (j=0; j<clen; j++)
-                    c_coeffs64[k][j] |= mod_mask_64;
+            for (j=0; j<N-4; j+=4)
+                *((uint64_t_alias*)&c->coeffs[j]) |= mod_mask_64;
+            for (; j<N; j++)
+                c->coeffs[j] |= mod_mask_64;
             overflow_ctr_rem = overflow_ctr_start;
         }
     }
 
-    /* switch back to the original mask for adding the 4 c_coeffs64 vectors */
-    mod_mask_64 = ~mod_mask_64;
-    for (k=0; k<4; k++) {
-        uint16_t j;
-        for (j=0; j<clen; j++)
-            c_coeffs64[k][j] &= mod_mask_64;
-    }
-    /* add the four vectors, c_coeffs64[0] + ... + c_coeffs64[3] */
-    for (i=0; i<clen; i++) {
-        c_coeffs64[0][i] += c_coeffs64[1][i] << 16;
-        c_coeffs64[0][i+1] += c_coeffs64[1][i] >> 48;
-    }
-    for (i=0; i<clen; i++) {
-        c_coeffs64[0][i] += c_coeffs64[2][i] << 32;
-        c_coeffs64[0][i+1] += c_coeffs64[2][i] >> 32;
-    }
-    for (i=0; i<clen; i++) {
-        c_coeffs64[0][i] += c_coeffs64[3][i] << 48;
-        c_coeffs64[0][i+1] += c_coeffs64[3][i] >> 16;
-    }
-    /* take indices mod N */
-    for (i=0; i<(N+3)/4; i++) {
-        uint16_t* ci = (uint16_t*)&c_coeffs64[0][i];
-        c_coeffs64[0][i] += *((uint64_t*)(ci+N));
-    }
-    /* take values mod modulus */
-    for (k=0; k<4; k++) {
-        uint16_t j;
-        for (j=0; j<(N+3)/4; j++)
-            c_coeffs64[k][j] &= mod_mask_64;
-    }
-
-    memcpy(&c->coeffs, c_coeffs64, N * sizeof c->coeffs[0]);
     c->N = N;
-
+    ntru_mod(c, modulus);
     return 1;
 }
 
@@ -608,7 +574,27 @@ NtruIntPoly *ntru_clone(NtruIntPoly *a) {
     return b;
 }
 
-void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
+void ntru_mod_64(NtruIntPoly *p, uint16_t modulus) {
+    typedef uint64_t __attribute__((__may_alias__)) uint64_t_alias;
+    uint16_t i;
+    if (modulus == 2048) {
+        for (i=0; i<p->N-4; i+=4)
+            *((uint64_t_alias*)&p->coeffs[i]) &= 0x07FF07FF07FF07FF;
+        for (; i<p->N; i++)
+            p->coeffs[i] &= 0x07FF;
+    }
+    else {
+        uint64_t mod_mask = modulus - 1;
+        mod_mask += mod_mask << 16;
+        mod_mask += mod_mask << 32;
+        for (i=0; i<p->N-4; i+=4)
+            *((uint64_t_alias*)&p->coeffs[i]) &= mod_mask;
+        for (; i<p->N; i++)
+            p->coeffs[i] &= mod_mask;
+    }
+}
+
+void ntru_mod_16(NtruIntPoly *p, uint16_t modulus) {
     uint16_t i;
     if (modulus == 2048)
         for (i=0; i<p->N; i++)
@@ -616,6 +602,14 @@ void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
     else
         for (i=0; i<p->N; i++)
             p->coeffs[i] %= modulus;
+}
+
+void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
+#ifdef _LP64
+    ntru_mod_64(p, modulus);
+#else
+    ntru_mod_16(p, modulus);
+#endif
 }
 
 void ntru_mod3(NtruIntPoly *p) {
