@@ -1,5 +1,14 @@
 CC=gcc
 CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -O2
+SSE3_FLAG = $(shell /usr/sbin/sysctl machdep.cpu.features | grep -m 1 -ow SSE3)
+ifneq ($(SSE), no)
+    ifeq ($(SSE3_FLAG), SSE3)
+        SSE=yes
+    endif
+endif
+ifeq ($(SSE), yes)
+    CFLAGS+=-msse3
+endif
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o

@@ -151,11 +151,11 @@ uint8_t ntru_mult_tern_16(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
 uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 /**
- * @brief General polynomial by ternary polynomial multiplication, 64-bit version
+ * @brief General polynomial by ternary polynomial multiplication, SSE version
  *
  * Multiplies a NtruIntPoly by a NtruTernPoly. The number of coefficients
  * must be the same for both polynomials.
- * This variant is optimized for 64-bit environments.
+ * This variant requires SSE support.
  *
  * @param a a general polynomial
  * @param b a ternary polynomial
@@ -163,7 +163,7 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
  * @param modulus the modulus; must be a power of two
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
@@ -274,6 +274,21 @@ uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
 uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+
+/**
+ * @brief Multiplication of two general polynomials with a modulus
+ *
+ * Multiplies a NtruIntPoly by another, taking the coefficient values modulo an integer.
+ * The number of coefficients must be the same for both polynomials.
+ * Requires SSE support.
+ *
+ * @param a input and output parameter; coefficients are overwritten
+ * @param b a polynomial to multiply by
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus the modulus to apply to the coefficients of c
+ * @return 0 if the number of coefficients differ, 1 otherwise
+ */
+uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 /**
  * @brief Reduction modulo an integer
@@ -405,6 +420,22 @@ uint8_t ntru_invert_16(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
  * @return 1 if a is invertible, 0 otherwise
  */
 uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+
+/**
+ * @brief Inverse modulo q
+ *
+ * Computes the inverse of 1+3a mod q; q must be a power of 2.
+ * Returns 0 if the polynomial is not invertible, 1 otherwise.
+ * The algorithm is described in "Almost Inverses and Fast NTRU Key Generation" at
+ * http://www.securityinnovation.com/uploads/Crypto/NTRUTech014.pdf
+ * This function requires SSE support.
+ *
+ * @param a a ternary or product-form polynomial
+ * @param q the modulus
+ * @param Fq output parameter; a pointer to store the new polynomial
+ * @return 1 if a is invertible, 0 otherwise
+ */
+uint8_t ntru_invert_sse(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
 
 /**
  * @brief Sum of coefficients

@@ -1,6 +1,9 @@
 CC?=gcc
 CFLAGS?=-g -O2
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
+ifeq ($(SSE), yes)
+    CFLAGS+=-msse3
+endif
 LIBS+=-lrt
 SRCDIR=src
 TESTDIR=tests

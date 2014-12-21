@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#ifdef __SSE3__
+#include <pmmintrin.h>
+#endif
 #include "poly.h"
 #include "rand.h"
 #include "err.h"
@@ -119,7 +122,9 @@ void ntru_neg_mod(NtruIntPoly *a, uint16_t modulus) {
 }
 
 uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
-#ifdef _LP64
+#ifdef __SSE3__
+    return ntru_mult_int_sse(a, b, c, modulus);
+#elif _LP64
     return ntru_mult_int_64(a, b, c, modulus);
 #else
     return ntru_mult_int_16(a, b, c, modulus);
@@ -209,8 +214,49 @@ uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
     return 1;
 }
 
+#ifdef __SSE3__
+uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+    uint16_t N = a->N;
+    if (N != b->N)
+        return 0;
+    c->N = N;
+    memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
+
+    uint16_t k;
+    for (k=0; k<N; k++) {
+        uint16_t i;
+        __m128i bk = _mm_set1_epi16(b->coeffs[k]);
+        for (i=0; i+k<N-7; i+=8) {
+            /* c->coeffs[k+i+t] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
+            __m128i ai = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
+            __m128i product = _mm_mullo_epi16 (ai, bk);
+            __m128i ci = _mm_lddqu_si128((__m128i*)&c->coeffs[k+i]);
+            ci = _mm_add_epi16(ci, product);
+            _mm_storeu_si128((__m128i*)&c->coeffs[k+i], ci);
+        }
+        for (; k+i<N; i++)
+            c->coeffs[k+i] += b->coeffs[k] * a->coeffs[i];
+        for (; i<N-7; i+=8) {
+            /* c->coeffs[k+i+t-N] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
+            __m128i ai = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
+            __m128i product = _mm_mullo_epi16 (ai, bk);
+            __m128i ci = _mm_lddqu_si128((__m128i*)&c->coeffs[k+i-N]);
+            ci = _mm_add_epi16(ci, product);
+            _mm_storeu_si128((__m128i*)&c->coeffs[k+i-N], ci);
+        }
+        for (; i<N; i++)
+            c->coeffs[k+i-N] += b->coeffs[k] * a->coeffs[i];
+    }
+
+    ntru_mod(c, modulus);
+    return 1;
+}
+#endif   /* __SSE3__ */
+
 uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
-#ifdef _LP64
+#ifdef __SSE3__
+    return ntru_mult_tern_sse(a, b, c, modulus);
+#elif _LP64
     return ntru_mult_tern_64(a, b, c, modulus);
 #else
     return ntru_mult_tern_16(a, b, c, modulus);
@@ -329,6 +375,69 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
     ntru_mod(c, modulus);
     return 1;
 }
+
+#ifdef __SSE3__
+uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
+    uint16_t N = a->N;
+    if (N != b->N)
+        return 0;
+    if (modulus & (modulus-1))   // check that modulus is a power of 2
+        return 0;
+    memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
+    c->N = N;
+
+    /* add coefficients that are multiplied by 1 */
+    uint16_t i;
+    for (i=0; i<b->num_ones; i++) {
+        int16_t j;
+        int16_t k = b->ones[i];
+        uint16_t j_end = N-7<b->ones[i] ? 0 : N-7-b->ones[i];
+        for (j=0; j<j_end; j+=8,k+=8) {
+            __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
+            __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
+            __m128i ca = _mm_add_epi16(ck, aj);
+            _mm_storeu_si128((__m128i*)&c->coeffs[k], ca);
+        }
+        for (; k<N; k++,j++)
+            c->coeffs[k] += a->coeffs[j];
+        for (k=0; j<N-7; j+=8,k+=8) {
+            __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
+            __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
+            __m128i ca = _mm_add_epi16(ck, aj);
+            _mm_storeu_si128((__m128i*)&c->coeffs[k], ca);
+        }
+        for (; j<N; j++,k++)
+            c->coeffs[k] += a->coeffs[j];
+    }
+
+    /* subtract coefficients that are multiplied by -1 */
+    for (i=0; i<b->num_neg_ones; i++) {
+        int16_t j;
+        int16_t k = b->neg_ones[i];
+        uint16_t j_end = N-7<b->neg_ones[i] ? 0 : N-7-b->neg_ones[i];
+        for (j=0; j<j_end; j+=8,k+=8) {
+            __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
+            __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
+            __m128i ca = _mm_sub_epi16(ck, aj);
+            _mm_storeu_si128((__m128i*)&c->coeffs[k], ca);
+        }
+        for (; k<N; k++,j++)
+            c->coeffs[k] -= a->coeffs[j];
+        for (k=0; j<N-7; j+=8,k+=8) {
+            __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
+            __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
+            __m128i ca = _mm_sub_epi16(ck, aj);
+            _mm_storeu_si128((__m128i*)&c->coeffs[k], ca);
+        }
+        for (; j<N; j++,k++)
+            c->coeffs[k] -= a->coeffs[j];
+    }
+
+    c->N = N;
+    ntru_mod(c, modulus);
+    return 1;
+}
+#endif   /* __SSE3__ */
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
 uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t modulus) {
