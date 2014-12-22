@@ -62,7 +62,7 @@ uint8_t test_mult_int() {
     for (i=0; i<10; i++) {
         uint16_t N;
         valid &= rand_ctx.rand_gen->generate((uint8_t*)&N, sizeof N, &rand_ctx);
-        N = 100 + (N%(NTRU_MAX_N-100));
+        N = 100 + (N%(NTRU_MAX_DEGREE-100));
         NtruIntPoly a3, b3, c3, c3_exp;
         valid &= rand_int(N, 11, &a3, &rand_ctx);
         valid &= rand_int(N, 11, &b3, &rand_ctx);
@@ -107,7 +107,7 @@ uint8_t test_mult_tern() {
     for (i=0; i<10; i++) {
         uint16_t N;
         valid &= rand_ctx.rand_gen->generate((uint8_t*)&N, sizeof N, &rand_ctx);
-        N = 100 + (N%(NTRU_MAX_N-100));
+        N = 100 + (N%(NTRU_MAX_DEGREE-100));
         uint16_t num_ones;
         valid &= rand_ctx.rand_gen->generate((uint8_t*)&num_ones, sizeof num_ones, &rand_ctx);
         num_ones %= N/2;

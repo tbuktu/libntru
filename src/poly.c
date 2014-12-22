@@ -563,7 +563,32 @@ void ntru_priv_to_mod2(NtruPrivPoly *a, uint64_t *b_coeffs64) {
     }
 }
 
-void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
+void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a) {
+    uint16_t N = p->N;
+    uint8_t log_q = ntru_log2(q);
+    typedef uint64_t __attribute__((__may_alias__)) *uint64_t_alias;
+    uint64_t *a64 = (uint64_t_alias)a;
+    uint16_t a_idx = 0;   /* index into a64 */
+    uint8_t bit_idx = 0;   /* next unused bit of a64[a_idx] */
+    a64[0] = 0;
+    uint16_t p_idx;
+    uint64_t mod_mask = q - 1;
+    for (p_idx=0; p_idx<N; p_idx++) {
+        uint64_t coeff = p->coeffs[p_idx] & mod_mask;
+        if (bit_idx < 64-log_q) {
+            a64[a_idx] |= coeff << bit_idx;
+            bit_idx += log_q;
+        }
+        else {
+            a64[a_idx] |= coeff << bit_idx;
+            a_idx++;
+            bit_idx += log_q - 64;
+            a64[a_idx] = coeff >> (log_q-bit_idx);
+        }
+    }
+}
+
+void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     uint8_t bits_coeff = 0;
     while (q > 1) {
         q /= 2;
@@ -586,6 +611,14 @@ void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
             else
                 bit_idx++;
         }
+}
+
+void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
+#ifdef _LP64
+    ntru_to_arr_64(p, q, a);
+#else
+    ntru_to_arr_16(p, q, a);
+#endif
 }
 
 void ntru_to_arr4(NtruIntPoly *p, uint8_t *arr) {

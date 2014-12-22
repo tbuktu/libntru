@@ -10,7 +10,7 @@
  *
  * Generates a random ternary polynomial.
  *
- * @param N the number of coefficients; must be NTRU_MAX_N or less
+ * @param N the number of coefficients; must be NTRU_MAX_DEGREE or less
  * @param num_ones number of ones
  * @param num_neg_ones number of negative ones
  * @param poly output parameter; a pointer to store the new polynomial
@@ -25,7 +25,7 @@ uint8_t ntru_rand_tern(uint16_t N, uint16_t num_ones, uint16_t num_neg_ones, Ntr
  *
  * Generates a random product-form polynomial consisting of 3 random ternary polynomials.
  *
- * @param N the number of coefficients; must be NTRU_MAX_N or less
+ * @param N the number of coefficients; must be NTRU_MAX_DEGREE or less
  * @param df1 number of ones and negative ones in the first ternary polynomial
  * @param df2 number of ones and negative ones in the second ternary polynomial
  * @param df3_ones number of ones ones in the third ternary polynomial
