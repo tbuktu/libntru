@@ -2,14 +2,14 @@ CC?=gcc
 AR?=ar
 CFLAGS?=-g -O2
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
-SSE3_FLAG = $(shell /bin/grep -m 1 -o sse3 /proc/cpuinfo)
+SSSE3_FLAG = $(shell /bin/grep -m 1 -o ssse3 /proc/cpuinfo)
 ifneq ($(SSE), no)
-    ifeq ($(SSE3_FLAG), sse3)
+    ifeq ($(SSSE3_FLAG), ssse3)
         SSE=yes
     endif
 endif
 ifeq ($(SSE), yes)
-    CFLAGS+=-msse3
+    CFLAGS+=-mssse3
 endif
 LIBS+=-lrt
 SRCDIR=src

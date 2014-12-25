@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#ifdef __SSE3__
-#include <pmmintrin.h>
+#ifdef __SSSE3__
+#include <tmmintrin.h>
 #endif
 #include "poly.h"
 #include "rand.h"
@@ -122,7 +122,7 @@ void ntru_neg_mod(NtruIntPoly *a, uint16_t modulus) {
 }
 
 uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
-#ifdef __SSE3__
+#ifdef __SSSE3__
     return ntru_mult_int_sse(a, b, c, modulus);
 #elif _LP64
     return ntru_mult_int_64(a, b, c, modulus);
@@ -214,7 +214,7 @@ uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
     return 1;
 }
 
-#ifdef __SSE3__
+#ifdef __SSSE3__
 uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
@@ -251,10 +251,10 @@ uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
     ntru_mod(c, modulus);
     return 1;
 }
-#endif   /* __SSE3__ */
+#endif   /* __SSSE3__ */
 
 uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
-#ifdef __SSE3__
+#ifdef __SSSE3__
     return ntru_mult_tern_sse(a, b, c, modulus);
 #elif _LP64
     return ntru_mult_tern_64(a, b, c, modulus);
@@ -376,7 +376,7 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
     return 1;
 }
 
-#ifdef __SSE3__
+#ifdef __SSSE3__
 uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
@@ -437,7 +437,7 @@ uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint
     ntru_mod(c, modulus);
     return 1;
 }
-#endif   /* __SSE3__ */
+#endif   /* __SSSE3__ */
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
 uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t modulus) {
@@ -754,7 +754,7 @@ void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
 #endif
 }
 
-void ntru_mod3(NtruIntPoly *p) {
+void ntru_mod3_standard(NtruIntPoly *p) {
     uint16_t i;
     for (i=0; i<p->N; i++) {
         int8_t c = p->coeffs[i] % 3;
@@ -764,6 +764,69 @@ void ntru_mod3(NtruIntPoly *p) {
             c = 1;
         p->coeffs[i] = c;
     }
+}
+
+#ifdef __SSSE3__
+/* (i%3)+3 for i=0..7 */
+__m128i NTRU_MOD3_LUT = {0x0403020403020403, 0};
+
+/**
+ * SSE version of ntru_mod3.
+ * Based on Douglas W Jones' mod3 function at
+ * http://homepage.cs.uiowa.edu/~jones/bcd/mod.shtml.
+ */
+void ntru_mod3_sse(NtruIntPoly *p) {
+    uint16_t i;
+    for (i=0; i<(p->N+7)/8*8; i+=8) {
+        __m128i a = _mm_lddqu_si128((__m128i*)&p->coeffs[i]);
+
+        /* make positive */
+        __m128i _3000 = _mm_set1_epi16(3000);
+        a = _mm_add_epi16(a, _3000);
+
+        /* a = (a>>8) + (a&0xFF);  (sum base 2**8 digits) */
+        __m128i a1 = _mm_srli_epi16(a, 8);
+        __m128i mask = _mm_set1_epi16(0x00FF);
+        __m128i a2 = _mm_and_si128(a, mask);
+        a = _mm_add_epi16(a1, a2);
+
+        /* a = (a>>4) + (a&0xF);  (sum base 2**4 digits; worst case 0x3B) */
+        a1 = _mm_srli_epi16(a, 4);
+        mask = _mm_set1_epi16(0x000F);
+        a2 = _mm_and_si128(a, mask);
+        a = _mm_add_epi16(a1, a2);
+
+        /* a = (a>>2) + (a&0x3);  (sum base 2**2 digits; worst case 0x1B) */
+        a1 = _mm_srli_epi16(a, 2);
+        mask = _mm_set1_epi16(0x0003);
+        a2 = _mm_and_si128(a, mask);
+        a = _mm_add_epi16(a1, a2);
+
+        /* a = (a>>2) + (a&0x3);  (sum base 2**2 digits; worst case 0x7) */
+        a1 = _mm_srli_epi16(a, 2);
+        mask = _mm_set1_epi16(0x0003);
+        a2 = _mm_and_si128(a, mask);
+        a = _mm_add_epi16(a1, a2);
+
+        __m128i a_mod3 = _mm_shuffle_epi8(NTRU_MOD3_LUT, a);
+        /* _mm_shuffle_epi8 changed bytes 1, 3, 5, ... to non-zero; change them back to zero */
+        mask = _mm_set1_epi16(0x00FF);
+        a_mod3 = _mm_and_si128(a_mod3, mask);
+        /* subtract 3 so coefficients are in the -1..1 range */
+        __m128i three = _mm_set1_epi16(0x0003);
+        a_mod3 = _mm_sub_epi16(a_mod3, three);
+
+        _mm_storeu_si128((__m128i*)&p->coeffs[i], a_mod3);
+    }
+}
+#endif   /* __SSSE3__ */
+
+void ntru_mod3(NtruIntPoly *p) {
+#ifdef __SSSE3__
+    ntru_mod3_sse(p);
+#else
+    ntru_mod3_standard(p);
+#endif   /* __SSSE3__ */
 }
 
 void ntru_mod_center(NtruIntPoly *p, uint16_t modulus) {

@@ -98,7 +98,7 @@ uint8_t test_mult_tern() {
     valid &= equals_int_mod(&c_tern, &c_int, 32);
     ntru_mult_tern_64(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
-#ifdef __SSE3__
+#ifdef __SSSE3__
     ntru_mult_tern_sse(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
 #endif
@@ -124,7 +124,7 @@ uint8_t test_mult_tern() {
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
         ntru_mult_tern_64(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
-#ifdef __SSE3__
+#ifdef __SSSE3__
         ntru_mult_tern_sse(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
 #endif
