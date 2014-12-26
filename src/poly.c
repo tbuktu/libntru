@@ -795,7 +795,6 @@ void ntru_mod3_sse(NtruIntPoly *p) {
         mask = _mm_set1_epi16(0x000F);
         a2 = _mm_and_si128(a, mask);
         a = _mm_add_epi16(a1, a2);
-
         /* a = (a>>2) + (a&0x3);  (sum base 2**2 digits; worst case 0x1B) */
         a1 = _mm_srli_epi16(a, 2);
         mask = _mm_set1_epi16(0x0003);
@@ -910,15 +909,6 @@ uint16_t ntru_deg_64(uint64_t *coeffs, uint16_t len) {
     while (coeffs[len]>>(deg%64)==0 && deg>0)
         deg--;
     return deg;
-}
-
-uint16_t ntru_count(NtruIntPoly *p, int16_t value) {
-    uint16_t count = 0;
-    uint16_t i;
-    for (i=0; i<p->N; i++)
-        if (p->coeffs[i] == value)
-            count++;
-    return count;
 }
 
 void ntru_clear_tern(NtruTernPoly *p) {

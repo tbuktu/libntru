@@ -344,18 +344,6 @@ uint8_t ntru_equals1(NtruIntPoly *p);
 uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b);
 
 /**
- * @brief Frequency of a coefficient
- *
- * Returns the number of times a coefficient value occurs
- * in a polynomial.
- *
- * @param a a polynomial
- * @param value
- * @return the number of coefficients equal to the value
- */
-uint16_t ntru_count(NtruIntPoly *p, int16_t value);
-
-/**
  * @brief Erases a private polynomial
  *
  * Overwrites all coefficients of a private (i.e., ternary or product-form)

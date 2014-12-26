@@ -263,6 +263,17 @@ void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params
     }
 }
 
+uint8_t ntru_check_rep_weight(NtruIntPoly *p, uint16_t dm0) {
+    uint16_t i;
+    uint16_t weights[3];
+    weights[0] = weights[1] = weights[2] = 0;
+
+    for (i=0; i<p->N; i++)
+        weights[p->coeffs[i]+1]++;
+
+    return (weights[0]>=dm0 && weights[1]>=dm0 && weights[2]>=dm0);
+}
+
 uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc) {
     uint16_t N = params->N;
     uint16_t q = params->q;
@@ -331,14 +342,8 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
 
         ntru_mod3(&mtrin);
 
-        if (dm0 > 0) {
-            if (ntru_count(&mtrin, -1) < dm0)
-                continue;
-            if (ntru_count(&mtrin, 0) < dm0)
-                continue;
-            if (ntru_count(&mtrin, 1) < dm0)
-                continue;
-        }
+        if (dm0>0 && !ntru_check_rep_weight(&mtrin, dm0))
+            continue;
 
         ntru_add_int_mod(&R, &mtrin, q);
         ntru_to_arr(&R, q, enc);
@@ -377,11 +382,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     NtruIntPoly ci;
     ntru_decrypt_poly(&e, &kp->priv, q, &ci);
 
-    if (ntru_count(&ci, -1) < dm0)
-        return NTRU_ERR_DM0_VIOLATION;
-    if (ntru_count(&ci, 0) < dm0)
-        return NTRU_ERR_DM0_VIOLATION;
-    if (ntru_count(&ci, 1) < dm0)
+    if (dm0>0 && !ntru_check_rep_weight(&ci, dm0))
         return NTRU_ERR_DM0_VIOLATION;
 
     NtruIntPoly cR = e;
