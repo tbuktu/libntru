@@ -61,44 +61,53 @@ uint8_t ntru_rand_wincrypt_release(NtruRandContext *rand_ctx) {
 
 #else
 
-uint8_t ntru_rand_devurandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
-    return 1;
+uint8_t ntru_rand_device_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen, char *filename) {
+    int rand_fd = open(filename, O_RDONLY);
+    if (rand_fd >= 0) {
+        /* save rand_fd in rand_ctx->state */
+        int *fd_ptr = malloc(sizeof(int));
+        if (fd_ptr == NULL)
+            return 0;
+        *fd_ptr = rand_fd;
+        rand_ctx->state = fd_ptr;
+    }
+    return rand_fd >= 0;
 }
 
-uint8_t ntru_rand_devurandom_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
-    int rand_fd = open("/dev/urandom", O_RDONLY);
-    if (rand_fd < 0)
-        return 0;
+uint8_t ntru_rand_device_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
+    int rand_fd = *((int*)rand_ctx->state);
     ssize_t bytes_read = read(rand_fd, rand_data, len);
-    close(rand_fd);
     return bytes_read == len;
 }
 
+uint8_t ntru_rand_device_release(NtruRandContext *rand_ctx) {
+    int rand_fd = *((int*)rand_ctx->state);
+    free(rand_ctx->state);
+    return close(rand_fd) >= 0;
+}
+
+uint8_t ntru_rand_devurandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
+    return ntru_rand_device_init(rand_ctx, rand_gen, "/dev/urandom");
+}
+
+uint8_t ntru_rand_devurandom_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
+    return ntru_rand_device_generate(rand_data, len, rand_ctx);
+}
+
 uint8_t ntru_rand_devurandom_release(NtruRandContext *rand_ctx) {
-    return 1;
+    return ntru_rand_device_release(rand_ctx);
 }
 
 uint8_t ntru_rand_devrandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
-    return 1;
+    return ntru_rand_device_init(rand_ctx, rand_gen, "/dev/random");
 }
 
 uint8_t ntru_rand_devrandom_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
-    int rand_fd = open("/dev/random", O_RDONLY);
-    if (rand_fd < 0)
-        return 0;
-    uint16_t tot_bytes = 0;
-    while (tot_bytes < len) {
-        ssize_t bytes_read = read(rand_fd, ((uint8_t*)rand_data)+tot_bytes, len-tot_bytes);
-        if (bytes_read <= 0)
-            return 0;
-        tot_bytes += bytes_read;
-    }
-    close(rand_fd);
-    return tot_bytes == len;
+    return ntru_rand_device_generate(rand_data, len, rand_ctx);
 }
 
 uint8_t ntru_rand_devrandom_release(NtruRandContext *rand_ctx) {
-    return 1;
+    return ntru_rand_device_release(rand_ctx);
 }
 #endif // !WIN32
 
