@@ -613,8 +613,82 @@ void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a) {
         }
 }
 
+#ifdef __SSSE3__
+void ntru_to_arr_sse_2048(NtruIntPoly *p, uint8_t *a) {
+    /* mask{n} masks bits n..n+10 except for mask64 which masks bits 64..66 */
+    __m128i mask0 = {(1<<11)-1, 0};
+    __m128i mask11 = _mm_slli_epi64(mask0, 11);
+    __m128i mask22 = _mm_slli_epi64(mask11, 11);
+    __m128i mask33 = _mm_slli_epi64(mask22, 11);
+    __m128i mask44 = _mm_slli_epi64(mask33, 11);
+    __m128i mask55 = {(uint64_t)((1<<9)-1) << 55, 3};
+    __m128i mask64 = {0, 3};
+    __m128i mask66 = {0, ((1<<11)-1) << 2};
+    __m128i mask77 = _mm_slli_epi64(mask66, 11);
+    __m128i mask88 = _mm_slli_epi64(mask77, 11);
+    __m128i mask99 = _mm_slli_epi64(mask88, 11);
+
+    uint16_t a_idx = 0;
+    uint16_t p_idx;
+    uint16_t N = p->N;
+    for (p_idx=0; p_idx<N-10; p_idx+=8) {
+        __m128i p128 = _mm_lddqu_si128((__m128i*)&p->coeffs[p_idx]);   /* 8 coeffs of p starting at p_idx */
+        __m128i a128 = _mm_and_si128(p128, mask0);                                  /* bits [0..10]    -> [0..10]  */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 5), mask11));       /* [16..26]   -> [11..21] */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 10), mask22));      /* [32..42]   -> [22..32] */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 15), mask33));      /* [48..58]   -> [33..43] */
+        __m128i p128_64 = _mm_srli_si128(p128, 8);
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_slli_epi64(p128_64, 44), mask44));   /* [64..74]   -> [44..54] */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_slli_epi64(p128_64, 39), mask55));   /* [80..88]   -> [55..63] */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 25), mask64));      /* [89..90]   -> [64..65] */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 30), mask66));      /* [96..111]  -> [66..76] */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 35), mask77));      /* [112..127] -> [77..87] */
+        _mm_storeu_si128((__m128i*)&a[a_idx], a128);
+        a_idx += 11;
+    }
+
+    /* remaining coeffs (up to 10) */
+    __m128i p128 = _mm_lddqu_si128((__m128i*)&p->coeffs[p_idx]);   /* 8 coeffs of p starting at p_idx */
+    __m128i a128 = _mm_setzero_si128();
+    if (N-p_idx > 0)
+        a128 = _mm_and_si128(p128, mask0);                                          /* bits [0..10]    -> [0..10]  */
+    if (N-p_idx > 1)
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 5), mask11));       /* [16..26]   -> [11..21] */
+    if (N-p_idx > 2)
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 10), mask22));      /* [32..42]   -> [22..32] */
+    if (N-p_idx > 3)
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 15), mask33));      /* [48..58]   -> [33..43] */
+    __m128i p128_64 = _mm_srli_si128(p128, 8);
+    if (N-p_idx > 4)
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_slli_epi64(p128_64, 44), mask44));   /* [64..74]   -> [44..54] */
+    if (N-p_idx > 5) {
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_slli_epi64(p128_64, 39), mask55));   /* [80..88]   -> [55..63] */
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 25), mask64));      /* [89..90]   -> [64..65] */
+    }
+    if (N-p_idx > 6)
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 30), mask66));      /* [96..111]  -> [66..76] */
+    if (N-p_idx > 7)
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_srli_epi64(p128, 35), mask77));      /* [112..127] -> [77..87] */
+    if (N-p_idx > 8) {
+        p128 = _mm_lddqu_si128((__m128i*)&p->coeffs[p_idx+8]);           /* coeffs p_idx+8 through p_idx+15 */
+        p128_64 = _mm_slli_si128(p128, 8);
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_slli_epi64(p128_64, 24), mask88));  /* [0..15]    -> [88..98]  */
+    }
+    if (N-p_idx > 9)
+        a128 = _mm_or_si128(a128, _mm_and_si128(_mm_slli_epi64(p128_64, 19), mask99));  /* [16..31]   -> [99..109] */
+    uint8_t a_last[16];
+    _mm_storeu_si128((__m128i*)a_last, a128);
+    memcpy(&a[a_idx], a_last, ((N-p_idx)*11+7)/8);
+}
+#endif   /* __SSSE3__ */
+
 void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
-#ifdef _LP64
+#ifdef __SSSE3__
+    if (q == 2048)
+        ntru_to_arr_sse_2048(p, a);
+    else
+        ntru_to_arr_16(p, q, a);
+#elif _LP64
     ntru_to_arr_64(p, q, a);
 #else
     ntru_to_arr_16(p, q, a);

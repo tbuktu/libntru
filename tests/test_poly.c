@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "poly.h"
 #include "ntru.h"
 #include "rand.h"
@@ -240,13 +241,18 @@ uint8_t test_arr() {
     NtruRandContext rand_ctx;
     ntru_rand_init(&rand_ctx, &rng);
     uint8_t valid = rand_int(params.N, 11, &p1, &rand_ctx);
-    ntru_to_arr(&p1, params.q, a);
+    ntru_to_arr_64(&p1, params.q, a);
     ntru_rand_release(&rand_ctx);
-
     NtruIntPoly p2;
     ntru_from_arr(a, params.N, params.q, &p2);
-
     valid &= equals_int(&p1, &p2);
+
+#ifdef __SSSE3__
+    uint8_t b[sizeof(a)];
+    ntru_to_arr_sse_2048(&p1, b);
+    valid &= memcmp(a, b, sizeof a) == 0;
+#endif
+
     print_result("test_arr", valid);
     return valid;
 }
