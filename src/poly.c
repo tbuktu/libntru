@@ -1144,24 +1144,6 @@ done:
     return invertible;
 }
 
-void ntru_int_to_bin64(NtruIntPoly *a, uint64_t *coeffs64) {
-    uint16_t N = a->N;
-    uint16_t i;
-    for (i=0; i<(N+63)/64; i++)
-        coeffs64[i] = 0;
-    for (i=0; i<N; i++)
-        coeffs64[i/64] |= ((uint64_t)a->coeffs[i]&1) << (i%64);
-}
-
-void ntru_bin64_to_int(uint64_t *coeffs64, uint16_t N, NtruIntPoly *a) {
-    uint16_t i;
-    for (i=0; i<N; i++)
-        a->coeffs[i] = 0;
-    for (i=0; i<N; i++)
-        a->coeffs[i] = (coeffs64[i/64]>>(i%64)) & 1;
-    a->N = N;
-}
-
 uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     int16_t i;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
