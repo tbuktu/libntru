@@ -226,7 +226,9 @@ uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
     for (k=0; k<N; k++) {
         uint16_t i;
         __m128i bk = _mm_set1_epi16(b->coeffs[k]);
-        for (i=0; i+k<N-7; i+=8) {
+        /* it is safe not to truncate the last block of 8 coefficients */
+        /* because there is extra room at the end of the coeffs array  */
+        for (i=0; i+k<N; i+=8) {
             /* c->coeffs[k+i+t] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
             __m128i ai = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
             __m128i product = _mm_mullo_epi16 (ai, bk);
@@ -234,9 +236,7 @@ uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
             ci = _mm_add_epi16(ci, product);
             _mm_storeu_si128((__m128i*)&c->coeffs[k+i], ci);
         }
-        for (; k+i<N; i++)
-            c->coeffs[k+i] += b->coeffs[k] * a->coeffs[i];
-        for (; i<N-7; i+=8) {
+        for (i=N-k; i<N-7; i+=8) {
             /* c->coeffs[k+i+t-N] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
             __m128i ai = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
             __m128i product = _mm_mullo_epi16 (ai, bk);
@@ -391,15 +391,16 @@ uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint
     for (i=0; i<b->num_ones; i++) {
         int16_t j;
         int16_t k = b->ones[i];
-        uint16_t j_end = N-7<b->ones[i] ? 0 : N-7-b->ones[i];
+        uint16_t j_end = N<b->ones[i] ? 0 : N-b->ones[i];
+        /* it is safe not to truncate the last block of 8 coefficients */
+        /* because there is extra room at the end of the coeffs array  */
         for (j=0; j<j_end; j+=8,k+=8) {
             __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
             __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
             __m128i ca = _mm_add_epi16(ck, aj);
             _mm_storeu_si128((__m128i*)&c->coeffs[k], ca);
         }
-        for (; k<N; k++,j++)
-            c->coeffs[k] += a->coeffs[j];
+        j = j_end;
         for (k=0; j<N-7; j+=8,k+=8) {
             __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
             __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
@@ -414,15 +415,16 @@ uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint
     for (i=0; i<b->num_neg_ones; i++) {
         int16_t j;
         int16_t k = b->neg_ones[i];
-        uint16_t j_end = N-7<b->neg_ones[i] ? 0 : N-7-b->neg_ones[i];
+        uint16_t j_end = N<b->neg_ones[i] ? 0 : N-b->neg_ones[i];
+        /* it is safe not to truncate the last block of 8 coefficients */
+        /* because there is extra room at the end of the coeffs array  */
         for (j=0; j<j_end; j+=8,k+=8) {
             __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
             __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
             __m128i ca = _mm_sub_epi16(ck, aj);
             _mm_storeu_si128((__m128i*)&c->coeffs[k], ca);
         }
-        for (; k<N; k++,j++)
-            c->coeffs[k] -= a->coeffs[j];
+        j = j_end;
         for (k=0; j<N-7; j+=8,k+=8) {
             __m128i ck = _mm_lddqu_si128((__m128i*)&c->coeffs[k]);
             __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
