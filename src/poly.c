@@ -220,33 +220,28 @@ uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
     if (N != b->N)
         return 0;
     c->N = N;
-    memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
+    int16_t c_coeffs[2*NTRU_INT_POLY_SIZE];   /* double capacity for intermediate result */
+    memset(&c_coeffs, 0, sizeof(c_coeffs));
 
     uint16_t k;
+    for(k=N; k<NTRU_INT_POLY_SIZE; k++)
+        a->coeffs[k] = 0;
     for (k=0; k<N; k++) {
         uint16_t i;
         __m128i bk = _mm_set1_epi16(b->coeffs[k]);
         /* it is safe not to truncate the last block of 8 coefficients */
         /* because there is extra room at the end of the coeffs array  */
-        for (i=0; i+k<N; i+=8) {
-            /* c->coeffs[k+i+t] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
+        for (i=0; i<N; i+=8) {
+            /* c_coeffs[k+i+t] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
             __m128i ai = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
             __m128i product = _mm_mullo_epi16 (ai, bk);
-            __m128i ci = _mm_lddqu_si128((__m128i*)&c->coeffs[k+i]);
+            __m128i ci = _mm_lddqu_si128((__m128i*)&c_coeffs[k+i]);
             ci = _mm_add_epi16(ci, product);
-            _mm_storeu_si128((__m128i*)&c->coeffs[k+i], ci);
+            _mm_storeu_si128((__m128i*)&c_coeffs[k+i], ci);
         }
-        for (i=N-k; i<N-7; i+=8) {
-            /* c->coeffs[k+i+t-N] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
-            __m128i ai = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
-            __m128i product = _mm_mullo_epi16 (ai, bk);
-            __m128i ci = _mm_lddqu_si128((__m128i*)&c->coeffs[k+i-N]);
-            ci = _mm_add_epi16(ci, product);
-            _mm_storeu_si128((__m128i*)&c->coeffs[k+i-N], ci);
-        }
-        for (; i<N; i++)
-            c->coeffs[k+i-N] += b->coeffs[k] * a->coeffs[i];
     }
+    for (k=0; k<N; k++)
+        c->coeffs[k] = c_coeffs[k] + c_coeffs[N+k];
 
     ntru_mod(c, modulus);
     return 1;
