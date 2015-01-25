@@ -224,20 +224,42 @@ uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
     memset(&c_coeffs, 0, sizeof(c_coeffs));
 
     uint16_t k;
-    for(k=N; k<NTRU_INT_POLY_SIZE; k++)
+    for(k=N; k<NTRU_INT_POLY_SIZE; k++) {
         a->coeffs[k] = 0;
-    for (k=0; k<N; k++) {
+        b->coeffs[k] = 0;
+    }
+    for (k=0; k<N; k+=8) {
+        uint8_t j;
+
+        /* process coeffs in 8x8 blocks */
+        __m128i b128[8];
+        for (j=0; j<8; j++)
+            b128[j] = _mm_set1_epi16(b->coeffs[k+j]);
+
+        /* indices 0..7 */
+        __m128i a128 = _mm_lddqu_si128((__m128i*)&a->coeffs[0]);
+        __m128i c128 = _mm_lddqu_si128((__m128i*)&c_coeffs[k]);
+        for (j=0; j<8; j++) {
+            __m128i product = _mm_mullo_epi16(a128, b128[j]);
+            c128 = _mm_add_epi16(c128, product);
+            a128 = _mm_slli_si128(a128, 2);
+        }
+        _mm_storeu_si128((__m128i*)&c_coeffs[k], c128);
+
+        /* indices 8... */
         uint16_t i;
-        __m128i bk = _mm_set1_epi16(b->coeffs[k]);
-        /* it is safe not to truncate the last block of 8 coefficients */
-        /* because there is extra room at the end of the coeffs array  */
-        for (i=0; i<N; i+=8) {
-            /* c_coeffs[k+i+t] += b->coeffs[k] * a->coeffs[i+t], 0<=t<8 */
-            __m128i ai = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
-            __m128i product = _mm_mullo_epi16 (ai, bk);
-            __m128i ci = _mm_lddqu_si128((__m128i*)&c_coeffs[k+i]);
-            ci = _mm_add_epi16(ci, product);
-            _mm_storeu_si128((__m128i*)&c_coeffs[k+i], ci);
+        for (i=8; i<N+8; i+=8) {
+            __m128i c128 = _mm_lddqu_si128((__m128i*)&c_coeffs[k+i]);
+            __m128i a128_0 = _mm_lddqu_si128((__m128i*)&a->coeffs[i-7]);
+            __m128i a128_1 = _mm_lddqu_si128((__m128i*)&a->coeffs[i]);
+            for (j=0; j<8; j++) {
+                __m128i product = _mm_mullo_epi16(a128_1, b128[j]);
+                c128 = _mm_add_epi16(c128, product);
+
+                a128_0 = _mm_slli_si128(a128_0, 2);
+                a128_1 = _mm_alignr_epi8(a128_1, a128_0, 14);
+            }
+            _mm_storeu_si128((__m128i*)&c_coeffs[k+i], c128);
         }
     }
     for (k=0; k<N; k++)
