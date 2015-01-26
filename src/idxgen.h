@@ -8,6 +8,7 @@
 typedef struct NtruIGFState {
     uint16_t N;
     uint16_t c;
+    uint16_t rnd_thresh;   /* value below which random numbers are accepted */
     uint8_t *Z;
     uint16_t zlen;
     uint16_t rem_len;

@@ -6,6 +6,7 @@ void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, Ntru
     s->zlen = seed_len;
     s->N = params->N;
     s->c = params->c;
+    s->rnd_thresh = (1<<s->c) - (1<<s->c)%s->N;
     s->hlen = params->hlen;
     s->rem_len = params->min_calls_r * 8 * s->hlen;
     s->hash = params->hash;
@@ -57,8 +58,9 @@ void ntru_IGF_next(NtruIGFState *s, uint16_t *i) {
         *i = ntru_leading(&s->buf, c);   /* assume c<32 */
         ntru_truncate(&s->buf, c);
         s->rem_len -= c;
-        if (*i < (1<<c)-((1<<c)%N)) {
-            *i %= N;
+        if (*i < s->rnd_thresh) {   /* if (*i < (1<<c)-(1<<c)%N) */
+            while (*i >= N)
+                *i -= N;
             return;
         }
     }
