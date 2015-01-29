@@ -127,53 +127,58 @@ void clock_gettime(uint32_t X, struct timespec *ts)
 int main(int argc, char **argv) {
     printf("Please wait...\n");
 
-    NtruEncKeyPair kp;
-
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    NtruEncParams params = EES439EP1;
-#else
-    NtruEncParams params = EES761EP1;
-#endif
+    NtruEncParams param_arr[] = ALL_PARAM_SETS;
     uint8_t success = 1;
-    uint32_t i;
-    struct timespec t1;
-    clock_gettime(CLOCK_REALTIME, &t1);
-    NtruRandGen rng = NTRU_RNG_DEFAULT;
-    NtruRandContext rand_ctx;
-    ntru_rand_init(&rand_ctx, &rng);
-    for (i=0; i<NUM_ITER_KEYGEN; i++)
-        success &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == 0;
-    struct timespec t2;
-    clock_gettime(CLOCK_REALTIME, &t2);
-    double time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_KEYGEN;
-    double per_sec = 1000000000.0 / time;
-    printf("%f key generations/sec\n", per_sec);
 
-    uint16_t enc_len = ntru_enc_len(&params);
-    char plain_char[33];
-    strcpy(plain_char, "test message secret test message");
-    uint8_t plain[strlen(plain_char)];
-    for (i=0; i<strlen(plain_char); i++)
-        plain[i] = plain_char[i];
-    uint8_t encrypted[enc_len];
-    uint8_t decrypted[strlen(plain_char)];
-    clock_gettime(CLOCK_REALTIME, &t1);
-    for (i=0; i<NUM_ITER_ENCDEC; i++)
-        success &= ntru_encrypt((uint8_t*)&plain, strlen(plain_char), &kp.pub, &params, &rand_ctx, (uint8_t*)&encrypted) == 0;
-    clock_gettime(CLOCK_REALTIME, &t2);
-    time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_ENCDEC;
-    per_sec = 1000000000.0 / time;
-    printf("%f encryptions/sec\n", per_sec);
-    ntru_rand_release(&rand_ctx);
+    uint8_t param_idx;
+    for (param_idx=0; param_idx<sizeof(param_arr)/sizeof(param_arr[0]); param_idx++) {
+        NtruEncParams params = param_arr[param_idx];
+        NtruEncKeyPair kp;
+        uint32_t i;
+        struct timespec t1, t2;
+        printf("%-10s   ", params.name);
+        fflush(stdout);
 
-    uint16_t dec_len;
-    clock_gettime(CLOCK_REALTIME, &t1);
-    for (i=0; i<NUM_ITER_ENCDEC; i++)
-        success &= ntru_decrypt((uint8_t*)&encrypted, &kp, &params, (uint8_t*)&decrypted, &dec_len) == 0;
-    clock_gettime(CLOCK_REALTIME, &t2);
-    time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_ENCDEC;
-    per_sec = 1000000000.0 / time;
-    printf("%f decryptions/sec\n", per_sec);
+        clock_gettime(CLOCK_REALTIME, &t1);
+        NtruRandGen rng = NTRU_RNG_DEFAULT;
+        NtruRandContext rand_ctx;
+        ntru_rand_init(&rand_ctx, &rng);
+        for (i=0; i<NUM_ITER_KEYGEN; i++)
+            success &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == 0;
+        clock_gettime(CLOCK_REALTIME, &t2);
+        double time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_KEYGEN;
+        double per_sec = 1000000000.0 / time;
+        printf("keygen %dμs=%d/sec   ", (uint32_t)time/1000, (uint32_t)per_sec);
+        fflush(stdout);
+
+        uint16_t enc_len = ntru_enc_len(&params);
+        char plain_char[33];
+        strcpy(plain_char, "test message secret test message");
+        uint8_t plain[strlen(plain_char)];
+        for (i=0; i<strlen(plain_char); i++)
+            plain[i] = plain_char[i];
+        uint8_t encrypted[enc_len];
+        uint8_t decrypted[strlen(plain_char)];
+        clock_gettime(CLOCK_REALTIME, &t1);
+        for (i=0; i<NUM_ITER_ENCDEC; i++)
+            success &= ntru_encrypt((uint8_t*)&plain, strlen(plain_char), &kp.pub, &params, &rand_ctx, (uint8_t*)&encrypted) == 0;
+        clock_gettime(CLOCK_REALTIME, &t2);
+        time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_ENCDEC;
+        per_sec = 1000000000.0 / time;
+        printf("enc %dμs=%d/sec   ", (uint32_t)time/1000, (uint32_t)per_sec);
+        fflush(stdout);
+        ntru_rand_release(&rand_ctx);
+
+        uint16_t dec_len;
+        clock_gettime(CLOCK_REALTIME, &t1);
+        for (i=0; i<NUM_ITER_ENCDEC; i++)
+            success &= ntru_decrypt((uint8_t*)&encrypted, &kp, &params, (uint8_t*)&decrypted, &dec_len) == 0;
+        clock_gettime(CLOCK_REALTIME, &t2);
+        time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_ENCDEC;
+        per_sec = 1000000000.0 / time;
+        printf("dec %dμs=%d/sec\n", (uint32_t)time/1000, (uint32_t)per_sec);
+        fflush(stdout);
+    }
 
     if (!success)
         printf("Error!\n");

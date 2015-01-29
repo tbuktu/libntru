@@ -15,6 +15,9 @@
 
 /* A set of parameters for NtruEncrypt */
 typedef struct NtruEncParams {
+    /* name of the parameter set */
+    char *name;
+
     /* number of polynomial coefficients */
     uint16_t N;
 
@@ -92,6 +95,7 @@ typedef struct NtruEncParams {
  * An IEEE 1361.1 parameter set that gives 112 bits of security and is optimized for key size.
  */
 #define EES401EP1 {\
+    "EES401EP1",   /* name */\
     401,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -116,6 +120,7 @@ typedef struct NtruEncParams {
  * An IEEE 1361.1 parameter set that gives 128 bits of security and is optimized for key size.
  */
 #define EES449EP1 {\
+    "EES449EP1",   /* name */\
     449,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -140,6 +145,7 @@ typedef struct NtruEncParams {
  * An IEEE 1361.1 parameter set that gives 192 bits of security and is optimized for key size.
  */
 #define EES667EP1 {\
+    "EES667EP1",   /* name */\
     667,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -164,6 +170,7 @@ typedef struct NtruEncParams {
  * An IEEE 1361.1 parameter set that gives 256 bits of security and is optimized for key size.
  */
 #define EES1087EP2 {\
+    "EES1087EP2",  /* name */\
     1087,          /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -189,6 +196,7 @@ typedef struct NtruEncParams {
  * a tradeoff between key size and encryption/decryption speed.
  */
 #define EES541EP1 {\
+    "EES541EP1",   /* name */\
     541,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -214,6 +222,7 @@ typedef struct NtruEncParams {
  * a tradeoff between key size and encryption/decryption speed.
  */
 #define EES613EP1 {\
+    "EES613EP1",   /* name */\
     613,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -239,6 +248,7 @@ typedef struct NtruEncParams {
  * a tradeoff between key size and encryption/decryption speed.
  */
 #define EES887EP1 {\
+    "EES887EP1",   /* name */\
     887,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -264,6 +274,7 @@ typedef struct NtruEncParams {
  * a tradeoff between key size and encryption/decryption speed.
  */
 #define EES1171EP1 {\
+    "EES1171EP1",  /* name */\
     1171,          /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -289,6 +300,7 @@ typedef struct NtruEncParams {
  * optimized for encryption/decryption speed.
  */
 #define EES659EP1 {\
+    "EES659EP1",   /* name */\
     659,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -314,6 +326,7 @@ typedef struct NtruEncParams {
  * optimized for encryption/decryption speed.
  */
 #define EES761EP1 {\
+    "EES761EP1",   /* name */\
     761,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -339,6 +352,7 @@ typedef struct NtruEncParams {
  * optimized for encryption/decryption speed.
  */
 #define EES1087EP1 {\
+    "EES1087EP1",  /* name */\
     1087,          /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -364,6 +378,7 @@ typedef struct NtruEncParams {
  * optimized for encryption/decryption speed.
  */
 #define EES1499EP1 {\
+    "EES1499EP1",  /* name */\
     1499,          /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
@@ -389,6 +404,7 @@ typedef struct NtruEncParams {
  * A product-form parameter set that gives 112 bits of security.
  */
 #define EES401EP2 {\
+    "EES401EP2",   /* name */\
     401,           /* N */\
     2048,          /* q */\
     1,             /* prod_flag */\
@@ -413,6 +429,7 @@ typedef struct NtruEncParams {
  * A product-form parameter set that gives 128 bits of security.
  */
 #define EES439EP1 {\
+    "EES439EP1",   /* name */\
     439,           /* N */\
     2048,          /* q */\
     1,             /* prod_flag */\
@@ -437,6 +454,7 @@ typedef struct NtruEncParams {
  * A product-form parameter set that gives 192 bits of security.
  */
 #define EES593EP1 {\
+    "EES593EP1",   /* name */\
     593,           /* N */\
     2048,          /* q */\
     1,             /* prod_flag */\
@@ -461,6 +479,7 @@ typedef struct NtruEncParams {
  * A product-form parameter set that gives 256 bits of security.
  */
 #define EES743EP1 {\
+    "EES743EP1",   /* name */\
     743,           /* N */\
     2048,          /* q */\
     1,             /* prod_flag */\
@@ -480,6 +499,12 @@ typedef struct NtruEncParams {
     32,            /* hlen */\
     256            /* pklen */\
 }
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES667EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1, EES401EP2, EES439EP1, EES593EP1, EES743EP1}
+#else
+#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES667EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1}
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 uint16_t ntru_enc_len(NtruEncParams *params);
