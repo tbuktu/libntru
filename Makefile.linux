@@ -114,11 +114,11 @@ testnoham: clean lib $(TEST_OBJS_PATHS)
 	@echo CFLAGS=$(CFLAGS)
 	$(CC) $(CFLAGS) -o testnoham $(TEST_OBJS_PATHS) -L. -lntru -lm
 
-bench: lib
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c $(LDFLAGS) -L. -lntru
+bench: static-lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c $(LDFLAGS) $(LIBS) -L. -lntru
 
-hybrid: lib
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) -L. -lntru -lcrypto
+hybrid: static-lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) $(LIBS) -L. -lntru -lcrypto
 
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
