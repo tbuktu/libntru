@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -O2
+OPTFLAGS=-O2
+bench: OPTFLAGS=-O3
+CFLAGS=-g -Wall -Wextra -Wno-unused-parameter $(OPTFLAGS)
 SSSE3_FLAG = $(shell /usr/sbin/sysctl machdep.cpu.features | grep -m 1 -ow SSSE3)
 ifneq ($(SSE), no)
     ifeq ($(SSSE3_FLAG), SSSE3)

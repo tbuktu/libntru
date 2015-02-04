@@ -1,5 +1,7 @@
 CC?=gcc
-CFLAGS?=-g -O2
+OPTFLAGS=-O2
+bench: OPTFLAGS=-O3 -march=native
+CFLAGS?=-g $(OPTFLAGS)
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
 ifeq ($(SSE), yes)
     CFLAGS+=-mssse3

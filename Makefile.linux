@@ -1,6 +1,8 @@
 CC?=gcc
 AR?=ar
-CFLAGS?=-g -O2
+OPTFLAGS=-O2
+bench: OPTFLAGS=-O3 -march=native
+CFLAGS?=-g $(OPTFLAGS)
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
 SSSE3_FLAG = $(shell /bin/grep -m 1 -o ssse3 /proc/cpuinfo)
 ifneq ($(SSE), no)
