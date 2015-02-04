@@ -124,6 +124,17 @@ void clock_gettime(uint32_t X, struct timespec *ts)
 
 #endif // __MINGW32__
 
+void print_time(char *label, struct timespec t1, struct timespec t2, uint32_t num_iter) {
+    double time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / num_iter;
+    double per_sec = 1000000000.0 / time;
+#ifdef WIN32
+    printf("%s %dus=%d/sec   ", label, (uint32_t)time/1000, (uint32_t)per_sec);
+#else
+    printf("%s %dμs=%d/sec   ", label, (uint32_t)time/1000, (uint32_t)per_sec);
+#endif
+    fflush(stdout);
+}
+
 int main(int argc, char **argv) {
     printf("Please wait...\n");
 
@@ -146,10 +157,7 @@ int main(int argc, char **argv) {
         for (i=0; i<NUM_ITER_KEYGEN; i++)
             success &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == 0;
         clock_gettime(CLOCK_REALTIME, &t2);
-        double time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_KEYGEN;
-        double per_sec = 1000000000.0 / time;
-        printf("keygen %dμs=%d/sec   ", (uint32_t)time/1000, (uint32_t)per_sec);
-        fflush(stdout);
+        print_time("keygen", t1, t2, NUM_ITER_KEYGEN);
 
         uint16_t enc_len = ntru_enc_len(&params);
         char plain_char[33];
@@ -163,10 +171,7 @@ int main(int argc, char **argv) {
         for (i=0; i<NUM_ITER_ENCDEC; i++)
             success &= ntru_encrypt((uint8_t*)&plain, strlen(plain_char), &kp.pub, &params, &rand_ctx, (uint8_t*)&encrypted) == 0;
         clock_gettime(CLOCK_REALTIME, &t2);
-        time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_ENCDEC;
-        per_sec = 1000000000.0 / time;
-        printf("enc %dμs=%d/sec   ", (uint32_t)time/1000, (uint32_t)per_sec);
-        fflush(stdout);
+        print_time("enc", t1, t2, NUM_ITER_ENCDEC);
         ntru_rand_release(&rand_ctx);
 
         uint16_t dec_len;
@@ -174,10 +179,8 @@ int main(int argc, char **argv) {
         for (i=0; i<NUM_ITER_ENCDEC; i++)
             success &= ntru_decrypt((uint8_t*)&encrypted, &kp, &params, (uint8_t*)&decrypted, &dec_len) == 0;
         clock_gettime(CLOCK_REALTIME, &t2);
-        time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / NUM_ITER_ENCDEC;
-        per_sec = 1000000000.0 / time;
-        printf("dec %dμs=%d/sec\n", (uint32_t)time/1000, (uint32_t)per_sec);
-        fflush(stdout);
+        print_time("dec", t1, t2, NUM_ITER_ENCDEC);
+        printf("\n");
     }
 
     if (!success)
