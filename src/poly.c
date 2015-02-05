@@ -262,6 +262,7 @@ uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
             _mm_storeu_si128((__m128i*)&c_coeffs[k+i], c128);
         }
     }
+    /* no need to SSE-ify the following loop b/c the compiler auto-vectorizes it */
     for (k=0; k<N; k++)
         c->coeffs[k] = c_coeffs[k] + c_coeffs[N+k];
 
@@ -1256,7 +1257,8 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     memset(&Fq->coeffs, 0, N * sizeof Fq->coeffs[0]);
     Fq->N = N;
     int16_t j = 0;
-    k %= N;
+    if (k >= N)
+        k -= N;
     for (i=N-1; i>=0; i--) {
         j = i - k;
         if (j < 0)

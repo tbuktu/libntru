@@ -345,7 +345,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
         if (dm0>0 && !ntru_check_rep_weight(&mtrin, dm0))
             continue;
 
-        ntru_add_int_mod(&R, &mtrin, q);
+        ntru_add_int(&R, &mtrin);
         ntru_to_arr(&R, q, enc);
         return NTRU_SUCCESS;
     }
