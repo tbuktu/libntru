@@ -1,6 +1,10 @@
 #ifndef NTRU_NTRU_H
 #define NTRU_NTRU_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus*/
+
 #include "types.h"
 #include "key.h"
 #include "encparams.h"
@@ -70,5 +74,9 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
  * @return the maximum number of bytes in a message
  */
 uint8_t ntru_max_msg_len(NtruEncParams *params);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus*/
 
 #endif   /* NTRU_NTRU_H */
