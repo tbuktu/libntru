@@ -144,9 +144,9 @@ typedef struct NtruEncParams {
 /*
  * An IEEE 1361.1 parameter set that gives 192 bits of security and is optimized for key size.
  */
-#define EES667EP1 {\
-    "EES667EP1",   /* name */\
-    667,           /* N */\
+#define EES677EP1 {\
+    "EES677EP1",   /* name */\
+    677,           /* N */\
     2048,          /* q */\
     0,             /* prod_flag */\
     157,           /* df */\
@@ -489,7 +489,7 @@ typedef struct NtruEncParams {
     204,           /* dm0 */\
     60,            /* maxm1 */\
     256,           /* db */\
-    12,            /* c */\
+    13,            /* c */\
     12,            /* min_calls_r */\
     7,             /* min_calls_mask */\
     1,             /* hash_seed */\
@@ -502,9 +502,9 @@ typedef struct NtruEncParams {
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
-#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES667EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1, EES401EP2, EES439EP1, EES593EP1, EES743EP1}
+#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1, EES401EP2, EES439EP1, EES593EP1, EES743EP1}
 #else
-#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES667EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1}
+#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1}
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 uint16_t ntru_enc_len(NtruEncParams *params);

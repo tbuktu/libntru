@@ -96,18 +96,20 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     ntru_rand_init(&rand_ctx, &rng);
     uint8_t valid = ntru_gen_key_pair(params, &kp, &rand_ctx) == NTRU_SUCCESS;
 
+    uint16_t max_len = ntru_max_msg_len(params);
+    uint8_t plain[max_len];
+    ntru_rand_generate(plain, max_len, &rand_ctx);
     uint16_t enc_len = ntru_enc_len(params);
-    char plain_char[19];
-    strcpy(plain_char, "test message 12345");
-    size_t plain_len = strlen(plain_char);
-    uint8_t plain[plain_len];
-    str_to_uint8(plain_char, plain);
     uint8_t encrypted[enc_len];
-    valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &kp.pub, params, &rand_ctx, (uint8_t*)&encrypted) == NTRU_SUCCESS;
-    uint8_t decrypted[plain_len];
-    uint16_t dec_len;
-    valid &= ntru_decrypt((uint8_t*)&encrypted, &kp, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
-    valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
+    uint8_t decrypted[max_len];
+    uint16_t plain_len;
+    for (plain_len=0; plain_len<=max_len; plain_len++) {
+        valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &kp.pub, params, &rand_ctx, (uint8_t*)&encrypted) == NTRU_SUCCESS;
+        uint16_t dec_len;
+        valid &= ntru_decrypt((uint8_t*)&encrypted, &kp, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
+        valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
+        plain_len++;
+    }
 
     ntru_rand_release(&rand_ctx);
     return valid;
@@ -122,36 +124,48 @@ uint8_t test_encr_decr_det(NtruEncParams *params) {
     NtruEncPubKey pub2;
     ntru_import_pub(pub_arr, &pub2);
     valid &= ntru_equals_int(&kp.pub.h, &pub2.h);
+
+    NtruRandContext rand_ctx_plaintext;
+    uint16_t max_len = ntru_max_msg_len(params);
+    uint8_t plain[max_len];
+    NtruRandGen rng_plaintext = NTRU_RNG_DEFAULT;
+    ntru_rand_init(&rand_ctx_plaintext, &rng_plaintext);
+    ntru_rand_generate(plain, max_len, &rand_ctx_plaintext);
+    ntru_rand_release(&rand_ctx_plaintext);
+    uint8_t plain2[max_len];
+    memcpy(plain2, plain, max_len);
+    uint16_t enc_len = ntru_enc_len(params);
+    uint8_t encrypted[enc_len];
+    uint8_t encrypted2[enc_len];
+
     char seed_char[11];
     strcpy(seed_char, "seed value");
     uint8_t seed[11];
-    uint16_t enc_len = ntru_enc_len(params);
-    char plain_char[19];
-    strcpy(plain_char, "test message 12345");
-    size_t plain_len = strlen(plain_char);
-    uint8_t plain[plain_len];
-    str_to_uint8(plain_char, plain);
     str_to_uint8(seed_char, seed);
-    uint8_t encrypted[enc_len];
-    NtruRandGen rng = NTRU_RNG_IGF2;
-    NtruRandContext rand_ctx;
-    ntru_rand_init_det(&rand_ctx, &rng, seed, strlen(seed_char));
-    valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &kp.pub, params, &rand_ctx, (uint8_t*)&encrypted) == NTRU_SUCCESS;
-    ntru_rand_release(&rand_ctx);
-    char plain2_char[19];
-    strcpy(plain2_char, "test message 12345");
-    uint8_t plain2[plain_len];
-    str_to_uint8(plain2_char, plain2);
     char seed2_char[11];
     strcpy(seed2_char, "seed value");
     uint8_t seed2[11];
     str_to_uint8(seed2_char, seed2);
-    uint8_t encrypted2[enc_len];
+
+    NtruRandContext rand_ctx;
+    NtruRandGen rng = NTRU_RNG_IGF2;
+    ntru_rand_init_det(&rand_ctx, &rng, seed, strlen(seed_char));
     NtruRandContext rand_ctx2;
-    ntru_rand_init_det(&rand_ctx2, &rng, seed2, strlen(seed2_char));
-    valid &= ntru_encrypt((uint8_t*)&plain2, plain_len, &pub2, params, &rand_ctx2, (uint8_t*)&encrypted2) == NTRU_SUCCESS;
+    NtruRandGen rng2 = NTRU_RNG_IGF2;
+    ntru_rand_init_det(&rand_ctx2, &rng2, seed2, strlen(seed2_char));
+
+    uint16_t plain_len;
+    for (plain_len=0; plain_len<=max_len; plain_len++) {
+        valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &kp.pub, params, &rand_ctx, (uint8_t*)&encrypted) == NTRU_SUCCESS;
+
+        valid &= ntru_encrypt((uint8_t*)&plain2, plain_len, &pub2, params, &rand_ctx2, (uint8_t*)&encrypted2) == NTRU_SUCCESS;
+
+        valid &= memcmp(encrypted, encrypted2, enc_len) == 0;
+    }
+
+    ntru_rand_release(&rand_ctx);
     ntru_rand_release(&rand_ctx2);
-    valid &= memcmp(encrypted, encrypted2, enc_len) == 0;
+
     return valid;
 }
 
