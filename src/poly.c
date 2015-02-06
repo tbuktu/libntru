@@ -1211,8 +1211,10 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
 
         /* right-shift f, left-shift c num_zeros coefficients each */
         if (num_zeros >= 64) {
-            memmove(f_coeffs64+num_zeros/64, f_coeffs64, N-num_zeros/64*8);
-            memset(f_coeffs64+N-num_zeros/64*8, 0, num_zeros/64*8);
+            memmove(c_coeffs64+num_zeros/64, c_coeffs64, N64*8-num_zeros/64*8);
+            memset(c_coeffs64, 0, num_zeros/64*8);
+            memmove(f_coeffs64, f_coeffs64+num_zeros/64, N64*8-num_zeros/64*8);
+            memset(f_coeffs64+N64-num_zeros/64, 0, num_zeros/64*8);
             num_zeros %= 64;
         }
         if (num_zeros > 0) {
@@ -1257,7 +1259,7 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     memset(&Fq->coeffs, 0, N * sizeof Fq->coeffs[0]);
     Fq->N = N;
     int16_t j = 0;
-    if (k >= N)
+    while (k >= N)
         k -= N;
     for (i=N-1; i>=0; i--) {
         j = i - k;
