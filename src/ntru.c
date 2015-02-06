@@ -105,13 +105,12 @@ uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandCon
  * @param M an encoded ternary polynomial
  * @param M_len number of elements in M
  * @param N number of coefficients to generate
- * @param skip whether to leave the constant coefficient zero and start populating at the linear coefficient
  * @param poly output parameter; pointer to write the polynomial to
  */
-void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, uint16_t skip, NtruIntPoly *poly) {
+void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, NtruIntPoly *poly) {
     poly->N = N;
 
-    uint16_t coeff_idx = skip ? 1 : 0;
+    uint16_t coeff_idx = 0;
     uint16_t i = 0;
     while (i<M_len/3*3 && coeff_idx<N-1) {
         /* process 24 bits at a time in the outer loop */
@@ -146,11 +145,10 @@ void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, uint16_t skip, NtruI
  * See P1363.1 section 9.2.3.
  *
  * @param poly a ternary polynomial
- * @param skip whether to skip the constant coefficient
  * @param data output parameter; must accommodate ceil(num_bits/8) bytes
  * @return NTRU_SUCCESS for success, NTRU_ERR_INVALID_ENCODING otherwise
  */
-uint8_t ntru_to_sves(NtruIntPoly *poly, uint16_t skip, uint8_t *data) {
+uint8_t ntru_to_sves(NtruIntPoly *poly, uint8_t *data) {
     uint16_t N = poly->N;
 
     uint16_t num_bits = (N*3+1) / 2;
@@ -159,8 +157,8 @@ uint8_t ntru_to_sves(NtruIntPoly *poly, uint16_t skip, uint8_t *data) {
     uint8_t bit_index = 0;
     uint16_t byte_index = 0;
     uint16_t i;
-    uint16_t start = skip ? 1 : 0;
-    uint16_t end = skip ? (N-1)|1 : N/2*2;   /* if there is an odd number of coeffs, throw away the highest one */
+    uint16_t start = 0;
+    uint16_t end = N/2*2;   /* if there is an odd number of coeffs, throw away the highest one */
     for (i=start; i<end; ) {
         int16_t coeff1 = poly->coeffs[i++] + 1;
         int16_t coeff2 = poly->coeffs[i++] + 1;
@@ -277,7 +275,6 @@ uint8_t ntru_check_rep_weight(NtruIntPoly *p, uint16_t dm0) {
 uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc) {
     uint16_t N = params->N;
     uint16_t q = params->q;
-    uint16_t maxm1 = params->maxm1;
     uint16_t db = params->db;
     uint16_t max_len_bytes = ntru_max_msg_len(params);
     uint16_t buf_len_bits = (N*3/2+7)/8*8 + 1;
@@ -305,7 +302,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
         memset(M_head, 0, max_len_bytes+1-msg_len);
 
         NtruIntPoly mtrin;
-        ntru_from_sves((uint8_t*)&M, M_len, N, maxm1, &mtrin);
+        ntru_from_sves((uint8_t*)&M, M_len, N, &mtrin);
 
         uint16_t blen = params->db / 8;
         uint16_t sdata_len = sizeof(params->oid) + msg_len + blen + blen;
@@ -328,21 +325,9 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
         ntru_MGF((uint8_t*)&oR4, oR4_len, params, &mask);
         ntru_add_int(&mtrin, &mask);
 
-        /*
-         * If df and dr are close to N/3, and the absolute value of ntru_sum_coeffs(mtrin) is
-         * large enough, the message becomes vulnerable to a meet-in-the-middle attack.
-         * To prevent this, we set the constant coefficient to zero but first check to ensure
-         * ntru_sum_coeffs() is small enough to keep the likelihood of a decryption failure low.
-         */
-        if (maxm1 > 0) {
-            if (ntru_sum_coeffs(&mtrin) > maxm1)
-                continue;
-            mtrin.coeffs[0] = 0;
-        }
-
         ntru_mod3(&mtrin);
 
-        if (dm0>0 && !ntru_check_rep_weight(&mtrin, dm0))
+        if (!ntru_check_rep_weight(&mtrin, dm0))
             continue;
 
         ntru_add_int(&R, &mtrin);
@@ -368,7 +353,6 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t db = params->db;
-    uint16_t maxm1 = params->maxm1;
     uint16_t max_len_bytes = ntru_max_msg_len(params);
     uint16_t dm0 = params->dm0;
 
@@ -382,7 +366,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     NtruIntPoly ci;
     ntru_decrypt_poly(&e, &kp->priv, q, &ci);
 
-    if (dm0>0 && !ntru_check_rep_weight(&ci, dm0))
+    if (!ntru_check_rep_weight(&ci, dm0))
         return NTRU_ERR_DM0_VIOLATION;
 
     NtruIntPoly cR = e;
@@ -401,7 +385,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     uint16_t cM_len_bits = (N*3+1) / 2;
     uint16_t cM_len_bytes = (cM_len_bits+7) / 8;
     uint8_t cM[cM_len_bytes];
-    ntru_to_sves(&cmtrin, maxm1, (uint8_t*)&cM);
+    ntru_to_sves(&cmtrin, (uint8_t*)&cM);
 
     uint8_t cb[blen];
     uint8_t *cM_head = cM;
@@ -445,9 +429,6 @@ uint8_t ntru_max_msg_len(NtruEncParams *params) {
     uint8_t llen = 1;   /* ceil(log2(max_len)) */
     uint16_t db = params->db;
     uint16_t max_msg_len;
-    if (params->maxm1 > 0)
-        max_msg_len = (N-1)/2*3/8 - llen - db/8;   /* only N-1 coeffs b/c the constant coeff is not used */
-    else
-        max_msg_len = N/2*3/8 - llen - db/8;
+    max_msg_len = N/2*3/8 - llen - db/8;
     return max_msg_len;
 }

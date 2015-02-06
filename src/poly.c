@@ -1272,11 +1272,3 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
 
     return 1;
 }
-
-int32_t ntru_sum_coeffs(NtruIntPoly *a) {
-    int16_t sum = 0;
-    uint16_t i;
-    for (i=1; i<a->N; i++)
-        sum += a->coeffs[i];
-    return sum;
-}

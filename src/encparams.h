@@ -48,12 +48,6 @@ typedef struct NtruEncParams {
      */
     uint16_t dm0;
 
-    /*
-     * Maximum absolute value of ntru_sum_coeffs(mtrin) or zero to disable this check.
-     * Values greater than zero cause the constant coefficient of the message to always be zero.
-     */
-    uint16_t maxm1;
-
     /* number of random bits to prepend to the message */
     uint16_t db;
 
@@ -103,7 +97,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     113,           /* dm0 */\
-    0,             /* maxm1 */\
     112,           /* db */\
     11,            /* c */\
     32,            /* min_calls_r */\
@@ -128,7 +121,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     134,           /* dm0 */\
-    0,             /* maxm1 */\
     128,           /* db */\
     9,             /* c */\
     31,            /* min_calls_r */\
@@ -153,7 +145,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     157,           /* dm0 */\
-    0,             /* maxm1 */\
     192,           /* db */\
     11,            /* c */\
     27,            /* min_calls_r */\
@@ -178,7 +169,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     120,           /* dm0 */\
-    0,             /* maxm1 */\
     256,           /* db */\
     13,            /* c */\
     25,            /* min_calls_r */\
@@ -204,7 +194,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     49,            /* dm0 */\
-    0,             /* maxm1 */\
     112,           /* db */\
     12,            /* c */\
     15,            /* min_calls_r */\
@@ -230,7 +219,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     55,            /* dm0 */\
-    0,             /* maxm1 */\
     128,           /* db */\
     11,            /* c */\
     16,            /* min_calls_r */\
@@ -256,7 +244,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     81,            /* dm0 */\
-    0,             /* maxm1 */\
     192,           /* db */\
     10,            /* c */\
     13,            /* min_calls_r */\
@@ -282,7 +269,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     106,           /* dm0 */\
-    0,             /* maxm1 */\
     256,           /* db */\
     12,            /* c */\
     20,            /* min_calls_r */\
@@ -308,7 +294,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     38,            /* dm0 */\
-    0,             /* maxm1 */\
     112,           /* db */\
     11,            /* c */\
     11,            /* min_calls_r */\
@@ -334,7 +319,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     42,            /* dm0 */\
-    0,             /* maxm1 */\
     128,           /* db */\
     12,            /* c */\
     13,            /* min_calls_r */\
@@ -360,7 +344,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     63,            /* dm0 */\
-    0,             /* maxm1 */\
     192,           /* db */\
     13,            /* c */\
     13,            /* min_calls_r */\
@@ -386,7 +369,6 @@ typedef struct NtruEncParams {
     0,\
     0,\
     79,            /* dm0 */\
-    0,             /* maxm1 */\
     256,           /* db */\
     13,            /* c */\
     17,            /* min_calls_r */\
@@ -412,7 +394,6 @@ typedef struct NtruEncParams {
     8,             /* df2 */\
     6,             /* df3 */\
     101,           /* dm0 */\
-    136,           /* maxm1 */\
     112,           /* db */\
     11,            /* c */\
     10,            /* min_calls_r */\
@@ -437,7 +418,6 @@ typedef struct NtruEncParams {
     8,             /* df2 */\
     5,             /* df3 */\
     112,           /* dm0 */\
-    126,           /* maxm1 */\
     128,           /* db */\
     9,             /* c */\
     15,            /* min_calls_r */\
@@ -462,7 +442,6 @@ typedef struct NtruEncParams {
     10,            /* df2 */\
     8,             /* df3 */\
     158,           /* dm0 */\
-    90,            /* maxm1 */\
     192,           /* db */\
     11,            /* c */\
     12,            /* min_calls_r */\
@@ -487,7 +466,6 @@ typedef struct NtruEncParams {
     11,            /* df2 */\
     15,            /* df3 */\
     204,           /* dm0 */\
-    60,            /* maxm1 */\
     256,           /* db */\
     13,            /* c */\
     12,            /* min_calls_r */\

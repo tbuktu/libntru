@@ -450,15 +450,4 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
  */
 uint8_t ntru_invert_sse(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
 
-/**
- * @brief Sum of coefficients
- *
- * Returns the sum of all coefficients except the lowest coefficient,
- * i.e. evaluates the polynomial at 1 and subtracts the constant coefficient.
- *
- * @param a a polynomial
- * @return the sum of all coefficients
- */
-int32_t ntru_sum_coeffs(NtruIntPoly *a);
-
 #endif   /* NTRU_POLY_H */
