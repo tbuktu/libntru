@@ -159,17 +159,15 @@ int main(int argc, char **argv) {
         clock_gettime(CLOCK_REALTIME, &t2);
         print_time("keygen", t1, t2, NUM_ITER_KEYGEN);
 
+        uint16_t max_len = ntru_max_msg_len(&params);   /* max message length for this param set */
+        uint8_t plain[max_len];
+        ntru_rand_generate(plain, max_len, &rand_ctx);
         uint16_t enc_len = ntru_enc_len(&params);
-        char plain_char[33];
-        strcpy(plain_char, "test message secret test message");
-        uint8_t plain[strlen(plain_char)];
-        for (i=0; i<strlen(plain_char); i++)
-            plain[i] = plain_char[i];
         uint8_t encrypted[enc_len];
-        uint8_t decrypted[strlen(plain_char)];
+        uint8_t decrypted[max_len];
         clock_gettime(CLOCK_REALTIME, &t1);
         for (i=0; i<NUM_ITER_ENCDEC; i++)
-            success &= ntru_encrypt((uint8_t*)&plain, strlen(plain_char), &kp.pub, &params, &rand_ctx, (uint8_t*)&encrypted) == 0;
+            success &= ntru_encrypt((uint8_t*)&plain, max_len, &kp.pub, &params, &rand_ctx, (uint8_t*)&encrypted) == 0;
         clock_gettime(CLOCK_REALTIME, &t2);
         print_time("enc", t1, t2, NUM_ITER_ENCDEC);
         ntru_rand_release(&rand_ctx);
