@@ -835,9 +835,11 @@ void ntru_mod_16(NtruIntPoly *p, uint16_t modulus) {
     if (modulus == 2048)
         for (i=0; i<p->N; i++)
             p->coeffs[i] &= 2047;
-    else
+    else {
+        uint16_t mod_mask = modulus - 1;
         for (i=0; i<p->N; i++)
-            p->coeffs[i] %= modulus;
+            p->coeffs[i] &= mod_mask;
+    }
 }
 
 void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
