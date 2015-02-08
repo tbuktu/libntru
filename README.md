@@ -16,10 +16,10 @@ page:
 
 Run ```make``` to build the library, or ```make test``` to run unit tests.
 
-The ```SSE``` environment variable enables SSE support (```SSE=yes```)
+The ```SSE``` environment variable enables SSSE3 support (```SSE=yes```)
 or disables it (```SSE=no```).
-Default on Linux and MacOS is to autodetect SSE on the build host,
-Windows default is no SSE.
+Default on Linux and MacOS is to autodetect SSSE3 on the build host,
+Windows default is no SSSE3.
 
 ## Usage
 
