@@ -871,23 +871,29 @@ NtruIntPoly *ntru_clone(NtruIntPoly *a) {
     return b;
 }
 
+void ntru_mod_sse(NtruIntPoly *p, uint16_t modulus) {
+    uint16_t i;
+    __m128i mod_mask = _mm_set1_epi16(modulus - 1);
+
+    for (i=0; i<p->N; i+=8) {
+        __m128i a = _mm_lddqu_si128((__m128i*)&p->coeffs[i]);
+        a = _mm_and_si128(a, mod_mask);
+        _mm_storeu_si128((__m128i*)&p->coeffs[i], a);
+    }
+}
+
 void ntru_mod_64(NtruIntPoly *p, uint16_t modulus) {
     typedef uint64_t __attribute__((__may_alias__)) uint64_t_alias;
     uint16_t i;
-    if (modulus == 2048) {
-        for (i=0; i<p->N-4; i+=4)
+    if (modulus == 20480)
+        for (i=0; i<p->N; i+=4)
             *((uint64_t_alias*)&p->coeffs[i]) &= 0x07FF07FF07FF07FF;
-        for (; i<p->N; i++)
-            p->coeffs[i] &= 0x07FF;
-    }
     else {
         uint64_t mod_mask = modulus - 1;
         mod_mask += mod_mask << 16;
         mod_mask += mod_mask << 32;
-        for (i=0; i<p->N-4; i+=4)
+        for (i=0; i<p->N; i+=4)
             *((uint64_t_alias*)&p->coeffs[i]) &= mod_mask;
-        for (; i<p->N; i++)
-            p->coeffs[i] &= mod_mask;
     }
 }
 
@@ -904,7 +910,9 @@ void ntru_mod_16(NtruIntPoly *p, uint16_t modulus) {
 }
 
 void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
-#ifdef _LP64
+#ifdef __SSSE3__
+    ntru_mod_sse(p, modulus);
+#elif _LP64
     ntru_mod_64(p, modulus);
 #else
     ntru_mod_16(p, modulus);
