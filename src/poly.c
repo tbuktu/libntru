@@ -871,6 +871,7 @@ NtruIntPoly *ntru_clone(NtruIntPoly *a) {
     return b;
 }
 
+#ifdef __SSSE3__
 void ntru_mod_sse(NtruIntPoly *p, uint16_t modulus) {
     uint16_t i;
     __m128i mod_mask = _mm_set1_epi16(modulus - 1);
@@ -881,6 +882,7 @@ void ntru_mod_sse(NtruIntPoly *p, uint16_t modulus) {
         _mm_storeu_si128((__m128i*)&p->coeffs[i], a);
     }
 }
+#endif
 
 void ntru_mod_64(NtruIntPoly *p, uint16_t modulus) {
     typedef uint64_t __attribute__((__may_alias__)) uint64_t_alias;
