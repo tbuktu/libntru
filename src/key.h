@@ -16,4 +16,8 @@ uint16_t ntru_pub_len(NtruEncParams *params);
 
 uint16_t ntru_priv_len(NtruEncParams *params);
 
+uint8_t ntru_params_from_key_pair(NtruEncKeyPair *kp, NtruEncParams *params);
+
+uint8_t ntru_params_from_priv_key(NtruEncPrivKey *key, NtruEncParams *params);
+
 #endif   /* NTRU_KEY_H */

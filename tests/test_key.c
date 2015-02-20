@@ -4,7 +4,7 @@
 #include "rand.h"
 #include "encparams.h"
 
-uint8_t test_key() {
+uint8_t test_export_import() {
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     NtruEncParams param_arr[] = {EES439EP1, EES1087EP2};
 #else
@@ -50,6 +50,37 @@ uint8_t test_key() {
         valid &= ntru_equals_int(&t_int1, &t_int2);
     }
 
+    return valid;
+}
+
+/* tests ntru_params_from_priv_key() and ntru_params_from_key_pair() */
+uint8_t test_params_from_key() {
+    NtruEncParams param_arr[] = ALL_PARAM_SETS;
+    uint8_t valid = 1;
+
+    uint8_t i;
+    for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++) {
+        NtruEncParams params = param_arr[i];
+        NtruRandContext rand_ctx;
+        NtruRandGen rng = NTRU_RNG_DEFAULT;
+        ntru_rand_init(&rand_ctx, &rng);
+        NtruEncKeyPair kp;
+        valid &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == NTRU_SUCCESS;
+        ntru_rand_release(&rand_ctx);
+
+        NtruEncParams params2;
+        valid &= ntru_params_from_priv_key(&kp.priv, &params2) == NTRU_SUCCESS;
+        valid &= equals_params(&params, &params2);
+        valid &= ntru_params_from_key_pair(&kp, &params2) == NTRU_SUCCESS;
+        valid &= equals_params(&params, &params2);
+    }
+
+    return valid;
+}
+
+uint8_t test_key() {
+    uint8_t valid = test_export_import();
+    valid &= test_params_from_key();
     print_result("test_key", valid);
     return valid;
 }

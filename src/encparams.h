@@ -16,7 +16,7 @@
 /* A set of parameters for NtruEncrypt */
 typedef struct NtruEncParams {
     /* name of the parameter set */
-    char *name;
+    char name[11];
 
     /* number of polynomial coefficients */
     uint16_t N;

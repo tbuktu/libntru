@@ -76,6 +76,30 @@ uint8_t equals_arr(uint8_t *arr1, uint8_t *arr2, uint16_t len) {
     return 1;
 }
 
+uint8_t equals_params(NtruEncParams *params1, NtruEncParams *params2) {
+    uint8_t equal = 1;
+    equal &= strcmp(params1->name, params2->name) == 0;
+    equal &= params1->N == params2->N;
+    equal &= params1->q == params2->q;
+    equal &= params1->prod_flag == params2->prod_flag;
+    equal &= params1->df1 == params2->df1;
+    if (params1->prod_flag) {
+        equal &= params1->df2 == params2->df2;
+        equal &= params1->df3 == params2->df3;
+    }
+    equal &= params1->dm0 == params2->dm0;
+    equal &= params1->db == params2->db;
+    equal &= params1->c == params2->c;
+    equal &= params1->min_calls_r == params2->min_calls_r;
+    equal &= params1->min_calls_mask == params2->min_calls_mask;
+    equal &= params1->hash_seed == params2->hash_seed;
+    equal &= memcmp(params1->oid, params2->oid, sizeof(params1->oid)) == 0;
+    equal &= params1->hash == params2->hash;
+    equal &= params1->hlen == params2->hlen;
+    equal &= params1->pklen == params2->pklen;
+    return equal;
+}
+
 uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, NtruRandContext *rand_ctx) {
     uint16_t rand_data[N];
     if (!rand_ctx->rand_gen->generate((uint8_t*)rand_data, N*2, rand_ctx))

@@ -5,9 +5,11 @@
 #else
 #include <netinet/in.h>
 #endif
+#include "key.h"
 #include "poly.h"
 #include "encparams.h"
 #include "types.h"
+#include "err.h"
 
 void ntru_export_pub(NtruEncPubKey *key, uint8_t *arr) {
     /* write N */
@@ -186,4 +188,53 @@ uint16_t ntru_priv_len(NtruEncParams *params) {
         return 5 + 4 + 4*params->df1 + 4 + 4*params->df2 + 4 + 4*params->df3;
     else
         return 5 + 4 + 4*params->df1;
+}
+
+uint8_t ntru_params_from_key_pair(NtruEncKeyPair *kp, NtruEncParams *params) {
+    return ntru_params_from_priv_key(&kp->priv, params);
+}
+
+uint8_t ntru_params_from_priv_key(NtruEncPrivKey *key, NtruEncParams *params) {
+    if (!key || !params)
+        return NTRU_ERR_NULL_ARG;
+
+    size_t i = 0;
+    struct NtruEncParams all[] = ALL_PARAM_SETS;
+    for (i=0; i<sizeof(all)/sizeof(struct NtruEncParams); i++) {
+        uint16_t df, N;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+        if (key->t.prod_flag) {
+            df = key->t.poly.prod.f1.num_ones;
+            N = key->t.poly.prod.N;
+        }
+        else {
+#endif
+            df = key->t.poly.tern.num_ones;
+            N = key->t.poly.tern.N;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+        }
+#endif
+        if (N==all[i].N && df==all[i].df1) {
+            strcpy(params->name, all[i].name);
+            params->N = all[i].N;
+            params->q = all[i].q;
+            params->prod_flag = all[i].prod_flag;
+            params->df1 = all[i].df1;
+            params->df2 = all[i].df2;
+            params->df3 = all[i].df3;
+            params->dm0 = all[i].dm0;
+            params->db = all[i].db;
+            params->c = all[i].c;
+            params->min_calls_r = all[i].min_calls_r;
+            params->min_calls_mask = all[i].min_calls_mask;
+            params->hash_seed = all[i].hash_seed;
+            memcpy(params->oid, all[i].oid, sizeof(all[i].oid));
+            params->hash = all[i].hash;
+            params->hlen = all[i].hlen;
+            params->pklen = all[i].pklen;
+            return NTRU_SUCCESS;
+        }
+    }
+
+    return NTRU_ERR_UNKNOWN_PARAM_SET;
 }
