@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#include <stdlib.h>
 #include <time.h>
 #include "ntru.h"
 #include "rand.h"
@@ -124,8 +123,26 @@ void clock_gettime(uint32_t X, struct timespec *ts)
 
 #endif // __MINGW32__
 
-void print_time(char *label, struct timespec t1, struct timespec t2, uint32_t num_iter) {
-    double time = (1000000000.0*(t2.tv_sec-t1.tv_sec)+t2.tv_nsec-t1.tv_nsec) / num_iter;
+int compare_double(const void *p1, const void *p2) {
+    double t1 = *(double*)p1;
+    double t2 = *(double*)p2;
+    return t1<t2 ? -1 : (t1>t2 ? 1 : 0);
+}
+
+double median(double *samples, int num_samples) {
+    if (num_samples == 0)
+        return 0;
+    if (num_samples == 1)
+        return samples[0];
+    qsort(samples, num_samples, sizeof(samples[0]), compare_double);
+    if (num_samples%2 == 0)
+        return samples[num_samples/2];
+    else
+        return (samples[num_samples/2]+samples[num_samples/2+1]) / 2;
+}
+
+void print_time(char *label, double *samples, int num_samples) {
+    double time = median(samples, num_samples);
     double per_sec = 1000000000.0 / time;
 #ifdef WIN32
     printf("%s %dus=%d/sec   ", label, (uint32_t)time/1000, (uint32_t)per_sec);
@@ -150,34 +167,45 @@ int main(int argc, char **argv) {
         printf("%-10s   ", params.name);
         fflush(stdout);
 
-        clock_gettime(CLOCK_REALTIME, &t1);
+        double samples_keygen[NUM_ITER_KEYGEN];
         NtruRandGen rng = NTRU_RNG_DEFAULT;
         NtruRandContext rand_ctx;
         ntru_rand_init(&rand_ctx, &rng);
-        for (i=0; i<NUM_ITER_KEYGEN; i++)
+        for (i=0; i<NUM_ITER_KEYGEN; i++) {
+            clock_gettime(CLOCK_REALTIME, &t1);
             success &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == 0;
-        clock_gettime(CLOCK_REALTIME, &t2);
-        print_time("keygen", t1, t2, NUM_ITER_KEYGEN);
+            clock_gettime(CLOCK_REALTIME, &t2);
+            double duration = 1000000000.0*(t2.tv_sec-t1.tv_sec) + t2.tv_nsec-t1.tv_nsec;
+            samples_keygen[i] = duration;
+        }
+        print_time("keygen", samples_keygen, NUM_ITER_KEYGEN);
 
+        double samples_encdec[NUM_ITER_ENCDEC];
         uint16_t max_len = ntru_max_msg_len(&params);   /* max message length for this param set */
         uint8_t plain[max_len];
         ntru_rand_generate(plain, max_len, &rand_ctx);
         uint16_t enc_len = ntru_enc_len(&params);
         uint8_t encrypted[enc_len];
         uint8_t decrypted[max_len];
-        clock_gettime(CLOCK_REALTIME, &t1);
-        for (i=0; i<NUM_ITER_ENCDEC; i++)
+        for (i=0; i<NUM_ITER_ENCDEC; i++) {
+            clock_gettime(CLOCK_REALTIME, &t1);
             success &= ntru_encrypt((uint8_t*)&plain, max_len, &kp.pub, &params, &rand_ctx, (uint8_t*)&encrypted) == 0;
-        clock_gettime(CLOCK_REALTIME, &t2);
-        print_time("enc", t1, t2, NUM_ITER_ENCDEC);
+            clock_gettime(CLOCK_REALTIME, &t2);
+            double duration = 1000000000.0*(t2.tv_sec-t1.tv_sec) + t2.tv_nsec-t1.tv_nsec;
+            samples_encdec[i] = duration;
+        }
+        print_time("enc", samples_encdec, NUM_ITER_ENCDEC);
         ntru_rand_release(&rand_ctx);
 
         uint16_t dec_len;
-        clock_gettime(CLOCK_REALTIME, &t1);
-        for (i=0; i<NUM_ITER_ENCDEC; i++)
+        for (i=0; i<NUM_ITER_ENCDEC; i++) {
+            clock_gettime(CLOCK_REALTIME, &t1);
             success &= ntru_decrypt((uint8_t*)&encrypted, &kp, &params, (uint8_t*)&decrypted, &dec_len) == 0;
-        clock_gettime(CLOCK_REALTIME, &t2);
-        print_time("dec", t1, t2, NUM_ITER_ENCDEC);
+            clock_gettime(CLOCK_REALTIME, &t2);
+            double duration = 1000000000.0*(t2.tv_sec-t1.tv_sec) + t2.tv_nsec-t1.tv_nsec;
+            samples_encdec[i] = duration;
+        }
+        print_time("dec", samples_encdec, NUM_ITER_ENCDEC);
         printf("\n");
     }
 
