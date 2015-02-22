@@ -201,6 +201,19 @@ uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t
  *
  * Converts a NtruIntPoly to a uint8_t array. Each coefficient is encoded
  * in (log q) bits.
+ * Uses 16-bit arithmetic.
+ *
+ * @param p a polynomial
+ * @param p the modulus; must be a power of two
+ * @param a output parameter; a pointer to store the encoded polynomial
+ */
+void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a);
+
+/**
+ * @brief Polynomial to binary
+ *
+ * Converts a NtruIntPoly to a uint8_t array. Each coefficient is encoded
+ * in (log q) bits.
  * Uses 64-bit arithmetic.
  *
  * @param p a polynomial
