@@ -8,7 +8,7 @@
 #include "err.h"
 #include "arith.h"
 
-#define NTRU_SPARSE_THRESH 20
+#define NTRU_SPARSE_THRESH 14
 
 uint8_t ntru_num_bits(uint16_t n) {
     uint8_t b = 1;
@@ -473,34 +473,62 @@ uint8_t ntru_mult_tern_sse_dense(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c
     uint16_t i;
     for(i=N; i<NTRU_INT_POLY_SIZE; i++)
         a->coeffs[i] = 0;
-    int16_t c_coeffs[2*NTRU_INT_POLY_SIZE];   /* double capacity for intermediate result */
-    memset(&c_coeffs, 0, sizeof(c_coeffs));
+    int16_t c_coeffs_arr[8+2*NTRU_INT_POLY_SIZE];   /* double capacity for intermediate result + another 8 */
+    int16_t *c_coeffs = c_coeffs_arr + 8;
+    memset(&c_coeffs_arr, 0, sizeof(c_coeffs_arr));
+
+    __m128i a_coeffs0[8];
+    a_coeffs0[0] = _mm_lddqu_si128((__m128i*)&a->coeffs[0]);
+    for (i=1; i<8; i++)
+        a_coeffs0[i] = _mm_slli_si128(a_coeffs0[i-1], 2);
 
     /* add coefficients that are multiplied by 1 */
     for (i=0; i<b->num_ones; i++) {
-        int16_t j;
         int16_t k = b->ones[i];
+        /* process the first num_coeffs0 coefficients, 1<=num_coeffs0<=8 */
+        uint8_t num_bytes0 = 16 - (((size_t)&c_coeffs[k])%16);
+        uint8_t num_coeffs0 = num_bytes0 / 2;   // c_coeffs[k+num_coeffs0] is 16-byte aligned
+        k -= 8 - num_coeffs0;
+        __m128i *ck = (__m128i*)&c_coeffs[k];
+        __m128i aj = a_coeffs0[8-num_coeffs0];
+        __m128i ca = _mm_add_epi16(*ck, aj);
+        _mm_storeu_si128(ck, ca);
+        k += 8;
+        /* process the remaining coefficients in blocks of 8. */
         /* it is safe not to truncate the last block of 8 coefficients */
         /* because there is extra room at the end of the coeffs array  */
-        for (j=0; j<N; j+=8,k+=8) {
-            __m128i ck = _mm_lddqu_si128((__m128i*)&c_coeffs[k]);
+        ck = (__m128i*)&c_coeffs[k];
+        int16_t j;
+        for (j=num_coeffs0; j<N; j+=8,k+=8) {
             __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
-            __m128i ca = _mm_add_epi16(ck, aj);
-            _mm_storeu_si128((__m128i*)&c_coeffs[k], ca);
+            __m128i ca = _mm_add_epi16(*ck, aj);
+            _mm_storeu_si128(ck, ca);
+            ck++;
         }
     }
 
     /* subtract coefficients that are multiplied by -1 */
     for (i=0; i<b->num_neg_ones; i++) {
-        int16_t j;
         int16_t k = b->neg_ones[i];
+        /* process the first num_coeffs0 coefficients, 1<=num_coeffs0<=8 */
+        uint8_t num_bytes0 = 16 - (((size_t)&c_coeffs[k])%16);
+        uint8_t num_coeffs0 = num_bytes0 / 2;   // c_coeffs[k+num_coeffs0] is 16-byte aligned
+        k -= 8 - num_coeffs0;
+        __m128i *ck = (__m128i*)&c_coeffs[k];
+        __m128i aj = a_coeffs0[8-num_coeffs0];
+        __m128i ca = _mm_sub_epi16(*ck, aj);
+        _mm_storeu_si128(ck, ca);
+        k += 8;
+        /* process the remaining coefficients in blocks of 8. */
         /* it is safe not to truncate the last block of 8 coefficients */
         /* because there is extra room at the end of the coeffs array  */
-        for (j=0; j<N; j+=8,k+=8) {
-            __m128i ck = _mm_lddqu_si128((__m128i*)&c_coeffs[k]);
+        ck = (__m128i*)&c_coeffs[k];
+        int16_t j;
+        for (j=num_coeffs0; j<N; j+=8,k+=8) {
             __m128i aj = _mm_lddqu_si128((__m128i*)&a->coeffs[j]);
-            __m128i ca = _mm_sub_epi16(ck, aj);
-            _mm_storeu_si128((__m128i*)&c_coeffs[k], ca);
+            __m128i ca = _mm_sub_epi16(*ck, aj);
+            _mm_storeu_si128(ck, ca);
+            ck++;
         }
     }
     for (i=0; i<N; i++)
