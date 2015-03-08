@@ -1,7 +1,15 @@
 CC?=gcc
 AR?=ar
-OPTFLAGS=-O2
-bench: OPTFLAGS=-O3 -march=native
+
+# use -march=native for the bench target unless we're compiling for PowerPC
+MACHINE=$(shell uname -m)
+ifneq ($(MACHINE), ppc64)
+    ifneq ($(MACHINE), powerpc)
+        BENCH_ARCH_OPTION=-march=native
+    endif
+endif
+bench: OPTFLAGS=-O3 $(BENCH_ARCH_OPTION)
+
 CFLAGS?=-g $(OPTFLAGS)
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
 SSSE3_FLAG = $(shell /bin/grep -m 1 -o ssse3 /proc/cpuinfo)

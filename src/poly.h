@@ -205,7 +205,8 @@ uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t
  *
  * @param p a polynomial
  * @param p the modulus; must be a power of two
- * @param a output parameter; a pointer to store the encoded polynomial
+ * @param a output parameter; a pointer to store the encoded polynomial.
+ *          No extra room is needed at the end.
  */
 void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a);
 
@@ -218,7 +219,8 @@ void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a);
  *
  * @param p a polynomial
  * @param p the modulus; must be a power of two
- * @param a output parameter; a pointer to store the encoded polynomial
+ * @param a output parameter; a pointer to store the encoded polynomial.
+ *          Must accommodate at least 7 more bytes than the result takes up.
  */
 void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a);
 
@@ -230,7 +232,8 @@ void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a);
  * Requires SSSE3 support.
  *
  * @param p a polynomial
- * @param a output parameter; a pointer to store the encoded polynomial
+ * @param a output parameter; a pointer to store the encoded polynomial.
+ *          Must accommodate at least 7 more bytes than the result takes up.
  */
 void ntru_to_arr_sse_2048(NtruIntPoly *p, uint8_t *a);
 

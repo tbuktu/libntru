@@ -667,6 +667,11 @@ void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a) {
             a64[a_idx] = coeff >> (log_q-bit_idx);
         }
     }
+
+    /* reverse byte order on big-endian machines */
+    uint16_t i;
+    for (i=0; i<=a_idx; i++)
+        a64[i] = htole64(a64[i]);
 }
 
 void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a) {
