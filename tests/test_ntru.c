@@ -108,7 +108,6 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
         uint16_t dec_len;
         valid &= ntru_decrypt((uint8_t*)&encrypted, &kp, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
         valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
-        plain_len++;
     }
 
     ntru_rand_release(&rand_ctx);
