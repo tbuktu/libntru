@@ -1,13 +1,16 @@
 CC?=gcc
 AR?=ar
 
-# use -march=native for the bench target unless we're compiling for PowerPC
-MACHINE=$(shell uname -m)
-ifneq ($(MACHINE), ppc64)
-    ifneq ($(MACHINE), powerpc)
-        BENCH_ARCH_OPTION=-march=native
-    endif
+# use -march=native if we're compiling for x86
+BENCH_ARCH_OPTION=
+MACHINE=$(shell uname -m | sed 's/i.86/i386/g')
+ifeq ($(MACHINE), i386)
+    BENCH_ARCH_OPTION=-march=native
 endif
+ifeq ($(MACHINE), x86_64)
+    BENCH_ARCH_OPTION=-march=native
+endif
+OPTFLAGS=-O2
 bench: OPTFLAGS=-O3 $(BENCH_ARCH_OPTION)
 
 CFLAGS?=-g $(OPTFLAGS)
