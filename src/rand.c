@@ -40,8 +40,10 @@ uint8_t ntru_rand_wincrypt_init(NtruRandContext *rand_ctx, NtruRandGen *rand_gen
     if (!result) {
         if (GetLastError() == (DWORD)NTE_BAD_KEYSET)   // see http://support.microsoft.com/kb/238187
             result = CryptAcquireContext(hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
-        if (!result)
+        if (!result) {
+            free(hCryptProv);
             return 0;
+        }
     }
     rand_ctx->state = hCryptProv;
     return 1;
