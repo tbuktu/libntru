@@ -75,6 +75,15 @@ uint8_t test_params_from_key() {
         valid &= equals_params(&params, &params2);
     }
 
+    for (i=0; i<sizeof(param_arr)/sizeof(param_arr[0]); i++) {
+        NtruEncParams params1 = param_arr[i];
+        uint8_t j;
+        for (j=0; j<sizeof(param_arr)/sizeof(param_arr[0]); j++) {
+            NtruEncParams params2 = param_arr[j];
+            valid &= equals_params(&params1, &params2) == (i==j);
+        }
+    }
+
     return valid;
 }
 

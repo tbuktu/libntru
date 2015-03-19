@@ -1,6 +1,10 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "test_util.h"
+
+/** For equals_hash_func() */
+#define HASH_INPUT_LEN 100
 
 uint8_t equals_int(NtruIntPoly *a, NtruIntPoly *b) {
     if (a->N != b->N)
@@ -76,6 +80,24 @@ uint8_t equals_arr(uint8_t *arr1, uint8_t *arr2, uint16_t len) {
     return 1;
 }
 
+/**
+ * A probabilistic test for equality of two hash functions.
+ * Calls the two hash functions with a random input value
+ * and considers the functions equal if the outputs match.
+ */
+int equals_hash_func(void (*func1)(uint8_t[], uint16_t, uint8_t[]), void (*func2)(uint8_t[], uint16_t, uint8_t[]), uint8_t hash_len) {
+    srand(0);
+    uint8_t input[HASH_INPUT_LEN];
+    uint8_t i;
+    for (i=0; i<HASH_INPUT_LEN; i++)
+        input[i] = rand();
+    uint8_t hash1[256];
+    uint8_t hash2[256];
+    func1(input, HASH_INPUT_LEN, hash1);
+    func2(input, HASH_INPUT_LEN, hash2);
+    return memcmp(hash1, hash2, hash_len) == 0;
+}
+
 uint8_t equals_params(NtruEncParams *params1, NtruEncParams *params2) {
     uint8_t equal = 1;
     equal &= strcmp(params1->name, params2->name) == 0;
@@ -94,7 +116,7 @@ uint8_t equals_params(NtruEncParams *params1, NtruEncParams *params2) {
     equal &= params1->min_calls_mask == params2->min_calls_mask;
     equal &= params1->hash_seed == params2->hash_seed;
     equal &= memcmp(params1->oid, params2->oid, sizeof(params1->oid)) == 0;
-    equal &= params1->hash == params2->hash;
+    equal &= equals_hash_func(params1->hash, params2->hash, params1->hlen);
     equal &= params1->hlen == params2->hlen;
     equal &= params1->pklen == params2->pklen;
     return equal;
