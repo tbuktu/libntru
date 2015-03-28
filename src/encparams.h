@@ -72,6 +72,9 @@ typedef struct NtruEncParams {
     /* hash function, e.g. ntru_sha256 */
     void (*hash)(uint8_t[], uint16_t, uint8_t[]);
 
+    /* hash function for 4 inputs, e.g. ntru_sha256_4way */
+    void (*hash_4way)(uint8_t *[4], uint16_t, uint8_t *[4]);
+
     /* output length of the hash function */
     uint16_t hlen;
 
@@ -98,6 +101,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 2, 4},     /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     114            /* pklen */\
 }
@@ -121,6 +125,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 3, 3},     /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     128            /* pklen */\
 }
@@ -144,6 +149,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 5, 3},     /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     192            /* pklen */\
 }
@@ -167,6 +173,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 6, 3},     /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     256            /* pklen */\
 }
@@ -191,6 +198,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 2, 5},     /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     112            /* pklen */\
 }
@@ -215,6 +223,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 3, 4},     /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     128            /* pklen */\
 }
@@ -239,6 +248,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 5, 4},     /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     192            /* pklen */\
 }
@@ -263,6 +273,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 6, 4},     /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     256            /* pklen */\
 }
@@ -287,6 +298,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 2, 6},     /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     112            /* pklen */\
 }
@@ -311,6 +323,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 3, 5},     /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     128            /* pklen */\
 }
@@ -335,6 +348,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 5, 5},     /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     192            /* pklen */\
 }
@@ -359,6 +373,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 6, 5},     /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     256            /* pklen */\
 }
@@ -383,6 +398,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 2, 16},    /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     112            /* pklen */\
 }
@@ -406,6 +422,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 3, 16},    /* oid */\
     ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
     20,            /* hlen */\
     128            /* pklen */\
 }
@@ -429,6 +446,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 5, 16},    /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     192            /* pklen */\
 }
@@ -452,6 +470,7 @@ typedef struct NtruEncParams {
     1,             /* hash_seed */\
     {0, 6, 16},    /* oid */\
     ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
     256            /* pklen */\
 }

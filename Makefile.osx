@@ -1,4 +1,5 @@
 CC=gcc
+AS=$(CC) -c
 OPTFLAGS=-O2
 bench: OPTFLAGS=-O3
 CFLAGS=-g -Wall -Wextra -Wno-unused-parameter $(OPTFLAGS)
@@ -14,6 +15,9 @@ endif
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o
+ifeq ($(SSE), yes)
+    LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
+endif
 TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
 VERSION=0.3
 INST_PFX=/usr
@@ -21,6 +25,8 @@ INST_LIBDIR=$(INST_PFX)/lib
 INST_INCLUDE=$(INST_PFX)/include/libntru
 INST_DOCDIR=$(INST_PFX)/share/doc/libntru
 INST_HEADERS=ntru.h types.h key.h encparams.h hash.h rand.h err.h
+PERL=/usr/bin/perl
+PERLASM_SCHEME=macosx
 
 LIB_OBJS_PATHS=$(patsubst %,$(SRCDIR)/%,$(LIB_OBJS))
 TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
@@ -95,12 +101,19 @@ hybrid: lib
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
 
+$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha1-mb-x86_64.o: $(SRCDIR)/sha1-mb-x86_64.s
+	$(AS) $(SRCDIR)/sha1-mb-x86_64.s -o $@
+$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha256-mb-x86_64.o: $(SRCDIR)/sha256-mb-x86_64.s
+	$(AS) $(SRCDIR)/sha256-mb-x86_64.s -o $@
+
 tests/%.o: tests/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -I$(SRCDIR) -c $< -o $@
 
 clean:
 	@# also clean files generated on other OSes
-	rm -f $(SRCDIR)/*.o $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
+	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.s $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
 
 distclean: clean
 	rm -rf $(DIST_NAME)

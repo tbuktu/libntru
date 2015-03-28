@@ -15,6 +15,7 @@ typedef struct NtruIGFState {
     NtruBitStr buf;
     uint16_t counter;
     void (*hash)(uint8_t[], uint16_t, uint8_t[]);
+    void (*hash_4way)(uint8_t*[4], uint16_t, uint8_t*[4]);
     uint16_t hlen;
 } NtruIGFState;
 

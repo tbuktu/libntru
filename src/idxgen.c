@@ -10,14 +10,34 @@ void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, Ntru
     s->hlen = params->hlen;
     s->rem_len = params->min_calls_r * 8 * s->hlen;
     s->hash = params->hash;
+    s->hash_4way = params->hash_4way;
     s->counter = 0;
 
     s->buf.num_bytes = 0;
     s->buf.last_byte_bits = 0;
 
-    uint8_t H[NTRU_MAX_HASH_LEN];
+    while (s->counter < params->min_calls_r-3) {
+        uint8_t H_arr[4][NTRU_MAX_HASH_LEN];
+        uint16_t inp_len = s->zlen + sizeof s->counter;
 
+        uint8_t j;
+        uint8_t hash_inp_arr[4][inp_len];
+        uint8_t *hash_inp[4];
+        for (j=0; j<4; j++) {
+            memcpy(&hash_inp_arr[j], (uint8_t*)s->Z, s->zlen);
+            memcpy((uint8_t*)&hash_inp_arr[j] + s->zlen, &s->counter, sizeof s->counter);
+            hash_inp[j] = hash_inp_arr[j];
+            s->counter++;
+        }
+        uint8_t *H[4];
+        for (j=0; j<4; j++)
+            H[j] = H_arr[j];
+        s->hash_4way(hash_inp, inp_len, H);
+        for (j=0; j<4; j++)
+            ntru_append(&s->buf, H[j], s->hlen);
+    }
     while (s->counter < params->min_calls_r) {
+        uint8_t H[NTRU_MAX_HASH_LEN];
         uint16_t inp_len = s->zlen + sizeof s->counter;
         uint8_t hash_inp[inp_len];
         memcpy(&hash_inp, (uint8_t*)s->Z, s->zlen);
