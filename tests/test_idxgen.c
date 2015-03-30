@@ -7,8 +7,7 @@
 #include "test_util.h"
 
 /** number of calls to IGF */
-#define NUM_ITER 1000
-#define NUM_ITER_LARGE 100000
+#define NUM_ITER 100000
 
 /* tests the IGF-2 implementation */
 uint8_t test_idxgen() {
@@ -43,7 +42,7 @@ uint8_t test_idxgen() {
         }
         avg /= NUM_ITER;
 
-        valid &= fabs((params[i].N/2.0)-avg) < 30;
+        valid &= fabs((params[i].N/2.0)-avg) < 10;
 
         /* test reproducability */
         ntru_IGF_init(seed, sizeof seed, &params[i], &s);
@@ -56,7 +55,7 @@ uint8_t test_idxgen() {
         ntru_IGF_init(seed, sizeof seed, &params[i], &s);
         uint8_t checklist[params[i].N];
         memset(checklist, 0, params[i].N);
-        for (j=0; j<NUM_ITER_LARGE; j++) {
+        for (j=0; j<NUM_ITER; j++) {
             ntru_IGF_next(&s, &idx);
             checklist[idx] = 1;
         }
