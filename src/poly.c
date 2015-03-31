@@ -1342,6 +1342,7 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
             memset(c_coeffs64, 0, num_zeros/64*8);
             memmove(f_coeffs64, f_coeffs64+num_zeros/64, N64*8-num_zeros/64*8);
             memset(f_coeffs64+N64-num_zeros/64, 0, num_zeros/64*8);
+            deg_f -= num_zeros / 64 * 64;
             num_zeros %= 64;
         }
         if (num_zeros > 0) {
@@ -1376,6 +1377,9 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
             c_coeffs64 = temp_coeffs;
         }
         ntru_add_int_mod2_64(f_coeffs64, g_coeffs64, N64);
+        /* adding f+g may have lowered the degree of f */
+        while (deg_f>0 && (f_coeffs64[deg_f/64]&(((uint64_t)1)<<(deg_f%64)))==0)
+            deg_f--;
         ntru_add_int_mod2_64(b_coeffs64, c_coeffs64, N64);
     }
 
