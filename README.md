@@ -8,6 +8,7 @@ in 2020; when built with the NTRU_AVOID_HAMMING_WT_PATENT flag, libntru becomes
 patent-free in 2017.
 
 Benchmark results:
+
 ![Benchmark results](https://tbuktu.github.io/ntru/images/bench.png?raw=true "Benchmark results")
 
 For more information on the NTRUEncrypt algorithm, see the NTRU introduction
