@@ -51,7 +51,7 @@ uint8_t ntru_rand_devurandom_init(NtruRandContext *rand_ctx, struct NtruRandGen 
 uint8_t ntru_rand_devurandom_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 uint8_t ntru_rand_devurandom_release(NtruRandContext *rand_ctx);
 
-#endif // !WIN32
+#endif /* !WIN32 */
 
 /* deterministic RNG based on IGF-2 */
 uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);

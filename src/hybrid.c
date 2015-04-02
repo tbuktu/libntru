@@ -37,14 +37,14 @@ int openssl_encr_decr(uint8_t *inbuf, int inlen, uint8_t *outbuf, int *outlen, u
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure; 99 for OpenSSL error
  */
 uint8_t ntru_encrypt_hybrid(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc, int *enc_len) {
-    uint8_t key_iv[32];   // key + iv
+    uint8_t key_iv[32];   /* key + iv */
     rand_ctx->rand_gen->generate(key_iv, 32, rand_ctx);
-    int retval = ntru_encrypt(key_iv, 32, pub, params, rand_ctx, enc);   // put encrypted sym key + iv at the beginning
+    int retval = ntru_encrypt(key_iv, 32, pub, params, rand_ctx, enc);   /* put encrypted sym key + iv at the beginning */
     int outlen;
-    if (!openssl_encr_decr(msg, msg_len, enc+ntru_enc_len(params), &outlen, key_iv, key_iv+16, 1))   // followed by the encrypted msg
+    if (!openssl_encr_decr(msg, msg_len, enc+ntru_enc_len(params), &outlen, key_iv, key_iv+16, 1))   /* followed by the encrypted msg */
         retval = 99;
     *enc_len = outlen;
-    *enc_len += ntru_enc_len(params);    // add length of encrypted sym key + iv
+    *enc_len += ntru_enc_len(params);    /* add length of encrypted sym key + iv */
 
     memset(key_iv, 0, 32);
     return retval;
@@ -107,7 +107,7 @@ int main(int arc, char **argv) {
     int dec_len;
     if (ntru_decrypt_hybrid((uint8_t*)&enc, enc_len, &kp, &params, (uint8_t*)&dec, &dec_len) != NTRU_SUCCESS)
         printf("decrypt fail\n");
-    dec[dec_len] = 0;   // string terminator
+    dec[dec_len] = 0;   /* string terminator */
     ntru_rand_release(&rand_ctx);
 
     printf("encryption+decryption ");

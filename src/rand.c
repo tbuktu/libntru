@@ -38,7 +38,7 @@ uint8_t ntru_rand_wincrypt_init(NtruRandContext *rand_ctx, NtruRandGen *rand_gen
         return 0;
     uint8_t result = CryptAcquireContext(hCryptProv, NULL, NULL, PROV_RSA_FULL, 0);
     if (!result) {
-        if (GetLastError() == (DWORD)NTE_BAD_KEYSET)   // see http://support.microsoft.com/kb/238187
+        if (GetLastError() == (DWORD)NTE_BAD_KEYSET)   /* see http://support.microsoft.com/kb/238187 */
             result = CryptAcquireContext(hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
         if (!result) {
             free(hCryptProv);
@@ -111,7 +111,7 @@ uint8_t ntru_rand_devrandom_generate(uint8_t rand_data[], uint16_t len, NtruRand
 uint8_t ntru_rand_devrandom_release(NtruRandContext *rand_ctx) {
     return ntru_rand_device_release(rand_ctx);
 }
-#endif // !WIN32
+#endif /* !WIN32 */
 
 uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
     rand_ctx->state = malloc(sizeof(struct NtruIGFState));

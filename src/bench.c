@@ -39,7 +39,7 @@ the_time->tv_sec = mts.tv_sec;
 the_time->tv_nsec = mts.tv_nsec;
 }
 
-#endif // __MACH__
+#endif /* __MACH__ */
 
 #ifdef __MINGW32__
 
@@ -121,7 +121,7 @@ void clock_gettime(uint32_t X, struct timespec *ts)
     ts->tv_nsec = t.QuadPart % 1000000000;
 }
 
-#endif // __MINGW32__
+#endif /* __MINGW32__ */
 
 int compare_double(const void *p1, const void *p2) {
     double t1 = *(double*)p1;

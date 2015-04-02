@@ -165,7 +165,7 @@ uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
     uint16_t N2 = (N+1) / 2;
     if (N != b->N)
         return 0;
-    if (modulus & (modulus-1))   // check that modulus is a power of 2
+    if (modulus & (modulus-1))   /* check that modulus is a power of 2 */
         return 0;
     uint16_t mod_mask_16 = modulus - 1;
     uint64_t mod_mask_64 = mod_mask_16 + (mod_mask_16<<25);
@@ -330,7 +330,7 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
-    if (modulus & (modulus-1))   // check that modulus is a power of 2
+    if (modulus & (modulus-1))   /* check that modulus is a power of 2 */
         return 0;
     memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
     c->N = N;
@@ -411,7 +411,7 @@ uint8_t ntru_mult_tern_sse_sparse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
-    if (modulus & (modulus-1))   // check that modulus is a power of 2
+    if (modulus & (modulus-1))   /* check that modulus is a power of 2 */
         return 0;
     memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
     c->N = N;
@@ -475,7 +475,7 @@ uint8_t ntru_mult_tern_sse_dense(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
-    if (modulus & (modulus-1))   // check that modulus is a power of 2
+    if (modulus & (modulus-1))   /* check that modulus is a power of 2 */
         return 0;
     c->N = N;
 
@@ -496,7 +496,7 @@ uint8_t ntru_mult_tern_sse_dense(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c
         int16_t k = b->ones[i];
         /* process the first num_coeffs0 coefficients, 1<=num_coeffs0<=8 */
         uint8_t num_bytes0 = 16 - (((size_t)&c_coeffs[k])%16);
-        uint8_t num_coeffs0 = num_bytes0 / 2;   // c_coeffs[k+num_coeffs0] is 16-byte aligned
+        uint8_t num_coeffs0 = num_bytes0 / 2;   /* c_coeffs[k+num_coeffs0] is 16-byte aligned */
         k -= 8 - num_coeffs0;
         __m128i *ck = (__m128i*)&c_coeffs[k];
         __m128i aj = a_coeffs0[8-num_coeffs0];
@@ -521,7 +521,7 @@ uint8_t ntru_mult_tern_sse_dense(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c
         int16_t k = b->neg_ones[i];
         /* process the first num_coeffs0 coefficients, 1<=num_coeffs0<=8 */
         uint8_t num_bytes0 = 16 - (((size_t)&c_coeffs[k])%16);
-        uint8_t num_coeffs0 = num_bytes0 / 2;   // c_coeffs[k+num_coeffs0] is 16-byte aligned
+        uint8_t num_coeffs0 = num_bytes0 / 2;   /* c_coeffs[k+num_coeffs0] is 16-byte aligned */
         k -= 8 - num_coeffs0;
         __m128i *ck = (__m128i*)&c_coeffs[k];
         __m128i aj = a_coeffs0[8-num_coeffs0];
