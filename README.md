@@ -17,7 +17,7 @@ page at https://tbuktu.github.com/ntru/.
 
 ## Compiling
 
-Run ```make``` to build the library, or ```make test``` to run unit tests.
+Run ```make``` to build the library, or ```make test``` to run unit tests. ```make bench``` builds a benchmark program.
 
 The ```SSE``` environment variable enables SSSE3 support (```SSE=yes```)
 or disables it (```SSE=no```).
