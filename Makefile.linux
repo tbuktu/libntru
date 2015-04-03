@@ -30,7 +30,9 @@ SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o
 ifeq ($(SSE), yes)
-    LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
+    ifeq ($(MACHINE), x86_64)
+        LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
+    endif
 endif
 TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
 VERSION=0.3
