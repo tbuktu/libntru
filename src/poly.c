@@ -919,12 +919,6 @@ NtruIntPoly *ntru_zero_poly(uint16_t n) {
     return poly;
 }
 
-NtruIntPoly *ntru_clone(NtruIntPoly *a) {
-    NtruIntPoly *b = malloc(sizeof *a);
-    memcpy(b, a, sizeof *a);
-    return b;
-}
-
 #ifdef __SSSE3__
 void ntru_mod_sse(NtruIntPoly *p, uint16_t modulus) {
     uint16_t i;
