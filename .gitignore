@@ -1,6 +1,10 @@
 # Object files
 *.o
 
+# Compiler-generated assembly files
+src/sha1-mb-x86_64.s
+src/sha256-mb-x86_64.s
+
 # Libraries
 *.lib
 
