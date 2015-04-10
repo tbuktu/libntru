@@ -904,12 +904,6 @@ void ntru_mult_fac(NtruIntPoly *a, int16_t factor) {
         a->coeffs[i] *= factor;
 }
 
-void ntru_mult_2(NtruIntPoly *a, uint16_t modulus) {
-    uint16_t i;
-    for (i=0; i<a->N; i++)
-        a->coeffs[i] = (a->coeffs[i]*2) % modulus;
-}
-
 NtruIntPoly *ntru_zero_poly(uint16_t n) {
     NtruIntPoly *poly = calloc(1, sizeof *poly);
     if (poly) {
@@ -1075,14 +1069,6 @@ uint8_t ntru_equals0(NtruIntPoly *p) {
     uint16_t i;
     for (i=0; i<p->N; i++)
         if (p->coeffs[i] != 0)
-            return 0;
-    return 1;
-}
-
-uint8_t ntru_equals0_64(uint64_t *p, uint16_t len) {
-    uint16_t i;
-    for (i=0; i<len; i++)
-        if (p[i] != 0)
             return 0;
     return 1;
 }
