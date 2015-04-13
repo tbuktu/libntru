@@ -95,7 +95,7 @@ uint8_t test_mult_tern() {
     NtruIntPoly c_int;
     ntru_mult_int(&a_int, &b, &c_int, 32);
     NtruIntPoly c_tern;
-    ntru_mult_tern_16(&b, &a, &c_tern, 32);
+    ntru_mult_tern_32(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
     ntru_mult_tern_64(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
@@ -121,7 +121,7 @@ uint8_t test_mult_tern() {
         valid &= rand_int(N, 11, &b, &rand_ctx);
         ntru_tern_to_int(&a, &a_int);
         ntru_mult_int_nomod(&a_int, &b, &c_int);
-        ntru_mult_tern_16(&b, &a, &c_tern, 2048);
+        ntru_mult_tern_32(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
         ntru_mult_tern_64(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
@@ -186,7 +186,7 @@ uint8_t test_inv() {
     /* Verify a short polynomial */
     NtruPrivPoly a1 = {0, {{11, 4, 4, {1, 2, 6, 9}, {0, 3, 4, 10}}}};
     NtruIntPoly b1;
-    uint8_t invertible = ntru_invert_16(&a1, 32, &b1);
+    uint8_t invertible = ntru_invert_32(&a1, 32, &b1);
     valid &= invertible;
     valid &= verify_inverse(&a1, &b1, 32);
     invertible &= ntru_invert_64(&a1, 32, &b1);
@@ -245,7 +245,7 @@ uint8_t test_arr() {
     NtruRandContext rand_ctx;
     ntru_rand_init(&rand_ctx, &rng);
     uint8_t valid = rand_int(params.N, 11, &p1, &rand_ctx);
-    ntru_to_arr_16(&p1, params.q, a);
+    ntru_to_arr_32(&p1, params.q, a);
     ntru_rand_release(&rand_ctx);
     NtruIntPoly p2;
     ntru_from_arr(a, params.N, params.q, &p2);

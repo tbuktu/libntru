@@ -125,7 +125,7 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t
  *
  * Multiplies a NtruIntPoly by a NtruTernPoly. The number of coefficients
  * must be the same for both polynomials.
- * Uses 16-bit arithmetic.
+ * Uses 32-bit arithmetic.
  *
  * @param a a general polynomial
  * @param b a ternary polynomial
@@ -133,7 +133,7 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t
  * @param modulus the modulus; must be a power of two
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_tern_16(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_tern_32(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 /**
  * @brief General polynomial by ternary polynomial multiplication
@@ -201,14 +201,14 @@ uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t
  *
  * Converts a NtruIntPoly to a uint8_t array. Each coefficient is encoded
  * in (log q) bits.
- * Uses 16-bit arithmetic.
+ * Uses 32-bit arithmetic.
  *
  * @param p a polynomial
  * @param p the modulus; must be a power of two
  * @param a output parameter; a pointer to store the encoded polynomial.
  *          No extra room is needed at the end.
  */
-void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a);
+void ntru_to_arr_32(NtruIntPoly *p, uint16_t q, uint8_t *a);
 
 /**
  * @brief Polynomial to binary
@@ -425,14 +425,14 @@ uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
  * Returns 0 if the polynomial is not invertible, 1 otherwise.
  * The algorithm is described in "Almost Inverses and Fast NTRU Key Generation" at
  * http://www.securityinnovation.com/uploads/Crypto/NTRUTech014.pdf
- * This function uses 16-bit arithmetic.
+ * This function uses 32-bit arithmetic.
  *
  * @param a a ternary or product-form polynomial
  * @param q the modulus
  * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t ntru_invert_16(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
 
 /**
  * @brief Inverse modulo q

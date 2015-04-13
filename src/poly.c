@@ -11,10 +11,12 @@
 #ifdef __APPLE__
 #include <libkern/OSByteOrder.h>
 #define htole64(x) OSSwapHostToLittleInt64(x)
+#define htole32(x) OSSwapHostToLittleInt32(x)
 #endif
 #ifdef __MINGW32__
 /* assume little endian */
 #define htole64(x) (x)
+#define htole32(x) (x)
 #endif
 
 #define NTRU_SPARSE_THRESH 14
@@ -108,10 +110,10 @@ void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
         a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) % modulus;
 }
 
-void ntru_add_int_mod2(NtruIntPoly *a, NtruIntPoly *b) {
+void ntru_add_int_mod2_32(uint32_t *a, uint32_t *b, uint16_t len) {
     uint16_t i;
-    for (i=0; i<b->N; i++)
-        a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) & 1;
+    for (i=0; i<len; i++)
+        a[i] ^= b[i];
 }
 
 void ntru_add_int_mod2_64(uint64_t *a, uint64_t *b, uint16_t len) {
@@ -147,14 +149,20 @@ uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
     if (N != b->N)
         return 0;
     c->N = N;
+    uint16_t mod_mask = modulus - 1;
 
     uint16_t k;
     for (k=0; k<N; k++) {
         int16_t ck = 0;
         uint16_t i;
-        for (i=0; i<N; i++)
-            ck += b->coeffs[i] * a->coeffs[(N+k-i)%N];
-        c->coeffs[k] = ck % modulus;
+        int16_t a_idx = k;
+        for (i=0; i<N; i++) {
+            ck += b->coeffs[i] * a->coeffs[a_idx];
+            a_idx--;
+            if (a_idx < 0)
+                a_idx = N - 1;
+        }
+        c->coeffs[k] = ck & mod_mask;
     }
 
     return 1;
@@ -235,7 +243,7 @@ uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16
     memset(&c_coeffs, 0, sizeof(c_coeffs));
 
     uint16_t k;
-    for(k=N; k<NTRU_INT_POLY_SIZE; k++) {
+    for (k=N; k<NTRU_INT_POLY_SIZE; k++) {
         a->coeffs[k] = 0;
         b->coeffs[k] = 0;
     }
@@ -288,37 +296,80 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t
 #elif _LP64
     return ntru_mult_tern_64(a, b, c, modulus);
 #else
-    return ntru_mult_tern_16(a, b, c, modulus);
+    return ntru_mult_tern_32(a, b, c, modulus);
 #endif
 }
 
-uint8_t ntru_mult_tern_16(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
+uint8_t ntru_mult_tern_32(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
+        return 0;
+    if (modulus & (modulus-1))   /* check that modulus is a power of 2 */
         return 0;
     c->N = N;
     memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
 
+    uint32_t mod_mask_32 = modulus - 1;
+    mod_mask_32 += mod_mask_32 << 16;
+    typedef uint32_t __attribute__((__may_alias__)) uint32_t_alias;
+
+    /* make sure a.coeffs[i] < modulus */
+    ntru_mod(a, modulus);
+
+    uint16_t overflow_ctr_start = (1<<16)/modulus - 1;
+    uint16_t overflow_ctr_rem = overflow_ctr_start;
+
+    /* add coefficients that are multiplied by 1 */
     uint16_t i;
     for (i=0; i<b->num_ones; i++) {
-        int16_t j = N - 1 - b->ones[i];
-        int16_t k;
-        for(k=N-1; k>=0; k--) {
+        int16_t j;
+        int16_t k = b->ones[i];
+        uint16_t j_end = N-2<b->ones[i] ? 0 : N-2-b->ones[i];
+        for (j=0; j<j_end; j+=2,k+=2)
+            *((uint32_t_alias*)&c->coeffs[k]) += *((uint32_t_alias*)&a->coeffs[j]);
+        for (; k<N; k++,j++)
             c->coeffs[k] += a->coeffs[j];
-            j--;
-            if (j < 0)
-                j = N - 1;
+        for (k=0; j<N-2; j+=2,k+=2)
+            *((uint32_t_alias*)&c->coeffs[k]) += *((uint32_t_alias*)&a->coeffs[j]);
+        for (; j<N; j++,k++)
+            c->coeffs[k] += a->coeffs[j];
+
+        overflow_ctr_rem--;
+        if (!overflow_ctr_rem) {
+            ntru_mod(c, modulus);
+            overflow_ctr_rem = overflow_ctr_start;
         }
     }
 
+    /* use inverse mask for subtraction */
+    mod_mask_32 = ~mod_mask_32;
+    for (i=0; i<N-2; i+=2)
+        *((uint32_t_alias*)&c->coeffs[i]) |= mod_mask_32;
+    for (; i<N; i++)
+        c->coeffs[i] |= mod_mask_32;
+
+    /* subtract coefficients that are multiplied by -1 */
+    overflow_ctr_rem = overflow_ctr_start;
     for (i=0; i<b->num_neg_ones; i++) {
-        int16_t j = N - 1 - b->neg_ones[i];
-        int16_t k;
-        for(k=N-1; k>=0; k--) {
+        int16_t j;
+        int16_t k = b->neg_ones[i];
+        uint16_t j_end = N-2<b->neg_ones[i] ? 0 : N-2-b->neg_ones[i];
+        for (j=0; j<j_end; j+=2,k+=2)
+            *((uint32_t_alias*)&c->coeffs[k]) -= *((uint32_t_alias*)&a->coeffs[j]);
+        for (; k<N; k++,j++)
             c->coeffs[k] -= a->coeffs[j];
-            j--;
-            if (j < 0)
-                j = N - 1;
+        for (k=0; j<N-2; j+=2,k+=2)
+            *((uint32_t_alias*)&c->coeffs[k]) -= *((uint32_t_alias*)&a->coeffs[j]);
+        for (; j<N; j++,k++)
+            c->coeffs[k] -= a->coeffs[j];
+
+        overflow_ctr_rem--;
+        if (!overflow_ctr_rem) {
+            for (j=0; j<N-2; j+=2)
+                *((uint32_t_alias*)&c->coeffs[j]) |= mod_mask_32;
+            for (; j<N; j++)
+                c->coeffs[j] |= mod_mask_32;
+            overflow_ctr_rem = overflow_ctr_start;
         }
     }
 
@@ -480,7 +531,7 @@ uint8_t ntru_mult_tern_sse_dense(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c
     c->N = N;
 
     uint16_t i;
-    for(i=N; i<NTRU_INT_POLY_SIZE; i++)
+    for (i=N; i<NTRU_INT_POLY_SIZE; i++)
         a->coeffs[i] = 0;
     int16_t c_coeffs_arr[8+2*NTRU_INT_POLY_SIZE];   /* double capacity for intermediate result + another 8 */
     int16_t *c_coeffs = c_coeffs_arr + 8;
@@ -629,8 +680,8 @@ void ntru_priv_to_int(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus) {
         ntru_tern_to_int(&a->poly.tern, b);
 }
 
-/** NtruPrivPoly to binary (coefficients reduced mod 2) */
-void ntru_priv_to_mod2(NtruPrivPoly *a, uint64_t *b_coeffs64) {
+/** NtruPrivPoly to binary (coefficients reduced mod 2), 64 bit version */
+void ntru_priv_to_mod2_64(NtruPrivPoly *a, uint64_t *b_coeffs64) {
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (a->prod_flag) {
         NtruProdPoly *prod = &a->poly.prod;
@@ -693,6 +744,70 @@ void ntru_priv_to_mod2(NtruPrivPoly *a, uint64_t *b_coeffs64) {
     }
 }
 
+/** NtruPrivPoly to binary (coefficients reduced mod 2), 32 bit version */
+void ntru_priv_to_mod2_32(NtruPrivPoly *a, uint32_t *b_coeffs32) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    if (a->prod_flag) {
+        NtruProdPoly *prod = &a->poly.prod;
+        uint16_t N = prod->N;
+        uint16_t N32 = (prod->N+31) / 32;
+        memset(b_coeffs32, 0, N32*4);
+        uint16_t i, j, bidx;
+        for (i=0; i<prod->f1.num_ones; i++) {
+            for (j=0; j<prod->f2.num_ones; j++) {
+                bidx = prod->f1.ones[i] + prod->f2.ones[j];
+                if (bidx >= N)
+                    bidx -= N;
+                b_coeffs32[bidx/32] ^= ((uint32_t)1) << (bidx%32);
+            }
+            for (j=0; j<prod->f2.num_neg_ones; j++) {
+                bidx = prod->f1.ones[i] + prod->f2.neg_ones[j];
+                if (bidx >= N)
+                    bidx -= N;
+                b_coeffs32[bidx/32] ^= ((uint32_t)1) << (bidx%32);
+            }
+        }
+        for (i=0; i<prod->f1.num_neg_ones; i++) {
+            for (j=0; j<prod->f2.num_ones; j++) {
+                bidx = prod->f1.neg_ones[i] + prod->f2.ones[j];
+                if (bidx >= N)
+                    bidx -= N;
+                b_coeffs32[bidx/32] ^= ((uint32_t)1) << (bidx%32);
+            }
+            for (j=0; j<prod->f2.num_neg_ones; j++) {
+                bidx = prod->f1.neg_ones[i] + prod->f2.neg_ones[j];
+                if (bidx >= N)
+                    bidx -= N;
+                b_coeffs32[bidx/32] ^= ((uint32_t)1) << (bidx%32);
+            }
+        }
+        for (i=0; i<prod->f3.num_ones; i++) {
+            uint16_t ai = prod->f3.ones[i];
+            b_coeffs32[ai/32] ^= ((uint32_t)1) << (ai%32);
+        }
+        for (i=0; i<prod->f3.num_neg_ones; i++) {
+            uint16_t ai = prod->f3.neg_ones[i];
+            b_coeffs32[ai/32] ^= ((uint32_t)1) << (ai%32);
+        }
+    }
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    {
+        NtruTernPoly *tern = &a->poly.tern;
+        uint16_t N32 = (tern->N+31) / 32;
+        memset(b_coeffs32, 0, N32*4);
+        uint16_t i;
+        for (i=0; i<tern->num_ones; i++) {
+            uint16_t ai = tern->ones[i];
+            b_coeffs32[ai/32] ^= ((uint32_t)1) << (ai%32);
+        }
+        for (i=0; i<tern->num_neg_ones; i++) {
+            uint16_t ai = tern->neg_ones[i];
+            b_coeffs32[ai/32] ^= ((uint32_t)1) << (ai%32);
+        }
+    }
+}
+
 void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     uint16_t N = p->N;
     uint8_t log_q = ntru_log2(q);
@@ -723,29 +838,34 @@ void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a) {
         a64[i] = htole64(a64[i]);
 }
 
-void ntru_to_arr_16(NtruIntPoly *p, uint16_t q, uint8_t *a) {
-    uint8_t bits_coeff = 0;
-    while (q > 1) {
-        q /= 2;
-        bits_coeff++;
+void ntru_to_arr_32(NtruIntPoly *p, uint16_t q, uint8_t *a) {
+    uint16_t N = p->N;
+    uint8_t log_q = ntru_log2(q);
+    typedef uint32_t __attribute__((__may_alias__)) *uint32_t_alias;
+    uint32_t *a32 = (uint32_t_alias)a;
+    uint16_t a_idx = 0;   /* index into a32 */
+    uint8_t bit_idx = 0;   /* next unused bit of a32[a_idx] */
+    a32[0] = 0;
+    uint16_t p_idx;
+    uint32_t mod_mask = q - 1;
+    for (p_idx=0; p_idx<N; p_idx++) {
+        uint32_t coeff = p->coeffs[p_idx] & mod_mask;
+        if (bit_idx < 32-log_q) {
+            a32[a_idx] |= coeff << bit_idx;
+            bit_idx += log_q;
+        }
+        else {
+            a32[a_idx] |= coeff << bit_idx;
+            a_idx++;
+            bit_idx += log_q - 32;
+            a32[a_idx] = coeff >> (log_q-bit_idx);
+        }
     }
 
-    uint8_t bit_idx = 0;
-    uint16_t byte_idx = 0;
-    uint16_t i, j;
-    a[0] = 0;
-    for (i=0; i<p->N; i++)
-        for (j=0; j<bits_coeff; j++) {
-            uint8_t curr_bit = (p->coeffs[i] >> j) & 1;
-            a[byte_idx] |= curr_bit << bit_idx;
-            if (bit_idx == 7) {
-                bit_idx = 0;
-                byte_idx++;
-                a[byte_idx] = 0;
-            }
-            else
-                bit_idx++;
-        }
+    /* reverse byte order on big-endian machines */
+    uint16_t i;
+    for (i=0; i<=a_idx; i++)
+        a32[i] = htole32(a32[i]);
 }
 
 #ifdef __SSSE3__
@@ -822,11 +942,11 @@ void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     if (q == 2048)
         ntru_to_arr_sse_2048(p, a);
     else
-        ntru_to_arr_16(p, q, a);
+        ntru_to_arr_32(p, q, a);
 #elif _LP64
     ntru_to_arr_64(p, q, a);
 #else
-    ntru_to_arr_16(p, q, a);
+    ntru_to_arr_32(p, q, a);
 #endif
 }
 
@@ -904,15 +1024,6 @@ void ntru_mult_fac(NtruIntPoly *a, int16_t factor) {
         a->coeffs[i] *= factor;
 }
 
-NtruIntPoly *ntru_zero_poly(uint16_t n) {
-    NtruIntPoly *poly = calloc(1, sizeof *poly);
-    if (poly) {
-        poly->N = n;
-        memset(&poly->coeffs, 0, n * sizeof poly->coeffs[0]);
-    }
-    return poly;
-}
-
 #ifdef __SSSE3__
 void ntru_mod_sse(NtruIntPoly *p, uint16_t modulus) {
     uint16_t i;
@@ -941,15 +1052,17 @@ void ntru_mod_64(NtruIntPoly *p, uint16_t modulus) {
     }
 }
 
-void ntru_mod_16(NtruIntPoly *p, uint16_t modulus) {
+void ntru_mod_32(NtruIntPoly *p, uint16_t modulus) {
+    typedef uint32_t __attribute__((__may_alias__)) uint32_t_alias;
     uint16_t i;
-    if (modulus == 2048)
-        for (i=0; i<p->N; i++)
-            p->coeffs[i] &= 2047;
+    if (modulus == 20480)
+        for (i=0; i<p->N; i+=2)
+            *((uint32_t_alias*)&p->coeffs[i]) &= 0x07FF07FF07FF07FF;
     else {
-        uint16_t mod_mask = modulus - 1;
-        for (i=0; i<p->N; i++)
-            p->coeffs[i] &= mod_mask;
+        uint32_t mod_mask = modulus - 1;
+        mod_mask += mod_mask << 16;
+        for (i=0; i<p->N; i+=2)
+            *((uint32_t_alias*)&p->coeffs[i]) &= mod_mask;
     }
 }
 
@@ -959,7 +1072,7 @@ void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
 #elif _LP64
     ntru_mod_64(p, modulus);
 #else
-    ntru_mod_16(p, modulus);
+    ntru_mod_32(p, modulus);
 #endif
 }
 
@@ -1059,20 +1172,6 @@ void ntru_mod_center(NtruIntPoly *p, uint16_t modulus) {
     }
 }
 
-void ntru_mod2(NtruIntPoly *p) {
-    uint16_t i;
-    for (i=0; i<p->N; i++)
-        p->coeffs[i] &= 1;
-}
-
-uint8_t ntru_equals0(NtruIntPoly *p) {
-    uint16_t i;
-    for (i=0; i<p->N; i++)
-        if (p->coeffs[i] != 0)
-            return 0;
-    return 1;
-}
-
 uint8_t ntru_equals1(NtruIntPoly *p) {
     uint16_t i;
     for (i=1; i<p->N; i++)
@@ -1093,13 +1192,6 @@ uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {
     return 1;
 }
 
-uint16_t ntru_deg(NtruIntPoly *p) {
-    uint16_t deg = p->N - 1;
-    while (deg>0 && p->coeffs[deg]==0)
-        deg--;
-    return deg;
-}
-
 uint16_t ntru_deg_64(uint64_t *coeffs, uint16_t len) {
     uint16_t deg = 64*len - 1;
     len--;
@@ -1108,6 +1200,18 @@ uint16_t ntru_deg_64(uint64_t *coeffs, uint16_t len) {
         deg -= 64;
     }
     while (coeffs[len]>>(deg%64)==0 && deg>0)
+        deg--;
+    return deg;
+}
+
+uint16_t ntru_deg_32(uint32_t *coeffs, uint16_t len) {
+    uint16_t deg = 32*len - 1;
+    len--;
+    while (len>0 && coeffs[len]==0) {
+        len--;
+        deg -= 32;
+    }
+    while (coeffs[len]>>(deg%32)==0 && deg>0)
         deg--;
     return deg;
 }
@@ -1167,12 +1271,11 @@ uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
 #ifdef _LP64
     return ntru_invert_64(a, q, Fq);
 #else
-    return ntru_invert_16(a, q, Fq);
+    return ntru_invert_32(a, q, Fq);
 #endif
 }
 
-uint8_t ntru_invert_16(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
-    uint8_t invertible;
+uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     int16_t i;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     uint16_t N = a->prod_flag ? a->poly.prod.N : a->poly.tern.N;
@@ -1180,95 +1283,109 @@ uint8_t ntru_invert_16(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     uint16_t N = a->poly.tern.N;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     uint16_t k = 0;
-    NtruIntPoly *b = ntru_zero_poly(N+1);
-    if (!b)
-        return NTRU_ERR_OUT_OF_MEMORY;
-    b->coeffs[0] = 1;
-    NtruIntPoly *c = ntru_zero_poly(N+1);
-    if (!c) {
-        free(b);
-        return NTRU_ERR_OUT_OF_MEMORY;
-    }
-    NtruIntPoly *f = malloc(sizeof(NtruIntPoly));
-    if (!f) {
-        free(b);
-        free(c);
-        return NTRU_ERR_OUT_OF_MEMORY;
-    }
-    /* f=3a+1; skip multiplication by 3 because f is taken mod 2 later */
-    ntru_priv_to_int(a, f, q);
-    f->coeffs[0] += 1;
-    /* add one coefficient for a total of N+1 */
-    f->coeffs[f->N] = 0;
-    f->N++;
-    ntru_mod2(f);
-    /* set g(x) = x^N − 1 */
-    NtruIntPoly *g = ntru_zero_poly(N+1);
-    if (!g) {
-        free(b);
-        free(c);
-        free(f);
-        return NTRU_ERR_OUT_OF_MEMORY;
-    }
-    g->coeffs[0] = 1;
-    g->coeffs[N] = 1;
+    uint16_t N32 = (N+1+31) / 32;   /* #uint32_t's needed for N+1 coeffs */
+
+    /* b = 1 */
+    uint32_t b_coeffs32_arr[N32];
+    uint32_t *b_coeffs32 = b_coeffs32_arr;
+    memset(b_coeffs32+1, 0, (N32-1)*4);
+    b_coeffs32[0] = 1;
+
+    /* c = 0 */
+    uint32_t c_coeffs32_arr[N32];
+    uint32_t *c_coeffs32 = c_coeffs32_arr;
+    memset(c_coeffs32, 0, N32*4);
+
+    /* f=3a+1; skip multiplication by 3 because f=3f (mod 2) */
+    uint32_t f_coeffs32_arr[N32];
+    uint32_t *f_coeffs32 = f_coeffs32_arr;
+    ntru_priv_to_mod2_32(a, f_coeffs32);
+    f_coeffs32[0] ^= 1;
+
+    /* g(x) = x^N − 1 */
+    uint32_t g_coeffs32_arr[N32];
+    uint32_t *g_coeffs32 = g_coeffs32_arr;
+    memset(g_coeffs32, 0, N32*4);
+    g_coeffs32[0] = 1;
+    g_coeffs32[N/32] |= ((uint32_t)1) << (N%32);
+
+    uint16_t deg_f = ntru_deg_32(f_coeffs32, N32);
+    uint16_t deg_g = N;
     for (;;) {
-        while (f->coeffs[0] == 0) {
-            for (i=1; i<=N; i++) {
-                f->coeffs[i-1] = f->coeffs[i];   /* f(x) = f(x) / x */
-                c->coeffs[N+1-i] = c->coeffs[N-i];   /* c(x) = c(x) * x */
-            }
-            f->coeffs[N] = 0;
-            c->coeffs[0] = 0;
-            k++;
-            if (ntru_equals0(f)) {
-                invertible = 0;
-                goto done;
-            }
+        uint16_t num_zeros = 0;
+        /* while f[0]==0 */
+        while ((f_coeffs32[num_zeros/32]&(((uint32_t)1)<<(num_zeros%32)))==0 && num_zeros<=N)
+            num_zeros++;
+        if (num_zeros >= N)   /* not invertible */
+            return 0;
+        k += num_zeros;
+
+        /* right-shift f, left-shift c num_zeros coefficients each */
+        if (num_zeros >= 32) {
+            memmove(c_coeffs32+num_zeros/32, c_coeffs32, N32*4-num_zeros/32*4);
+            memset(c_coeffs32, 0, num_zeros/32*4);
+            memmove(f_coeffs32, f_coeffs32+num_zeros/32, N32*4-num_zeros/32*4);
+            memset(f_coeffs32+N32-num_zeros/32, 0, num_zeros/32*4);
+            deg_f -= num_zeros / 32 * 32;
+            num_zeros %= 32;
         }
-        if (ntru_equals1(f))
+        if (num_zeros > 0) {
+            /* c(x) = c(x)*(x^num_zeros) */
+            for (i=N32-1; i>0; i--) {
+                c_coeffs32[i] <<= num_zeros;
+                c_coeffs32[i] |= c_coeffs32[i-1] >> (32-num_zeros);
+            }
+            c_coeffs32[0] <<= num_zeros;
+            /* f(x) = f(x)/(x^num_zeros) */
+            for (i=1; i<N32; i++) {
+                f_coeffs32[i-1] >>= num_zeros;
+                f_coeffs32[i-1] |= f_coeffs32[i] << (32-num_zeros);
+            }
+            f_coeffs32[i-1] >>= num_zeros;
+        }
+        deg_f -= num_zeros;
+
+        if (deg_f==0 && f_coeffs32[0]==1)   /* if f==1 */
             break;
-        if (ntru_deg(f) < ntru_deg(g)) {
+        if (deg_f < deg_g) {
             /* exchange f and g */
-            NtruIntPoly *temp = f;
-            f = g;
-            g = temp;
+            uint32_t *temp_coeffs = f_coeffs32;
+            f_coeffs32 = g_coeffs32;
+            g_coeffs32 = temp_coeffs;
+            uint16_t temp = deg_f;
+            deg_f = deg_g;
+            deg_g = temp;
             /* exchange b and c */
-            temp = b;
-            b = c;
-            c = temp;
+            temp_coeffs = b_coeffs32;
+            b_coeffs32 = c_coeffs32;
+            c_coeffs32 = temp_coeffs;
         }
-        ntru_add_int_mod2(f, g);
-        ntru_add_int_mod2(b, c);
+        ntru_add_int_mod2_32(f_coeffs32, g_coeffs32, N32);
+        /* adding f+g may have lowered the degree of f */
+        while (deg_f>0 && (f_coeffs32[deg_f/32]&(((uint32_t)1)<<(deg_f%32)))==0)
+            deg_f--;
+        ntru_add_int_mod2_32(b_coeffs32, c_coeffs32, N32);
     }
 
-    if (b->coeffs[N] != 0) {
-        invertible = 0;
-        goto done;
-    }
-    invertible = 1;
+    if ((b_coeffs32[(N+1-1)/32]&(((uint32_t)1)<<((N+1-1)%32))) != 0)   /* if (b[N]!=0) */
+        return 0;
 
     /* Fq(x) = x^(N-k) * b(x) */
     memset(&Fq->coeffs, 0, N * sizeof Fq->coeffs[0]);
     Fq->N = N;
     int16_t j = 0;
-    k %= N;
+    while (k >= N)
+        k -= N;
     for (i=N-1; i>=0; i--) {
         j = i - k;
         if (j < 0)
             j += N;
-        Fq->coeffs[j] = b->coeffs[i];
+        Fq->coeffs[j] = (b_coeffs32[i/32]>>(i%32)) & 1;   /* Fq->coeffs[j]=b[i] */
     }
 
     ntru_mod2_to_modq(a, Fq, q);
 
-done:
-    free(b);
-    free(c);
-    free(f);
-    free(g);
-
-    return invertible;
+    return 1;
 }
 
 uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
@@ -1295,7 +1412,7 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     /* f=3a+1; skip multiplication by 3 because f=3f (mod 2) */
     uint64_t f_coeffs64_arr[N64];
     uint64_t *f_coeffs64 = f_coeffs64_arr;
-    ntru_priv_to_mod2(a, f_coeffs64);
+    ntru_priv_to_mod2_64(a, f_coeffs64);
     f_coeffs64[0] ^= 1;
 
     /* g(x) = x^N − 1 */

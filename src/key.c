@@ -23,7 +23,7 @@ void ntru_export_pub(NtruEncPubKey *key, uint8_t *arr) {
     arr += sizeof q_endian;
 
     /* write h */
-    ntru_to_arr_16(&key->h, key->q, arr);
+    ntru_to_arr_32(&key->h, key->q, arr);
 }
 
 uint16_t ntru_import_pub(uint8_t *arr, NtruEncPubKey *key) {
