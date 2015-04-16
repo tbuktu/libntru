@@ -20,6 +20,7 @@
 #endif
 
 #define NTRU_SPARSE_THRESH 14
+#define NTRU_KARATSUBA_THRESH 40
 
 uint8_t ntru_num_bits(uint16_t n) {
     uint8_t b = 1;
@@ -144,26 +145,92 @@ uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t m
 #endif
 }
 
+void ntru_mult_karatsuba_16(int16_t *a, int16_t *b, int16_t *c, uint16_t len, uint16_t N) {
+    if (len < NTRU_KARATSUBA_THRESH) {
+        memset(c, 0, 2*(2*len-1));   /* only needed if N < NTRU_KARATSUBA_THRESH */
+        uint16_t c_idx = 0;
+        uint16_t k;
+        for (k=0; k<2*len-1; k++) {
+            int16_t ck = 0;
+            uint16_t i;
+            int16_t istart = k - len + 1;
+            if (istart < 0)
+                istart = 0;
+            int16_t iend = k + 1;
+            if (iend > len)
+                iend = len;
+            int16_t a_idx = k - istart;
+            for (i=istart; i<iend; i++) {
+                ck += b[i] * a[a_idx];
+                a_idx--;
+                if (a_idx < 0)
+                    a_idx = len - 1;
+            }
+            c[c_idx] += ck;
+            c_idx++;
+            if (c_idx >= N)
+                c_idx = 0;
+        }
+    }
+    else {
+        uint16_t len2 = len / 2;
+        int16_t z0[NTRU_INT_POLY_SIZE];
+        int16_t z1[NTRU_INT_POLY_SIZE];
+        int16_t z2[NTRU_INT_POLY_SIZE];
+
+        /* z0, z2 */
+        ntru_mult_karatsuba_16(a, b, z0, len2, N);
+        ntru_mult_karatsuba_16(a+len2, b+len2, z2, len-len2, N);
+
+        /* z1 */
+        int16_t lh1[NTRU_INT_POLY_SIZE];
+        int16_t lh2[NTRU_INT_POLY_SIZE];
+        uint16_t i;
+        for (i=0; i<len2; i++) {
+            lh1[i] = a[i] + a[len2+i];
+            lh2[i] = b[i] + b[len2+i];
+        }
+        if (len%2 != 0) {
+            lh1[len-len2-1] = a[len-1];
+            lh2[len-len2-1] = b[len-1];
+        }
+        ntru_mult_karatsuba_16(lh1, lh2, z1, len-len2, N);
+        for (i=0; i<2*len2-1; i++)
+            z1[i] -= z0[i];
+        z1[len] = 0;
+        for (i=0; i<2*(len-len2)-1; i++)
+            z1[i] -= z2[i];
+
+        /* c */
+        memset(c, 0, NTRU_INT_POLY_SIZE*2);
+        memcpy(c, z0, 2*(2*len2-1));   /* 2*len2-1 coefficients */
+        uint16_t c_idx = len2;
+        for (i=0; i<2*(len-len2)-1; i++) {
+            c[c_idx] += z1[i];
+            c_idx++;
+            if (c_idx >= N)
+                c_idx = 0;
+        }
+        c_idx = 2 * len2;
+        if (c_idx >= N)
+            c_idx = 0;
+        for (i=0; i<2*(len-len2)-1; i++) {
+            c[c_idx] += z2[i];
+            c_idx++;
+            if (c_idx >= N)
+                c_idx = 0;
+        }
+    }
+}
+
 uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
     uint16_t N = a->N;
     if (N != b->N)
         return 0;
     c->N = N;
-    uint16_t mod_mask = modulus - 1;
 
-    uint16_t k;
-    for (k=0; k<N; k++) {
-        int16_t ck = 0;
-        uint16_t i;
-        int16_t a_idx = k;
-        for (i=0; i<N; i++) {
-            ck += b->coeffs[i] * a->coeffs[a_idx];
-            a_idx--;
-            if (a_idx < 0)
-                a_idx = N - 1;
-        }
-        c->coeffs[k] = ck & mod_mask;
-    }
+    ntru_mult_karatsuba_16((int16_t*)&a->coeffs, (int16_t*)&b->coeffs, (int16_t*)&c->coeffs, N, N);
+    ntru_mod(c, modulus);
 
     return 1;
 }
