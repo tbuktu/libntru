@@ -20,7 +20,8 @@
 #endif
 
 #define NTRU_SPARSE_THRESH 14
-#define NTRU_KARATSUBA_THRESH 40
+#define NTRU_KARATSUBA_THRESH_16 40
+#define NTRU_KARATSUBA_THRESH_64 120
 
 uint8_t ntru_num_bits(uint16_t n) {
     uint8_t b = 1;
@@ -146,8 +147,8 @@ uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t m
 }
 
 void ntru_mult_karatsuba_16(int16_t *a, int16_t *b, int16_t *c, uint16_t len, uint16_t N) {
-    if (len < NTRU_KARATSUBA_THRESH) {
-        memset(c, 0, 2*(2*len-1));   /* only needed if N < NTRU_KARATSUBA_THRESH */
+    if (len < NTRU_KARATSUBA_THRESH_16) {
+        memset(c, 0, 2*(2*len-1));   /* only needed if N < NTRU_KARATSUBA_THRESH_16 */
         uint16_t c_idx = 0;
         uint16_t k;
         for (k=0; k<2*len-1; k++) {
@@ -235,67 +236,125 @@ uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
     return 1;
 }
 
-uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
-    uint16_t N = a->N;
-    uint16_t N2 = (N+1) / 2;
-    if (N != b->N)
-        return 0;
-    if (modulus & (modulus-1))   /* check that modulus is a power of 2 */
-        return 0;
+uint8_t ntru_mult_int_64_base(int16_t *a, int16_t *b, int16_t *c, uint16_t len, uint16_t N, uint16_t modulus) {
+    uint16_t N2 = (len+1) / 2;
     uint16_t mod_mask_16 = modulus - 1;
     uint64_t mod_mask_64 = mod_mask_16 + (mod_mask_16<<25);
 
-    /* make 64-bit versions of a->coeffs and b->coeffs */
-    uint64_t a_coeffs64[N2];
-    uint64_t b_coeffs64[N2];
+    /* make 64-bit versions of a and b */
+    uint64_t a64[N2];
+    uint64_t b64[N2];
     uint16_t i;
-    for (i=0; i<N/2; i++) {
-        a_coeffs64[i] = (a->coeffs[2*i]&mod_mask_16) + (((uint64_t)(a->coeffs[2*i+1]&mod_mask_16))<<25);
-        b_coeffs64[i] = (b->coeffs[2*i]&mod_mask_16) + (((uint64_t)(b->coeffs[2*i+1]&mod_mask_16))<<25);
+    for (i=0; i<len/2; i++) {
+        a64[i] = (a[2*i]&mod_mask_16) + (((uint64_t)(a[2*i+1]&mod_mask_16))<<25);
+        b64[i] = (b[2*i]&mod_mask_16) + (((uint64_t)(b[2*i+1]&mod_mask_16))<<25);
     }
-    if (N%2 == 1) {
-        a_coeffs64[N2-1] = a->coeffs[N-1] & mod_mask_16;
-        b_coeffs64[N2-1] = b->coeffs[N-1] & mod_mask_16;
+    if (len%2 == 1) {
+        a64[N2-1] = a[len-1] & mod_mask_16;
+        b64[N2-1] = b[len-1] & mod_mask_16;
     }
 
-    /* multiply a_coeffs64 by b_coeffs64 */
+    /* multiply a64 by b64 */
     uint16_t clen = 2 * N2;   /* double capacity for intermediate result */
-    uint64_t c_coeffs64[clen];
-    memset(&c_coeffs64, 0, clen*8);
+    uint64_t c64[clen];
+    memset(&c64, 0, clen*8);
     uint16_t overflow_ctr_start = (1<<(25-ntru_log2(modulus))) - 1;
     uint16_t overflow_ctr_rem = overflow_ctr_start;
     for (i=0; i<N2; i++) {
         uint64_t j;
         for (j=0; j<N2; j++) {
-            uint64_t ck = a_coeffs64[i] * b_coeffs64[j];
-            c_coeffs64[i+j] += ck & mod_mask_64;
-            c_coeffs64[i+j+1] += ck >> 50;
+            uint64_t ck = a64[i] * b64[j];
+            c64[i+j] += ck & mod_mask_64;
+            c64[i+j+1] += ck >> 50;
             overflow_ctr_rem--;
             if (!overflow_ctr_rem) {
                 uint16_t k;
                 for (k=0; k<clen; k++)
-                    c_coeffs64[k] &= mod_mask_64;
+                    c64[k] &= mod_mask_64;
                 overflow_ctr_rem = overflow_ctr_start;
             }
         }
     }
 
-    /* transform c_coeffs64 into NtruIntPoly representation */
-    c->N = N;
-    memset(&c->coeffs, 0, N*2);
+    /* transform c64 into NtruIntPoly representation */
+    memset(c, 0, 2*(2*len-1));
     uint16_t k = 0;
     for (i=0; i<clen; i++) {
-        c->coeffs[k] += c_coeffs64[i];
+        c[k] += c64[i];
         if (++k >= N)
             k = 0;
-        c->coeffs[k] += c_coeffs64[i] >> 25;
+        c[k] += c64[i] >> 25;
         if (++k >= N)
             k = 0;
     }
 
-    /* take values mod modulus */
-    for (i=0; i<N; i++)
-        c->coeffs[i] &= mod_mask_16;
+    return 1;
+}
+
+void ntru_mult_karatsuba_64(int16_t *a, int16_t *b, int16_t *c, uint16_t len, uint16_t N, uint16_t modulus) {
+    if (len < NTRU_KARATSUBA_THRESH_64)
+        ntru_mult_int_64_base(a, b, c, len, N, modulus);
+    else {
+        uint16_t len2 = len / 2;
+        int16_t z0[NTRU_INT_POLY_SIZE];
+        int16_t z1[NTRU_INT_POLY_SIZE];
+        int16_t z2[NTRU_INT_POLY_SIZE];
+
+        /* z0, z2 */
+        ntru_mult_karatsuba_64(a, b, z0, len2, N, modulus);
+        ntru_mult_karatsuba_64(a+len2, b+len2, z2, len-len2, N, modulus);
+
+        /* z1 */
+        int16_t lh1[NTRU_INT_POLY_SIZE];
+        int16_t lh2[NTRU_INT_POLY_SIZE];
+        uint16_t i;
+        for (i=0; i<len2; i++) {
+            lh1[i] = a[i] + a[len2+i];
+            lh2[i] = b[i] + b[len2+i];
+        }
+        if (len%2 != 0) {
+            lh1[len-len2-1] = a[len-1];
+            lh2[len-len2-1] = b[len-1];
+        }
+        ntru_mult_karatsuba_64(lh1, lh2, z1, len-len2, N, modulus);
+        for (i=0; i<2*len2-1; i++)
+            z1[i] -= z0[i];
+        z1[len] = 0;
+        for (i=0; i<2*(len-len2)-1; i++)
+            z1[i] -= z2[i];
+
+        /* c */
+        memset(c, 0, NTRU_INT_POLY_SIZE*2);
+        memcpy(c, z0, 2*(2*len2-1));   /* 2*len2-1 coefficients */
+        uint16_t c_idx = len2;
+        for (i=0; i<2*(len-len2)-1; i++) {
+            c[c_idx] += z1[i];
+            c_idx++;
+            if (c_idx >= N)
+                c_idx = 0;
+        }
+        c_idx = 2 * len2;
+        if (c_idx >= N)
+            c_idx = 0;
+        for (i=0; i<2*(len-len2)-1; i++) {
+            c[c_idx] += z2[i];
+            c_idx++;
+            if (c_idx >= N)
+                c_idx = 0;
+        }
+    }
+}
+
+uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+    uint16_t N = a->N;
+    if (N != b->N)
+        return 0;
+    if (modulus & (modulus-1))   /* check that modulus is a power of 2 */
+        return 0;
+    c->N = N;
+
+    ntru_mult_karatsuba_64((int16_t*)&a->coeffs, (int16_t*)&b->coeffs, (int16_t*)&c->coeffs, N, N, modulus);
+    ntru_mod(c, modulus);
 
     return 1;
 }
