@@ -1166,7 +1166,7 @@ void ntru_mod_sse(NtruIntPoly *p, uint16_t modulus) {
 void ntru_mod_64(NtruIntPoly *p, uint16_t modulus) {
     typedef uint64_t __attribute__((__may_alias__)) uint64_t_alias;
     uint16_t i;
-    if (modulus == 20480)
+    if (modulus == 2048)
         for (i=0; i<p->N; i+=4)
             *((uint64_t_alias*)&p->coeffs[i]) &= 0x07FF07FF07FF07FF;
     else {
@@ -1181,7 +1181,7 @@ void ntru_mod_64(NtruIntPoly *p, uint16_t modulus) {
 void ntru_mod_32(NtruIntPoly *p, uint16_t modulus) {
     typedef uint32_t __attribute__((__may_alias__)) uint32_t_alias;
     uint16_t i;
-    if (modulus == 20480)
+    if (modulus == 2048)
         for (i=0; i<p->N; i+=2)
             *((uint32_t_alias*)&p->coeffs[i]) &= 0x07FF07FF07FF07FF;
     else {
