@@ -1206,17 +1206,17 @@ void ntru_mod3_standard(NtruIntPoly *p) {
     uint16_t i;
     for (i=0; i<p->N; i++) {
         int8_t c = p->coeffs[i] % 3;
-        if (c > 1)
-            c = -1;
-        if (c < -1)
+        if (c == -2)
             c = 1;
+        if (c == -1)
+            c = 2;
         p->coeffs[i] = c;
     }
 }
 
 #ifdef __SSSE3__
 /* (i%3)+3 for i=0..7 */
-__m128i NTRU_MOD3_LUT = {0x0403020403020403, 0};
+__m128i NTRU_MOD3_LUT = {0x0403050403050403, 0};
 
 /**
  * SSE version of ntru_mod3.
@@ -1259,7 +1259,7 @@ void ntru_mod3_sse(NtruIntPoly *p) {
         /* _mm_shuffle_epi8 changed bytes 1, 3, 5, ... to non-zero; change them back to zero */
         mask = _mm_set1_epi16(0x00FF);
         a_mod3 = _mm_and_si128(a_mod3, mask);
-        /* subtract 3 so coefficients are in the -1..1 range */
+        /* subtract 3 so coefficients are in the 0..2 range */
         __m128i three = _mm_set1_epi16(0x0003);
         a_mod3 = _mm_sub_epi16(a_mod3, three);
 

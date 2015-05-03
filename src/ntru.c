@@ -12,9 +12,6 @@
 
 const int8_t NTRU_COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
 const int8_t NTRU_COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
-const uint8_t NTRU_BIT1_TABLE[] = {1, 1, 1, 0, 0, 0, 1, 0, 1};
-const uint8_t NTRU_BIT2_TABLE[] = {1, 1, 1, 1, 0, 0, 0, 1, 0};
-const uint8_t NTRU_BIT3_TABLE[] = {1, 0, 1, 0, 0, 1, 1, 1, 0};
 
 uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx) {
     uint16_t N = params->N;
@@ -138,9 +135,9 @@ void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, NtruIntPoly *poly) {
 /**
  * @brief Ternary polynomial to byte array
  *
- * Encodes a polynomial whose elements are between -1 and 1, to a uint8_t array.
+ * Encodes a polynomial whose elements are between 0 and 2, to a uint8_t array.
  * The (2*i)-th coefficient and the (2*i+1)-th coefficient must not both equal
- * -1 for any integer i, so this method is only safe to use with arrays
+ * 2 for any integer i, so this method is only safe to use with arrays
  * produced by ntru_from_sves().
  * See P1363.1 section 9.2.3.
  *
@@ -160,13 +157,16 @@ uint8_t ntru_to_sves(NtruIntPoly *poly, uint8_t *data) {
     uint16_t start = 0;
     uint16_t end = N/2*2;   /* if there is an odd number of coeffs, throw away the highest one */
     for (i=start; i<end; ) {
-        int16_t coeff1 = poly->coeffs[i++] + 1;
-        int16_t coeff2 = poly->coeffs[i++] + 1;
-        if (coeff1==0 && coeff2==0)
+        int16_t coeff1 = poly->coeffs[i++];
+        int16_t coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
             return NTRU_ERR_INVALID_ENCODING;
         int16_t bit_tbl_index = coeff1*3 + coeff2;
+        uint8_t bits[3];
+        bits[0] = bit_tbl_index >> 2;
+        bits[1] = (bit_tbl_index>>1) & 1;
+        bits[2] = bit_tbl_index & 1;
         uint8_t j;
-        uint8_t bits[] = {NTRU_BIT1_TABLE[bit_tbl_index], NTRU_BIT2_TABLE[bit_tbl_index], NTRU_BIT3_TABLE[bit_tbl_index]};
         for (j=0; j<3; j++) {
             data[byte_index] |= bits[j] << bit_index;
             if (bit_index == 7) {
@@ -267,7 +267,7 @@ uint8_t ntru_check_rep_weight(NtruIntPoly *p, uint16_t dm0) {
     weights[0] = weights[1] = weights[2] = 0;
 
     for (i=0; i<p->N; i++)
-        weights[p->coeffs[i]+1]++;
+        weights[p->coeffs[i]]++;
 
     return (weights[0]>=dm0 && weights[1]>=dm0 && weights[2]>=dm0);
 }

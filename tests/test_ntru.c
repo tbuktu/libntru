@@ -22,6 +22,10 @@ void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly 
     ntru_add_int(d, e);
     ntru_mod_center(d, q);
     ntru_mod3(d);
+    uint16_t i;
+    for (i=0; i<d->N; i++)
+        if (d->coeffs[i] == 2)
+            d->coeffs[i] = -1;
 }
 
 uint8_t gen_key_pair(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
