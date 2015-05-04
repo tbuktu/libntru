@@ -92,18 +92,18 @@ test:
 
 testham: clean lib $(TEST_OBJS_PATHS)
 	@echo CFLAGS=$(CFLAGS)
-	$(CC) $(CFLAGS) -o testham.exe $(TEST_OBJS_PATHS) -L. -lntru -lm
+	$(CC) $(CFLAGS) -o testham.exe $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -llibntru -lm
 
 testnoham: CFLAGS += -DNTRU_AVOID_HAMMING_WT_PATENT
 testnoham: clean lib $(TEST_OBJS_PATHS)
 	@echo CFLAGS=$(CFLAGS)
-	$(CC) $(CFLAGS) -o testnoham.exe $(TEST_OBJS_PATHS) -L. -lntru -lm
+	$(CC) $(CFLAGS) -o testnoham.exe $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -llibntru -lm
 
 bench: lib
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c -L. -lntru
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c $(LDFLAGS) -L. -llibntru
 
 hybrid: lib
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) -L. -lntru -lcrypto -lgdi32
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) -L. -llibntru -lcrypto -lgdi32
 
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
