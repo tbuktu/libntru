@@ -121,7 +121,7 @@ void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, NtruIntPoly *poly) {
         uint8_t j;
         for (j=0; j<8 && coeff_idx<N-1; j++) {
             /* process 3 bits at a time in the inner loop */
-            uint8_t coeff_tbl_idx = ((chunk&1)<<2) + (chunk&2) + ((chunk&4)>>2);   /* low 3 bits in reverse order */
+            uint8_t coeff_tbl_idx = chunk & 7;   /* low 3 bits */
             poly->coeffs[coeff_idx++] = NTRU_COEFF1_TABLE[coeff_tbl_idx];
             poly->coeffs[coeff_idx++] = NTRU_COEFF2_TABLE[coeff_tbl_idx];
             chunk >>= 3;
@@ -142,7 +142,7 @@ void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, NtruIntPoly *poly) {
  * See P1363.1 section 9.2.3.
  *
  * @param poly a ternary polynomial
- * @param data output parameter; must accommodate ceil(num_bits/8) bytes
+ * @param data output parameter; must accommodate ceil(num_bits/8)+3 bytes
  * @return NTRU_SUCCESS for success, NTRU_ERR_INVALID_ENCODING otherwise
  */
 uint8_t ntru_to_sves(NtruIntPoly *poly, uint8_t *data) {
@@ -151,31 +151,73 @@ uint8_t ntru_to_sves(NtruIntPoly *poly, uint8_t *data) {
     uint16_t num_bits = (N*3+1) / 2;
     memset(data, 0, (num_bits+7)/8);
 
-    uint8_t bit_index = 0;
-    uint16_t byte_index = 0;
     uint16_t i;
     uint16_t start = 0;
     uint16_t end = N/2*2;   /* if there is an odd number of coeffs, throw away the highest one */
+
+    memset(&poly->coeffs[N], 0, 2*15);   /* we process coefficients in blocks of 16, so clear the last block */
+    uint16_t d_idx = 0;
     for (i=start; i<end; ) {
         int16_t coeff1 = poly->coeffs[i++];
         int16_t coeff2 = poly->coeffs[i++];
         if (coeff1==2 && coeff2==2)
             return NTRU_ERR_INVALID_ENCODING;
-        int16_t bit_tbl_index = coeff1*3 + coeff2;
-        uint8_t bits[3];
-        bits[0] = bit_tbl_index >> 2;
-        bits[1] = (bit_tbl_index>>1) & 1;
-        bits[2] = bit_tbl_index & 1;
-        uint8_t j;
-        for (j=0; j<3; j++) {
-            data[byte_index] |= bits[j] << bit_index;
-            if (bit_index == 7) {
-                bit_index = 0;
-                byte_index++;
-            }
-            else
-                bit_index++;
-        }
+        int16_t c = coeff1*3 + coeff2;
+        data[d_idx] = c;
+
+        coeff1 = poly->coeffs[i++];
+        coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
+            return NTRU_ERR_INVALID_ENCODING;
+        c = coeff1*3 + coeff2;
+        data[d_idx] |= c << 3;
+
+        coeff1 = poly->coeffs[i++];
+        coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
+            return NTRU_ERR_INVALID_ENCODING;
+        c = coeff1*3 + coeff2;
+        data[d_idx] |= c << 6;
+        d_idx++;
+        data[d_idx] = c >> 2;
+
+        coeff1 = poly->coeffs[i++];
+        coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
+            return NTRU_ERR_INVALID_ENCODING;
+        c = coeff1*3 + coeff2;
+        data[d_idx] |= c << 1;
+
+        coeff1 = poly->coeffs[i++];
+        coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
+            return NTRU_ERR_INVALID_ENCODING;
+        c = coeff1*3 + coeff2;
+        data[d_idx] |= c << 4;
+
+        coeff1 = poly->coeffs[i++];
+        coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
+            return NTRU_ERR_INVALID_ENCODING;
+        c = coeff1*3 + coeff2;
+        data[d_idx] |= c << 7;
+        d_idx++;
+        data[d_idx] = c >> 1;
+
+        coeff1 = poly->coeffs[i++];
+        coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
+            return NTRU_ERR_INVALID_ENCODING;
+        c = coeff1*3 + coeff2;
+        data[d_idx] |= c << 2;
+
+        coeff1 = poly->coeffs[i++];
+        coeff2 = poly->coeffs[i++];
+        if (coeff1==2 && coeff2==2)
+            return NTRU_ERR_INVALID_ENCODING;
+        c = coeff1*3 + coeff2;
+        data[d_idx] |= c << 5;
+        d_idx++;
     }
 
     return NTRU_SUCCESS;
@@ -384,7 +426,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     ntru_mod3(&cmtrin);
     uint16_t cM_len_bits = (N*3+1) / 2;
     uint16_t cM_len_bytes = (cM_len_bits+7) / 8;
-    uint8_t cM[cM_len_bytes];
+    uint8_t cM[cM_len_bytes+3];   /* 3 extra bytes for ntru_to_sves() */
     ntru_to_sves(&cmtrin, (uint8_t*)&cM);
 
     uint8_t cb[blen];
