@@ -35,7 +35,7 @@ ifeq ($(SSE), yes)
     endif
 endif
 TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
-VERSION=0.3
+VERSION=0.4
 INST_PFX=/usr
 INST_LIBDIR=$(INST_PFX)/lib
 INST_INCLUDE=$(INST_PFX)/include/libntru

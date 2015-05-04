@@ -1,3 +1,12 @@
+0.4 (5/4/2015)
+ * massive performance improvements
+ * new Makefile targets for distros (thanks Julian Ospald)
+ * made the library C++ friendly (thanks Ruben De Smet)
+ * new functions: ntru_params_from_key_pair() and ntru_params_from_priv_key()
+ * fixed a memory leak
+ * fixed parameter values
+ * fixed data-dependent branches
+
 0.3 (11/14/2014)
  * option to exclude code that is patented beyond 2017
  * RNG-related API changes for thread safety and closeability of OS handles
