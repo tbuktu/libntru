@@ -1111,12 +1111,7 @@ void ntru_from_arr(uint8_t *arr, uint16_t N, uint16_t q, NtruIntPoly *p) {
     p->N = N;
     memset(&p->coeffs, 0, N * sizeof p->coeffs[0]);
 
-    uint8_t bits_per_coeff = 0;
-    while (q > 1) {
-        q /= 2;
-        bits_per_coeff++;
-    }
-
+    uint8_t bits_per_coeff = ntru_log2(q);
     uint32_t mask = 0xFFFFFFFF >> (32-bits_per_coeff);   /* for truncating values to bitsPerCoeff bits */
     uint16_t byte_idx = 0;
     uint8_t bit_idx = 0;   /* next bit in arr[byte_idx] */
