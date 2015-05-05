@@ -1157,31 +1157,21 @@ void ntru_mod_sse(NtruIntPoly *p, uint16_t modulus) {
 
 void ntru_mod_64(NtruIntPoly *p, uint16_t modulus) {
     typedef uint64_t __attribute__((__may_alias__)) uint64_t_alias;
+    uint64_t mod_mask = modulus - 1;
+    mod_mask += mod_mask << 16;
+    mod_mask += mod_mask << 32;
     uint16_t i;
-    if (modulus == 2048)
-        for (i=0; i<p->N; i+=4)
-            *((uint64_t_alias*)&p->coeffs[i]) &= 0x07FF07FF07FF07FF;
-    else {
-        uint64_t mod_mask = modulus - 1;
-        mod_mask += mod_mask << 16;
-        mod_mask += mod_mask << 32;
-        for (i=0; i<p->N; i+=4)
-            *((uint64_t_alias*)&p->coeffs[i]) &= mod_mask;
-    }
+    for (i=0; i<p->N; i+=4)
+        *((uint64_t_alias*)&p->coeffs[i]) &= mod_mask;
 }
 
 void ntru_mod_32(NtruIntPoly *p, uint16_t modulus) {
     typedef uint32_t __attribute__((__may_alias__)) uint32_t_alias;
+    uint32_t mod_mask = modulus - 1;
+    mod_mask += mod_mask << 16;
     uint16_t i;
-    if (modulus == 2048)
-        for (i=0; i<p->N; i+=2)
-            *((uint32_t_alias*)&p->coeffs[i]) &= 0x07FF07FF07FF07FF;
-    else {
-        uint32_t mod_mask = modulus - 1;
-        mod_mask += mod_mask << 16;
-        for (i=0; i<p->N; i+=2)
-            *((uint32_t_alias*)&p->coeffs[i]) &= mod_mask;
-    }
+    for (i=0; i<p->N; i+=2)
+        *((uint32_t_alias*)&p->coeffs[i]) &= mod_mask;
 }
 
 void ntru_mod(NtruIntPoly *p, uint16_t modulus) {
@@ -1269,24 +1259,16 @@ void ntru_mod3(NtruIntPoly *p) {
 }
 
 void ntru_mod_center(NtruIntPoly *p, uint16_t modulus) {
+    uint16_t m2 = modulus / 2;
+    uint16_t mod_mask = modulus - 1;
     uint16_t i;
-    if (modulus == 2048)
-        for (i=0; i<p->N; i++) {
-            int16_t c = p->coeffs[i] & 2047;
-            if (c & 1024)
-                c -= 2048;
-            p->coeffs[i] = c;
-        }
-    else {
-        uint16_t m2 = modulus / 2;
-        for (i=0; i<p->N; i++) {
-            int16_t c = p->coeffs[i] % modulus;
-            if (c < -m2)
-                c += modulus;
-            if (c > m2)
-                c -= modulus;
-            p->coeffs[i] = c;
-        }
+    for (i=0; i<p->N; i++) {
+        int16_t c = p->coeffs[i] & mod_mask;
+        if (c < -m2)
+            c += modulus;
+        if (c > m2)
+            c -= modulus;
+        p->coeffs[i] = c;
     }
 }
 
