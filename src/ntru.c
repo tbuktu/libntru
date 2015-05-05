@@ -331,7 +331,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
     for (;;) {
         /* M = b|octL|msg|p0 */
         uint8_t b[db/8];
-        if (!rand_ctx->rand_gen->generate(b, db/8, rand_ctx))
+        if (!ntru_rand_generate(b, db/8, rand_ctx))
             return NTRU_ERR_PRNG;
 
         uint16_t M_len = (buf_len_bits+7) / 8;
