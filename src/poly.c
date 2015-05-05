@@ -577,7 +577,6 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
         }
     }
 
-    c->N = N;
     ntru_mod(c, modulus);
     return 1;
 }
@@ -642,7 +641,6 @@ uint8_t ntru_mult_tern_sse_sparse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *
             c->coeffs[k] -= a->coeffs[j];
     }
 
-    c->N = N;
     ntru_mod(c, modulus);
     return 1;
 }
@@ -734,7 +732,6 @@ uint8_t ntru_mult_tern_sse_dense(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c
         ci++;
     }
 
-    c->N = N;
     return 1;
 }
 
