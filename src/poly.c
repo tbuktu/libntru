@@ -1507,7 +1507,6 @@ uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
 }
 
 uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
-    int16_t i;
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     uint16_t N = a->prod_flag ? a->poly.prod.N : a->poly.tern.N;
 #else
@@ -1561,6 +1560,7 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
             num_zeros %= 64;
         }
         if (num_zeros > 0) {
+            int16_t i;
             /* c(x) = c(x)*(x^num_zeros) */
             for (i=N64-1; i>0; i--) {
                 c_coeffs64[i] <<= num_zeros;
@@ -1607,6 +1607,7 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
     int16_t j = 0;
     while (k >= N)
         k -= N;
+    int16_t i;
     for (i=N-1; i>=0; i--) {
         j = i - k;
         if (j < 0)
