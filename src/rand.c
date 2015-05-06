@@ -153,5 +153,6 @@ uint8_t ntru_rand_igf2_generate(uint8_t rand_data[], uint16_t len, NtruRandConte
 }
 
 uint8_t ntru_rand_igf2_release(NtruRandContext *rand_ctx) {
+    free(rand_ctx->state);
     return 1;
 }
