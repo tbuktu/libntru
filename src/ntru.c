@@ -305,6 +305,7 @@ void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, const NtruEncParams *
     r->prod_flag = params->prod_flag;
 }
 
+/* All elements of p->coeffs must be in the [0..2] range */
 uint8_t ntru_check_rep_weight(NtruIntPoly *p, uint16_t dm0) {
     uint16_t i;
     uint16_t weights[3];
