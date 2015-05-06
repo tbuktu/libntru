@@ -1350,7 +1350,7 @@ void ntru_clear_int(NtruIntPoly *p) {
  * @param Fq the inverse of 1+3a modulo 2
  * @param q the modulus
  */
-void ntru_mod2_to_modq(NtruPrivPoly *a, NtruIntPoly *Fq, uint16_t q) {
+void ntru_lift_inverse(NtruPrivPoly *a, NtruIntPoly *Fq, uint16_t q) {
     NtruIntPoly temp1, temp2;
     uint32_t v = 2;
     while (v < q) {
@@ -1484,7 +1484,7 @@ uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
         Fq->coeffs[j] = (b_coeffs32[i/32]>>(i%32)) & 1;   /* Fq->coeffs[j]=b[i] */
     }
 
-    ntru_mod2_to_modq(a, Fq, q);
+    ntru_lift_inverse(a, Fq, q);
 
     return 1;
 }
@@ -1598,7 +1598,7 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq) {
         Fq->coeffs[j] = (b_coeffs64[i/64]>>(i%64)) & 1;   /* Fq->coeffs[j]=b[i] */
     }
 
-    ntru_mod2_to_modq(a, Fq, q);
+    ntru_lift_inverse(a, Fq, q);
 
     return 1;
 }
