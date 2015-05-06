@@ -13,6 +13,6 @@
  * @param params NTRUEncrypt parameters
  * @param i output parameter: the generated ternary polynomial
  */
-void ntru_MGF(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruIntPoly *i);
+void ntru_MGF(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params, NtruIntPoly *i);
 
 #endif   /* NTRU_MGF_H */

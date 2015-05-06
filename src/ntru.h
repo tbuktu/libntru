@@ -23,7 +23,7 @@ extern "C" {
  * @param rand_ctx an initialized random number generator. See ntru_rand_init() in rand.h.
  * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
  */
-uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx);
+uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx);
 
 /**
  * @brief Encryption
@@ -43,7 +43,7 @@ uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandCon
               ntru_enc_len(params) bytes.
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
  */
-uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc);
+uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc);
 
 /**
  * @brief Decryption
@@ -60,7 +60,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
  * @param dec_len output parameter; pointer to store the length of dec
  * @return NTRU_SUCCESS on success, or one of the NTRU_ERR_ codes on failure
  */
-uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, uint8_t *dec, uint16_t *dec_len);
+uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *params, uint8_t *dec, uint16_t *dec_len);
 
 /**
  * @brief Maximum message length
@@ -73,7 +73,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
  * @param params an NtruEncrypt parameter set
  * @return the maximum number of bytes in a message
  */
-uint8_t ntru_max_msg_len(NtruEncParams *params);
+uint8_t ntru_max_msg_len(const NtruEncParams *params);
 
 #ifdef __cplusplus
 }

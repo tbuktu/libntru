@@ -11,6 +11,27 @@
 #include <Wincrypt.h>
 #endif
 
+const NtruEncParams NTRU_IGF2_RAND_PARAMS = {\
+    "EES401EP1",   /* name */\
+    401,           /* N */\
+    256,           /* q=256 because we want to generate bytes */\
+    0,             /* prod_flag */\
+    0,             /* df */\
+    0,\
+    0,\
+    0,             /* dm0 */\
+    0,             /* db */\
+    11,            /* c */\
+    0,             /* min_calls_r */\
+    0,             /* min_calls_mask */\
+    1,             /* hash_seed */\
+    {0, 0, 0},     /* oid */\
+    ntru_sha1,     /* hash */\
+    ntru_sha1_4way, /* hash_4way */\
+    20,            /* hlen */\
+    0              /* pklen */\
+};
+
 uint8_t ntru_rand_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
     rand_ctx->rand_gen = rand_gen;
     return rand_gen->init(rand_ctx, rand_gen);
@@ -117,9 +138,7 @@ uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_
     rand_ctx->state = malloc(sizeof(struct NtruIGFState));
     if (!rand_ctx->state)
         return 0;
-    NtruEncParams params = EES401EP1;
-    params.N = 256;   /* we want to generate bytes */
-    ntru_IGF_init(rand_ctx->seed, rand_ctx->seed_len, &params, rand_ctx->state);
+    ntru_IGF_init(rand_ctx->seed, rand_ctx->seed_len, &NTRU_IGF2_RAND_PARAMS, rand_ctx->state);
     return 1;
 }
 

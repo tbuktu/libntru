@@ -50,7 +50,7 @@ uint16_t ntru_import_pub(uint8_t *arr, NtruEncPubKey *key) {
     return arr_head - arr;
 }
 
-uint16_t ntru_pub_len(NtruEncParams *params) {
+uint16_t ntru_pub_len(const NtruEncParams *params) {
     return 4 + ntru_enc_len(params);
 }
 
@@ -183,7 +183,7 @@ void ntru_import_priv(uint8_t *arr, NtruEncPrivKey *key) {
     }
 }
 
-uint16_t ntru_priv_len(NtruEncParams *params) {
+uint16_t ntru_priv_len(const NtruEncParams *params) {
     if (params->prod_flag)
         return 5 + 4 + 4*params->df1 + 4 + 4*params->df2 + 4 + 4*params->df3;
     else

@@ -254,7 +254,7 @@ int16_t NTRU_MGF_TRIT_TBL[243][5] = {
     {-1, -1, -1, -1, -1}
 };
 
-void ntru_MGF(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruIntPoly *i) {
+void ntru_MGF(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params, NtruIntPoly *i) {
     uint16_t N = params->N;
     i->N = N;
     uint16_t min_calls_mask = params->min_calls_mask;

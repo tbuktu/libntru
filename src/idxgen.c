@@ -1,7 +1,7 @@
 #include <string.h>
 #include "idxgen.h"
 
-void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruIGFState *s) {
+void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params, NtruIGFState *s) {
     s->Z = seed;
     s->zlen = seed_len;
     s->N = params->N;

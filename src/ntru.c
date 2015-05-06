@@ -13,7 +13,7 @@
 const int8_t NTRU_COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
 const int8_t NTRU_COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
 
-uint8_t ntru_gen_key_pair(NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx) {
+uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t df1 = params->df1;
@@ -236,7 +236,7 @@ uint8_t ntru_to_sves(NtruIntPoly *poly, uint8_t *data) {
  * @param params encryption parameters
  * @param seed output parameter; an array to write the seed value to
  */
-void ntru_get_seed(uint8_t *msg, uint16_t msg_len, NtruIntPoly *h, uint8_t *b, NtruEncParams *params, uint8_t *seed) {
+void ntru_get_seed(uint8_t *msg, uint16_t msg_len, NtruIntPoly *h, uint8_t *b, const NtruEncParams *params, uint8_t *seed) {
     uint16_t oid_len = sizeof params->oid;
     uint16_t pklen = params->pklen;
 
@@ -285,7 +285,7 @@ void ntru_gen_tern_poly(NtruIGFState *s, uint16_t df, NtruTernPoly *p) {
     }
 }
 
-void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params, NtruPrivPoly *r) {
+void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params, NtruPrivPoly *r) {
     NtruIGFState s;
     ntru_IGF_init(seed, seed_len, params, &s);
 
@@ -316,7 +316,7 @@ uint8_t ntru_check_rep_weight(NtruIntPoly *p, uint16_t dm0) {
     return (weights[0]>=dm0 && weights[1]>=dm0 && weights[2]>=dm0);
 }
 
-uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc) {
+uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t db = params->db;
@@ -383,7 +383,7 @@ void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruInt
     ntru_mod3(d);
 }
 
-uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, uint8_t *dec, uint16_t *dec_len) {
+uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *params, uint8_t *dec, uint16_t *dec_len) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t db = params->db;
@@ -455,7 +455,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     return retcode;
 }
 
-uint8_t ntru_max_msg_len(NtruEncParams *params) {
+uint8_t ntru_max_msg_len(const NtruEncParams *params) {
     uint16_t N = params->N;
     uint8_t llen = 1;   /* ceil(log2(max_len)) */
     uint16_t db = params->db;
