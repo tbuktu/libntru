@@ -1,4 +1,4 @@
-CC=gcc
+CC?=gcc
 AS=$(CC) -c
 OPTFLAGS=-O2
 bench: OPTFLAGS=-O3
@@ -11,6 +11,9 @@ ifneq ($(SSE), no)
 endif
 ifeq ($(SSE), yes)
     CFLAGS+=-mssse3
+endif
+ifeq ($(SSE), no)
+    CFLAGS+=-march=x86-64
 endif
 SRCDIR=src
 TESTDIR=tests
@@ -113,7 +116,7 @@ tests/%.o: tests/%.c
 
 clean:
 	@# also clean files generated on other OSes
-	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.s $(TESTDIR)/*.o libntru.so libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
+	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.s $(TESTDIR)/*.o libntru.so libntru.a libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
 
 distclean: clean
 	rm -rf $(DIST_NAME)

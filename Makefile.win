@@ -126,14 +126,15 @@ clean:
 	@if exist testham.exe del testham.exe
 	@if exist testnoham.exe del testnoham.exe
 	@if exist bench.exe del bench.exe
+	@if exist hybrid.exe del hybrid.exe
 	@rem ***** clean files generated on other OSes *****
 	@if exist libntru.so del libntru.so
+	@if exist libntru.a del libntru.a
 	@if exist libntru.dylib del libntru.dylib
 	@if exist testham del testnoham
 	@if exist testnoham del testnoham
 	@if exist bench del bench
 	@if exist hybrid del hybrid
-	@if exist hybrid.exe del hybrid.exe
 
 distclean: clean
 	@if exist $(DIST_NAME)\$(SRCDIR)\*.c del $(DIST_NAME)\$(SRCDIR)\*.c

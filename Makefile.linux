@@ -2,19 +2,7 @@ CC?=gcc
 AS=$(CC) -c
 AR?=ar
 
-# use -march=native if we're compiling for x86
-BENCH_ARCH_OPTION=
-MACHINE=$(shell uname -m | sed 's/i.86/i386/g')
-ifeq ($(MACHINE), i386)
-    BENCH_ARCH_OPTION=-march=native
-endif
-ifeq ($(MACHINE), x86_64)
-    BENCH_ARCH_OPTION=-march=native
-endif
-OPTFLAGS=-O2
-bench: OPTFLAGS=-O3 $(BENCH_ARCH_OPTION)
-
-CFLAGS?=-g $(OPTFLAGS)
+CFLAGS?=-g
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
 SSSE3_FLAG = $(shell /bin/grep -m 1 -o ssse3 /proc/cpuinfo)
 ifneq ($(SSE), no)
@@ -25,6 +13,22 @@ endif
 ifeq ($(SSE), yes)
     CFLAGS+=-mssse3
 endif
+
+# use -march=native if we're compiling for x86
+BENCH_ARCH_OPTION=
+MACHINE=$(shell uname -m | sed 's/i.86/i386/g')
+ifeq ($(SSE), yes)
+    ifeq ($(MACHINE), i386)
+        BENCH_ARCH_OPTION=-march=native
+    endif
+    ifeq ($(MACHINE), x86_64)
+        BENCH_ARCH_OPTION=-march=native
+    endif
+endif
+OPTFLAGS=-O2
+bench: OPTFLAGS=-O3 $(BENCH_ARCH_OPTION)
+CFLAGS+=$(OPTFLAGS)
+
 LIBS+=-lrt
 SRCDIR=src
 TESTDIR=tests
