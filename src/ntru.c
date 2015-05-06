@@ -302,6 +302,7 @@ void ntru_gen_blind_poly(uint8_t *seed, uint16_t seed_len, NtruEncParams *params
         r->poly.tern.N = s.N;
         ntru_gen_tern_poly(&s, params->df1, &r->poly.tern);
     }
+    r->prod_flag = params->prod_flag;
 }
 
 uint8_t ntru_check_rep_weight(NtruIntPoly *p, uint16_t dm0) {
@@ -355,12 +356,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
         NtruIntPoly R;
         NtruPrivPoly r;
         ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &r);
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-        if (params->prod_flag)
-            ntru_mult_prod(&pub->h, &r.poly.prod, &R, q);
-        else
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-            ntru_mult_tern(&pub->h, &r.poly.tern, &R, q);
+        ntru_mult_priv(&r, &pub->h, &R, q);
         uint16_t oR4_len = (N*2+7) / 8;
         uint8_t oR4[oR4_len];
         ntru_to_arr4(&R, (uint8_t*)&oR4);
@@ -380,12 +376,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, NtruEnc
 }
 
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    if (priv->t.prod_flag)
-        ntru_mult_prod(e, &priv->t.poly.prod, d, q);
-    else
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-        ntru_mult_tern(e, &priv->t.poly.tern, d, q);
+    ntru_mult_priv(&priv->t, e, d, q);
     ntru_mult_fac(d, 3);
     ntru_add_int(d, e);
     ntru_mod_center(d, q);
@@ -456,12 +447,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, NtruEncParams *params, ui
     NtruPrivPoly cr;
     ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &cr);
     NtruIntPoly cR_prime;
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    if (params->prod_flag)
-        ntru_mult_prod(&kp->pub.h, &cr.poly.prod, &cR_prime, q);
-    else
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-        ntru_mult_tern(&kp->pub.h, &cr.poly.tern, &cR_prime, q);
+    ntru_mult_priv(&cr, &kp->pub.h, &cR_prime, q);
     if (!ntru_equals_int(&cR_prime, &cR))
         retcode = NTRU_ERR_INVALID_ENCODING;
 
