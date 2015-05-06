@@ -204,7 +204,7 @@ uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t
  * Uses 32-bit arithmetic.
  *
  * @param p a polynomial
- * @param p the modulus; must be a power of two
+ * @param q the modulus; must be a power of two
  * @param a output parameter; a pointer to store the encoded polynomial.
  *          No extra room is needed at the end.
  */
@@ -218,7 +218,7 @@ void ntru_to_arr_32(NtruIntPoly *p, uint16_t q, uint8_t *a);
  * Uses 64-bit arithmetic.
  *
  * @param p a polynomial
- * @param p the modulus; must be a power of two
+ * @param q the modulus; must be a power of two
  * @param a output parameter; a pointer to store the encoded polynomial.
  *          Must accommodate at least 7 more bytes than the result takes up.
  */
@@ -244,7 +244,7 @@ void ntru_to_arr_sse_2048(NtruIntPoly *p, uint8_t *a);
  * in (log q) bits.
  *
  * @param p a polynomial
- * @param p the modulus; must be a power of two
+ * @param q the modulus; must be a power of two
  * @param a output parameter; a pointer to store the encoded polynomial
  */
 void ntru_to_arr(NtruIntPoly *p, uint16_t q, uint8_t *a);
