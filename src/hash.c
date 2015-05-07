@@ -12,6 +12,20 @@
 #include "sph_sha2.h"
 #include "hash.h"
 
+void ntru_sha1(uint8_t *input, uint16_t input_len, uint8_t *digest) {
+    sph_sha1_context context;
+    sph_sha1_init(&context);
+    sph_sha1(&context, input, input_len);
+    sph_sha1_close(&context, digest);
+}
+
+void ntru_sha256(uint8_t *input, uint16_t input_len, uint8_t *digest) {
+    sph_sha256_context context;
+    sph_sha256_init(&context);
+    sph_sha256(&context, input, input_len);
+    sph_sha256_close(&context, digest);
+}
+
 #if defined __SSSE3__ && _LP64
 typedef struct {
     uint32_t A[8], B[8], C[8], D[8], E[8];
@@ -36,16 +50,7 @@ typedef struct {
     uint8_t *ptr;
     uint32_t blocks;
 } HASH_DESC;
-#endif   /* __SSSE3__ && _LP64 */
 
-void ntru_sha1(uint8_t *input, uint16_t input_len, uint8_t *digest) {
-    sph_sha1_context context;
-    sph_sha1_init(&context);
-    sph_sha1(&context, input, input_len);
-    sph_sha1_close(&context, digest);
-}
-
-#if defined __SSSE3__ && _LP64
 uint64_t OPENSSL_ia32cap_P = 0;   /* don’t detect SHA extensions for now */
 
 extern void sha1_multi_block(SHA1_MB_CTX *, HASH_DESC *, int num);
@@ -157,29 +162,14 @@ void SHA1_MB_Final(uint8_t *digest[4], SHA1_MB_CTX *ctx) {
         *d32 = ntohl(ctx->E[i]);
     }
 }
-#endif   /* __SSSE3__ && _LP64 */
 
 void ntru_sha1_4way(uint8_t *input[4], uint16_t input_len, uint8_t *digest[4]) {
-#if defined __SSSE3__ && _LP64
     SHA1_MB_CTX ctx;
     SHA1_MB_Init(&ctx);
     SHA1_MB_Update(&ctx, input, input_len);
     SHA1_MB_Final(digest, &ctx);
-#else
-    uint8_t i;
-    for (i=0; i<4; i++)
-        ntru_sha1(input[i], input_len, digest[i]);
-#endif   /* __SSSE3__ && _LP64 */
 }
 
-void ntru_sha256(uint8_t *input, uint16_t input_len, uint8_t *digest) {
-    sph_sha256_context context;
-    sph_sha256_init(&context);
-    sph_sha256(&context, input, input_len);
-    sph_sha256_close(&context, digest);
-}
-
-#if defined __SSSE3__ && _LP64
 void SHA256_MB_Init(SHA256_MB_CTX *ctx) {
     memset(ctx, 0, sizeof(*ctx));
     __m128i a = _mm_set1_epi32(0x6a09e667);
@@ -294,17 +284,25 @@ void SHA256_MB_Final(uint8_t *digest[4], SHA256_MB_CTX *ctx) {
         *d32 = ntohl(ctx->H[i]);
     }
 }
-#endif   /* __SSSE3__ && _LP64 */
 
 void ntru_sha256_4way(uint8_t *input[4], uint16_t input_len, uint8_t *digest[4]) {
-#if defined __SSSE3__ && _LP64
     SHA256_MB_CTX ctx;
     SHA256_MB_Init(&ctx);
     SHA256_MB_Update(&ctx, input, input_len);
     SHA256_MB_Final(digest, &ctx);
-#else
+}
+
+#else   /* non-SSE code */
+
+void ntru_sha1_4way(uint8_t *input[4], uint16_t input_len, uint8_t *digest[4]) {
+    uint8_t i;
+    for (i=0; i<4; i++)
+        ntru_sha1(input[i], input_len, digest[i]);
+}
+
+void ntru_sha256_4way(uint8_t *input[4], uint16_t input_len, uint8_t *digest[4]) {
     uint8_t i;
     for (i=0; i<4; i++)
         ntru_sha256(input[i], input_len, digest[i]);
-#endif
 }
+#endif   /* __SSSE3__ && _LP64 */
