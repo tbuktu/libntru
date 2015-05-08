@@ -19,6 +19,10 @@
 #define htole32(x) (x)
 #endif
 
+#ifdef __OS2__
+#include <endian.h>
+#endif
+
 #define NTRU_SPARSE_THRESH 14
 #define NTRU_KARATSUBA_THRESH_16 40
 #define NTRU_KARATSUBA_THRESH_64 120

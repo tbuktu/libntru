@@ -1,0 +1,145 @@
+CC?=gcc
+AS=$(CC) -c
+OPTFLAGS=-O2
+bench: OPTFLAGS=-O3 -march=native
+CFLAGS?=-g $(OPTFLAGS)
+CFLAGS+=-Wall -Wextra -Wno-unused-parameter
+ifeq ($(SSE), yes)
+    CFLAGS+=-mssse3
+endif
+LIBS+=-lrt
+SRCDIR=src
+TESTDIR=tests
+LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o
+ifeq ($(SSE), yes)
+    LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
+endif
+TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
+VERSION=0.4
+INST_PFX=%PROGRAMFILES%
+INST_LIBDIR=$(INST_PFX)\libntru
+INST_INCLUDE=$(INST_PFX)\libntru\include
+INST_DOCDIR=$(INST_PFX)\libntru
+INST_HEADERS=ntru.h types.h key.h encparams.h hash.h rand.h err.h
+PERL=c:\mingw\msys\1.0\bin\perl
+PERLASM_SCHEME=coff
+
+LIB_OBJS_PATHS=$(patsubst %,$(SRCDIR)/%,$(LIB_OBJS))
+TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
+DIST_NAME=libntru-$(VERSION)
+MAKEFILENAME=$(lastword $(MAKEFILE_LIST))
+
+.PHONY: all lib install dist test clean distclean
+
+all: lib
+
+lib: $(LIB_OBJS_PATHS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -o libntru.dll $(LIB_OBJS_PATHS)
+
+install: lib
+	mkdir "$(DESTDIR)$(INST_PFX)"
+	mkdir "$(DESTDIR)$(INST_LIBDIR)"
+	mkdir "$(DESTDIR)$(INST_INCLUDE)"
+	mkdir "$(DESTDIR)$(INST_DOCDIR)"
+	copy libntru.dll "$(DESTDIR)$(INST_LIBDIR)"
+	copy README.md "$(DESTDIR)$(INST_DOCDIR)"
+	for %%h in ($(INST_HEADERS)) do \
+	    copy $(SRCDIR)\%%h "$(INST_INCLUDE)"
+
+uninstall:
+	rm -f "$(DESTDIR)$(INST_LIBDIR)\libntru.dll"
+	rm -f "$(DESTDIR)$(INST_DOCDIR)\README.md"
+	for %%h in ($(DESTDIR)$(INST_HEADERS)) do \
+	    rm -f "$(DESTDIR)$(INST_INCLUDE)\%%h"
+	rmdir "$(DESTDIR)$(INST_INCLUDE)"
+	rmdir "$(DESTDIR)$(INST_LIBDIR)"
+	rmdir "$(DESTDIR)$(INST_DOCDIR)"
+
+dist:
+	rm -f $(DIST_NAME)\$(SRCDIR)\*.c
+	rm -f $(DIST_NAME)\$(SRCDIR)\*.h
+	rmdir $(DIST_NAME)\$(SRCDIR)
+	rm -f $(DIST_NAME)\$(TESTDIR)\*.c
+	rm -f $(DIST_NAME)\$(TESTDIR)\*.h
+	rmdir $(DIST_NAME)\$(TESTDIR)
+	rm -f /q $(DIST_NAME)\*.*
+	rmdir $(DIST_NAME)
+	mkdir $(DIST_NAME)
+	mkdir $(DIST_NAME)\$(SRCDIR)
+	mkdir $(DIST_NAME)\$(TESTDIR)
+	copy Makefile $(DIST_NAME)
+	copy Makefile.win $(DIST_NAME)
+	copy Makefile.osx $(DIST_NAME)
+	copy README.md $(DIST_NAME)
+	copy LICENSE $(DIST_NAME)
+	copy PATENTS $(DIST_NAME)
+	copy $(SRCDIR)\*.c $(DIST_NAME)\$(SRCDIR)
+	copy $(SRCDIR)\*.h $(DIST_NAME)\$(SRCDIR)
+	copy $(TESTDIR)\*.c $(DIST_NAME)\$(TESTDIR)
+	copy $(TESTDIR)\*.h $(DIST_NAME)\$(TESTDIR)
+
+test:
+	$(MAKE) -f $(MAKEFILENAME) testnoham
+	@echo.
+	@echo Testing patent-reduced build
+	testnoham.exe
+	$(MAKE) -f $(MAKEFILENAME) testham
+	@echo.
+	@echo Testing full build
+	testham.exe
+
+testham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testham.exe $(TEST_OBJS_PATHS) -L. -lntru -lm
+
+testnoham: CFLAGS += -DNTRU_AVOID_HAMMING_WT_PATENT
+testnoham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testnoham.exe $(TEST_OBJS_PATHS) -L. -lntru -lm
+
+bench: lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c -L. -lntru
+
+hybrid: lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) -L. -lntru -lcrypto -lgdi32
+
+$(SRCDIR)/%.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha1-mb-x86_64.o: $(SRCDIR)/sha1-mb-x86_64.s
+	$(AS) $(SRCDIR)/sha1-mb-x86_64.s -o $@
+$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha256-mb-x86_64.o: $(SRCDIR)/sha256-mb-x86_64.s
+	$(AS) $(SRCDIR)/sha256-mb-x86_64.s -o $@
+
+$(TESTDIR)/%.o: tests/%.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -I$(SRCDIR) -c $< -o $@
+
+clean:
+	rm -f $(SRCDIR)\*.o
+	rm -f $(SRCDIR)\*.s
+	rm -f $(TESTDIR)\*.o
+	rm -f libntru.dll
+	rm -f testham.exe
+	rm -f testnoham.exe
+	rm -f bench.exe
+	rm -f libntru.so
+	rm -f libntru.dylib
+	rm -f testham
+	rm -f testnoham
+	rm -f bench
+	rm -f hybrid
+	rm -f hybrid.exe
+
+distclean: clean
+	rm -f $(DIST_NAME)\$(SRCDIR)\*.c
+	rm -f $(DIST_NAME)\$(SRCDIR)\*.h
+	rmdir $(DIST_NAME)\$(SRCDIR)
+	rm -f $(DIST_NAME)\$(TESTDIR)\*.c
+	rm -f $(DIST_NAME)\$(TESTDIR)\*.h
+	rmdir $(DIST_NAME)\$(TESTDIR)
+	rm -f $(DIST_NAME)\*.*
+	rmdir $(DIST_NAME)
+	rm -f $(DIST_NAME).zip
+	rm -f $(DIST_NAME).tar.xz
