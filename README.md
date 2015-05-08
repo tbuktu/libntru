@@ -45,7 +45,6 @@ Windows default is no SSSE3.
     ntru_rand_init_det(&rand_ctx_igf2, &rng_igf2, seed, strlen(seed));
     if (ntru_gen_key_pair(&params, &kp, &rand_ctx_igf2) != NTRU_SUCCESS)
         printf("keygen fail\n");
-    ntru_rand_release(&rand_ctx_igf2);
 
     /* encryption */
     uint8_t msg[9];
