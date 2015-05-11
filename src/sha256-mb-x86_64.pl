@@ -44,24 +44,25 @@ die "can't locate x86_64-xlate.pl";
 
 $avx=0;
 
-if (`$ENV{CC} -Wa,-v -c -o /dev/null -x assembler /dev/null 2>&1`
-		=~ /GNU assembler version ([2-9]\.[0-9]+)/) {
-	$avx = ($1>=2.19) + ($1>=2.22);
-}
-
-if (!$avx && $win64 && ($flavour =~ /nasm/ || $ENV{ASM} =~ /nasm/) &&
-	   `nasm -v 2>&1` =~ /NASM version ([2-9]\.[0-9]+)/) {
-	$avx = ($1>=2.09) + ($1>=2.10);
-}
-
-if (!$avx && $win64 && ($flavour =~ /masm/ || $ENV{ASM} =~ /ml64/) &&
-	   `ml64 2>&1` =~ /Version ([0-9]+)\./) {
-	$avx = ($1>=10) + ($1>=11);
-}
-
-if (!$avx && `$ENV{CC} -v 2>&1` =~ /(^clang version|based on LLVM) ([3-9]\.[0-9]+)/) {
-	$avx = ($2>=3.0) + ($2>3.0);
-}
+# tbuktu 5/10/2015: disable AVX
+#if (`$ENV{CC} -Wa,-v -c -o /dev/null -x assembler /dev/null 2>&1`
+#		=~ /GNU assembler version ([2-9]\.[0-9]+)/) {
+#	$avx = ($1>=2.19) + ($1>=2.22);
+#}
+#
+#if (!$avx && $win64 && ($flavour =~ /nasm/ || $ENV{ASM} =~ /nasm/) &&
+#	   `nasm -v 2>&1` =~ /NASM version ([2-9]\.[0-9]+)/) {
+#	$avx = ($1>=2.09) + ($1>=2.10);
+#}
+#
+#if (!$avx && $win64 && ($flavour =~ /masm/ || $ENV{ASM} =~ /ml64/) &&
+#	   `ml64 2>&1` =~ /Version ([0-9]+)\./) {
+#	$avx = ($1>=10) + ($1>=11);
+#}
+#
+#if (!$avx && `$ENV{CC} -v 2>&1` =~ /(^clang version|based on LLVM) ([3-9]\.[0-9]+)/) {
+#	$avx = ($2>=3.0) + ($2>3.0);
+#}
 
 open OUT,"| \"$^X\" $xlate $flavour $output";
 *STDOUT=*OUT;
