@@ -178,8 +178,25 @@ extern const NtruEncParams EES743EP1;
 #define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1}
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
+/**
+ * @brief Ciphertext length
+ *
+ * Returns the length of an encrypted message in bytes for a given parameter set.
+ *
+ * @param params
+ * @return the length in bytes or 0 if params->q is not a power of two
+ */
 uint16_t ntru_enc_len(const NtruEncParams *params);
 
+/**
+ * @brief Ciphertext length
+ *
+ * Returns the length of an encrypted message in bytes for a given N and q value.
+ *
+ * @param N
+ * @param q
+ * @return the length in bytes or 0 if q is not a power of two
+ */
 uint16_t ntru_enc_len_Nq(uint16_t N, uint16_t q);
 
 #endif   /* NTRU_ENCPARAMS_H */
