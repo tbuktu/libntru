@@ -430,8 +430,11 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *para
     cM_head += blen;
     uint8_t cl = *cM_head;   /* llen=1, so read one byte */
     cM_head++;
-    if (cl>max_len_bytes && retcode==NTRU_SUCCESS)
-        retcode = NTRU_ERR_MSG_TOO_LONG;
+    if (cl > max_len_bytes) {
+        if (retcode == NTRU_SUCCESS)
+            retcode = NTRU_ERR_MSG_TOO_LONG;
+        cl = max_len_bytes;   /* prevent buffer overrun in memcpy below */
+    }
 
     memcpy(dec, cM_head, cl);
     cM_head += cl;
