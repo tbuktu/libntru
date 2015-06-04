@@ -109,7 +109,7 @@ void ntru_from_sves(uint8_t *M, uint16_t M_len, uint16_t N, NtruIntPoly *poly) {
 
     uint16_t coeff_idx = 0;
     uint16_t i = 0;
-    while (i<M_len/3*3 && coeff_idx<N-1) {
+    while (i<(M_len+2)/3*3 && coeff_idx<N-1) {
         /* process 24 bits at a time in the outer loop */
         int32_t chunk = (uint8_t)M[i+2];
         chunk <<= 8;
@@ -322,7 +322,6 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
     uint16_t q = params->q;
     uint16_t db = params->db;
     uint16_t max_len_bytes = ntru_max_msg_len(params);
-    uint16_t buf_len_bits = (N*3/2+7)/8*8 + 1;
     uint16_t dm0 = params->dm0;
 
     if (max_len_bytes > 255)
@@ -336,7 +335,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
         if (!ntru_rand_generate(b, db/8, rand_ctx))
             return NTRU_ERR_PRNG;
 
-        uint16_t M_len = (buf_len_bits+7) / 8;
+        uint16_t M_len = db/8 + 1 + max_len_bytes + 1;
         uint8_t M[M_len];
         memcpy(&M, &b, db/8);
         uint8_t *M_head = (uint8_t*)&M + db/8;
