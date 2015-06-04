@@ -1,4 +1,4 @@
-#include "string.h"
+#include <string.h>
 #include "test_ntru.h"
 #include "test_util.h"
 #include "ntru.h"
