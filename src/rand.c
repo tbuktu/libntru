@@ -12,7 +12,7 @@
 #endif
 
 const NtruEncParams NTRU_IGF2_RAND_PARAMS = {\
-    "EES401EP1",   /* name */\
+    "IGF2_RNG",    /* name */\
     401,           /* N */\
     256,           /* q=256 because we want to generate bytes */\
     0,             /* prod_flag */\
