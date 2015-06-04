@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 #include "ntru.h"
-#include "poly.h"
-#include "rand.h"
 
 uint8_t equals_int(NtruIntPoly *a, NtruIntPoly *b);
 

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include "ntru.h"
-#include "rand.h"
 
 #define NUM_ITER_KEYGEN 50
 #define NUM_ITER_ENCDEC 10000

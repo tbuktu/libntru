@@ -2,8 +2,6 @@
 #include <string.h>
 #include "poly.h"
 #include "ntru.h"
-#include "rand.h"
-#include "encparams.h"
 #include "test_util.h"
 #include "test_poly.h"
 

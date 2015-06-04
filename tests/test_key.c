@@ -1,8 +1,7 @@
 #include "test_key.h"
 #include "test_util.h"
 #include "ntru.h"
-#include "rand.h"
-#include "encparams.h"
+#include "poly.h"
 
 uint8_t test_export_import() {
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT

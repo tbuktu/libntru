@@ -1,7 +1,6 @@
+#include <stdio.h>
 #include "test_util.h"
 #include "bitstring.h"
-
-#include <stdio.h>
 
 uint8_t test_append() {
     uint8_t c[5] = {0};

@@ -2,8 +2,7 @@
 #include "test_ntru.h"
 #include "test_util.h"
 #include "ntru.h"
-#include "rand.h"
-#include "encparams.h"
+#include "poly.h"
 
 void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, uint16_t q) {
     ntru_mult_tern(h, r, e, q);
