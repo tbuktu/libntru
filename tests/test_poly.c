@@ -58,7 +58,7 @@ uint8_t test_mult_int() {
 
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
-    ntru_rand_init(&rand_ctx, &rng);
+    valid &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
     int i;
     for (i=0; i<10; i++) {
         uint16_t N;
@@ -75,7 +75,7 @@ uint8_t test_mult_int() {
         valid &= equals_int_mod(&c3_exp, &c3, 2048);
     }
 
-    ntru_rand_release(&rand_ctx);
+    valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
     print_result("test_mult_int", valid);
     return valid;
 }
@@ -84,10 +84,10 @@ uint8_t test_mult_int() {
 uint8_t test_mult_tern() {
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
-    ntru_rand_init(&rand_ctx, &rng);
+    uint8_t valid = ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
 
     NtruTernPoly a;
-    uint8_t valid = ntru_rand_tern(11, 3, 3, &a, &rand_ctx);
+    valid &= ntru_rand_tern(11, 3, 3, &a, &rand_ctx);
     NtruIntPoly b;
     valid &= rand_int(11, 5, &b, &rand_ctx);
     NtruIntPoly a_int;
@@ -131,7 +131,7 @@ uint8_t test_mult_tern() {
 #endif
     }
 
-    ntru_rand_release(&rand_ctx);
+    valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
     print_result("test_mult_tern", valid);
     return valid;
@@ -144,7 +144,7 @@ uint8_t test_mult_prod() {
     uint16_t i;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
-    ntru_rand_init(&rand_ctx, &rng);
+    valid &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
     uint16_t log_modulus = 11;
     uint16_t modulus = 1 << log_modulus;
     for (i=0; i<10; i++) {
@@ -160,7 +160,7 @@ uint8_t test_mult_prod() {
         ntru_mult_int(&a_int, &b, &c_int, modulus);
         valid &= equals_int_mod(&c_prod, &c_int, log_modulus);
     }
-    ntru_rand_release(&rand_ctx);
+    valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
     print_result("test_mult_prod", valid);
     return valid;
@@ -197,11 +197,11 @@ uint8_t test_inv() {
     uint16_t num_invertible = 0;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
-    ntru_rand_init(&rand_ctx, &rng);
+    valid &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
     while (num_invertible < 3) {
         NtruPrivPoly a2;
         a2.prod_flag = 0;   /* ternary */
-        ntru_rand_tern(853, 100, 100, &a2.poly.tern, &rand_ctx);
+        valid &= ntru_rand_tern(853, 100, 100, &a2.poly.tern, &rand_ctx);
 
         NtruIntPoly b;
         uint8_t invertible = ntru_invert(&a2, 2048, &b);
@@ -215,7 +215,7 @@ uint8_t test_inv() {
     while (num_invertible < 3) {
         NtruPrivPoly a3;
         a3.prod_flag = 0;   /* ternary */
-        ntru_rand_tern(853, 100, 100, &a3.poly.tern, &rand_ctx);
+        valid &= ntru_rand_tern(853, 100, 100, &a3.poly.tern, &rand_ctx);
 
         NtruIntPoly b;
         uint8_t invertible = ntru_invert(&a3, 2048, &b);
@@ -225,7 +225,7 @@ uint8_t test_inv() {
         }
     }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-    ntru_rand_release(&rand_ctx);
+    valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
     /* test a non-invertible polynomial */
     NtruPrivPoly a2 = {0, {{11, 2, 3, {3, 10}, {0, 6, 8}}}};
@@ -243,10 +243,10 @@ uint8_t test_arr() {
     NtruIntPoly p1;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
-    ntru_rand_init(&rand_ctx, &rng);
-    uint8_t valid = rand_int(params.N, 11, &p1, &rand_ctx);
+    uint8_t valid = ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
+    valid &= rand_int(params.N, 11, &p1, &rand_ctx);
     ntru_to_arr_32(&p1, params.q, a);
-    ntru_rand_release(&rand_ctx);
+    valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
     NtruIntPoly p2;
     ntru_from_arr(a, params.N, params.q, &p2);
     valid &= equals_int(&p1, &p2);

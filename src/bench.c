@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
         double samples_keygen[NUM_ITER_KEYGEN];
         NtruRandGen rng = NTRU_RNG_DEFAULT;
         NtruRandContext rand_ctx;
-        ntru_rand_init(&rand_ctx, &rng);
+        success &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
         for (i=0; i<NUM_ITER_KEYGEN; i++) {
             clock_gettime(CLOCK_REALTIME, &t1);
             success &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == NTRU_SUCCESS;
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
         double samples_encdec[NUM_ITER_ENCDEC];
         uint16_t max_len = ntru_max_msg_len(&params);   /* max message length for this param set */
         uint8_t plain[max_len];
-        ntru_rand_generate(plain, max_len, &rand_ctx);
+        success &= ntru_rand_generate(plain, max_len, &rand_ctx) == NTRU_SUCCESS;
         uint16_t enc_len = ntru_enc_len(&params);
         uint8_t encrypted[enc_len];
         uint8_t decrypted[max_len];
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
             samples_encdec[i] = duration / 1000.0;   /* microseconds */
         }
         print_time("enc", samples_encdec, NUM_ITER_ENCDEC);
-        ntru_rand_release(&rand_ctx);
+        success &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
         uint16_t dec_len;
         for (i=0; i<NUM_ITER_ENCDEC; i++) {

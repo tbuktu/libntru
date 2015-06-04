@@ -32,7 +32,8 @@ Windows default is no SSSE3.
     struct NtruEncParams params = EES449EP1; /*see encparams.h for more*/
     NtruRandGen rng_def = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx_def;
-    ntru_rand_init(&rand_ctx_def, &rng_def);
+    if (ntru_rand_init(&rand_ctx_def, &rng_def) != NTRU_SUCCESS)
+        printf("rng fail\n");
     NtruEncKeyPair kp;
     if (ntru_gen_key_pair(&params, &kp, &rand_ctx_def) != NTRU_SUCCESS)
         printf("keygen fail\n");
@@ -42,7 +43,8 @@ Windows default is no SSSE3.
     strcpy(seed, "my test password");
     NtruRandGen rng_igf2 = NTRU_RNG_IGF2;
     NtruRandContext rand_ctx_igf2;
-    ntru_rand_init_det(&rand_ctx_igf2, &rng_igf2, seed, strlen(seed));
+    if (ntru_rand_init_det(&rand_ctx_igf2, &rng_igf2, seed, strlen(seed)) != NTRU_SUCCESS)
+        printf("rng fail\n");
     if (ntru_gen_key_pair(&params, &kp, &rand_ctx_igf2) != NTRU_SUCCESS)
         printf("keygen fail\n");
 
@@ -54,8 +56,10 @@ Windows default is no SSSE3.
         printf("encrypt fail\n");
 
     /* release RNG resources */
-    ntru_rand_release(&rand_ctx_def);
-    ntru_rand_release(&rand_ctx_igf2);
+    if (ntru_rand_release(&rand_ctx_def) != NTRU_SUCCESS)
+        printf("rng fail\n");
+    if (ntru_rand_release(&rand_ctx_igf2) != NTRU_SUCCESS)
+        printf("rng fail\n");
 
     /* decryption */
     uint8_t dec[ntru_max_msg_len(&params)];

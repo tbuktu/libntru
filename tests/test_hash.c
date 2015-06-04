@@ -23,7 +23,7 @@ uint8_t test_hash() {
     uint16_t i;
     NtruRandContext rand_ctx;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
-    ntru_rand_init(&rand_ctx, &rng);
+    valid1 &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
     for (i=0; i<100; i++) {
         uint16_t inp_len = i;
         uint8_t test_a[inp_len];
@@ -37,7 +37,7 @@ uint8_t test_hash() {
         hash_inp[3] = test_d;
         uint8_t j;
         for (j=0; j<4; j++)
-            valid1 &= ntru_rand_generate(hash_inp[j], inp_len, &rand_ctx);
+            valid1 &= ntru_rand_generate(hash_inp[j], inp_len, &rand_ctx) == NTRU_SUCCESS;
         uint8_t H4_arr[4][20];
         uint8_t *H4[4];
         for (j=0; j<4; j++)
@@ -49,7 +49,7 @@ uint8_t test_hash() {
             valid1 &= memcmp(H4[j], H1, 20) == 0;
         }
     }
-    ntru_rand_release(&rand_ctx);
+    valid1 &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
     /* test ntru_sha256() */
     uint8_t sha256[] = {
@@ -62,7 +62,7 @@ uint8_t test_hash() {
     int valid256 = memcmp((uint8_t*)&hash256, (uint8_t*)&sha256, 32) == 0;
 
     /* test ntru_sha256_4way() */
-    ntru_rand_init(&rand_ctx, &rng);
+    valid256 &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
     for (i=0; i<100; i++) {
         uint16_t inp_len = i;
         uint8_t test_a[inp_len];
@@ -76,7 +76,7 @@ uint8_t test_hash() {
         hash_inp[3] = test_d;
         uint8_t j;
         for (j=0; j<4; j++)
-            valid1 &= ntru_rand_generate(hash_inp[j], inp_len, &rand_ctx);
+            valid256 &= ntru_rand_generate(hash_inp[j], inp_len, &rand_ctx) == NTRU_SUCCESS;
         uint8_t H4_arr[4][32];
         uint8_t *H4[4];
         for (j=0; j<4; j++)
@@ -85,10 +85,10 @@ uint8_t test_hash() {
         for (j=0; j<4; j++) {
             uint8_t H1[32];
             ntru_sha256(hash_inp[j], inp_len, H1);
-            valid1 &= memcmp(H4[j], H1, 32) == 0;
+            valid256 &= memcmp(H4[j], H1, 32) == 0;
         }
     }
-    ntru_rand_release(&rand_ctx);
+    valid256 &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
     uint8_t valid = valid1 && valid256;
     print_result("test_hash", valid);

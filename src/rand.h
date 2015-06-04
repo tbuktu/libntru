@@ -18,9 +18,16 @@ typedef struct NtruRandGen {
     uint8_t (*release)(NtruRandContext *rand_ctx);
 } NtruRandGen;
 
+/** Returns NTRU_SUCCESS or NTRU_ERR_PRNG */
 uint8_t ntru_rand_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
+
+/** Returns NTRU_SUCCESS or NTRU_ERR_PRNG */
 uint8_t ntru_rand_init_det(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen, uint8_t *seed, uint16_t seed_len);
+
+/** Returns NTRU_SUCCESS or NTRU_ERR_PRNG */
 uint8_t ntru_rand_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+
+/** Returns NTRU_SUCCESS or NTRU_ERR_PRNG */
 uint8_t ntru_rand_release(NtruRandContext *rand_ctx);
 
 #ifdef WIN32

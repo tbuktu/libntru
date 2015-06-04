@@ -97,12 +97,12 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     NtruEncKeyPair kp;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
-    ntru_rand_init(&rand_ctx, &rng);
-    uint8_t valid = ntru_gen_key_pair(params, &kp, &rand_ctx) == NTRU_SUCCESS;
+    uint8_t valid = ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
+    valid &= ntru_gen_key_pair(params, &kp, &rand_ctx) == NTRU_SUCCESS;
 
     uint16_t max_len = ntru_max_msg_len(params);
     uint8_t plain[max_len];
-    ntru_rand_generate(plain, max_len, &rand_ctx);
+    valid &= ntru_rand_generate(plain, max_len, &rand_ctx) == NTRU_SUCCESS;
     uint16_t enc_len = ntru_enc_len(params);
     uint8_t encrypted[enc_len];
     uint8_t decrypted[max_len];
@@ -114,7 +114,7 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
         valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
     }
 
-    ntru_rand_release(&rand_ctx);
+    valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
     return valid;
 }
 
@@ -136,9 +136,9 @@ uint8_t test_encr_decr_det(NtruEncParams *params, uint8_t *digest_expected) {
     strcpy(plain_seed_char, "seed value for plaintext");
     uint8_t plain_seed[25];
     str_to_uint8(plain_seed_char, plain_seed);
-    ntru_rand_init_det(&rand_ctx_plaintext, &rng_plaintext, plain_seed, strlen(plain_seed_char));
-    ntru_rand_generate(plain, max_len, &rand_ctx_plaintext);
-    ntru_rand_release(&rand_ctx_plaintext);
+    valid &= ntru_rand_init_det(&rand_ctx_plaintext, &rng_plaintext, plain_seed, strlen(plain_seed_char)) == NTRU_SUCCESS;
+    valid &= ntru_rand_generate(plain, max_len, &rand_ctx_plaintext) == NTRU_SUCCESS;
+    valid &= ntru_rand_release(&rand_ctx_plaintext) == NTRU_SUCCESS;
     uint8_t plain2[max_len];
     memcpy(plain2, plain, max_len);
     uint16_t enc_len = ntru_enc_len(params);
@@ -156,10 +156,10 @@ uint8_t test_encr_decr_det(NtruEncParams *params, uint8_t *digest_expected) {
 
     NtruRandContext rand_ctx;
     NtruRandGen rng = NTRU_RNG_IGF2;
-    ntru_rand_init_det(&rand_ctx, &rng, seed, strlen(seed_char));
+    valid &= ntru_rand_init_det(&rand_ctx, &rng, seed, strlen(seed_char)) == NTRU_SUCCESS;
     NtruRandContext rand_ctx2;
     NtruRandGen rng2 = NTRU_RNG_IGF2;
-    ntru_rand_init_det(&rand_ctx2, &rng2, seed2, strlen(seed2_char));
+    valid &= ntru_rand_init_det(&rand_ctx2, &rng2, seed2, strlen(seed2_char)) == NTRU_SUCCESS;
 
     uint8_t decrypted[max_len];
     uint16_t plain_len;
@@ -177,8 +177,8 @@ uint8_t test_encr_decr_det(NtruEncParams *params, uint8_t *digest_expected) {
     ntru_sha1(encrypted, enc_len, digest);
     valid &= memcmp(digest, digest_expected, 20) == 0;
 
-    ntru_rand_release(&rand_ctx);
-    ntru_rand_release(&rand_ctx2);
+    valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
+    valid &= ntru_rand_release(&rand_ctx2) == NTRU_SUCCESS;
 
     return valid;
 }
