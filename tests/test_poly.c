@@ -69,8 +69,10 @@ uint8_t test_mult_int() {
         ntru_mod(&c3_exp, 2048);
         valid &= ntru_mult_int_16(&a3, &b3, &c3, 2048);
         valid &= equals_int_mod(&c3_exp, &c3, 2048);
+#ifndef __ARMEL__
         valid &= ntru_mult_int_64(&a3, &b3, &c3, 2048);
         valid &= equals_int_mod(&c3_exp, &c3, 2048);
+#endif
     }
 
     valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
@@ -95,8 +97,10 @@ uint8_t test_mult_tern() {
     NtruIntPoly c_tern;
     ntru_mult_tern_32(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
+#ifndef __ARMEL__
     ntru_mult_tern_64(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
+#endif
 #ifdef __SSSE3__
     ntru_mult_tern_sse(&b, &a, &c_tern, 32);
     valid &= equals_int_mod(&c_tern, &c_int, 32);
@@ -121,8 +125,10 @@ uint8_t test_mult_tern() {
         ntru_mult_int_nomod(&a_int, &b, &c_int);
         ntru_mult_tern_32(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
+#ifndef __ARMEL__
         ntru_mult_tern_64(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
+#endif
 #ifdef __SSSE3__
         ntru_mult_tern_sse(&b, &a, &c_tern, 2048);
         valid &= equals_int_mod(&c_tern, &c_int, 2048);
