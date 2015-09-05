@@ -6,17 +6,17 @@
 
 void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, uint16_t q) {
     ntru_mult_tern(h, r, e, q);
-    ntru_add_int_mod(e, m, q);
+    ntru_add_int_mod(e, m, q-1);
 }
 
 void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d, uint16_t modulus) {
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (priv->t.prod_flag)
-        ntru_mult_prod(e, &priv->t.poly.prod, d, modulus);
+        ntru_mult_prod(e, &priv->t.poly.prod, d, modulus-1);
     else
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-        ntru_mult_tern(e, &priv->t.poly.tern, d, modulus);
-    ntru_mod(d, q);
+        ntru_mult_tern(e, &priv->t.poly.tern, d, modulus-1);
+    ntru_mod_mask(d, q-1);
     ntru_mult_fac(d, 3);
     ntru_add_int(d, e);
     ntru_mod_center(d, q);

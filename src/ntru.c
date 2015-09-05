@@ -22,6 +22,9 @@ uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruR
     uint16_t df3 = params->df3;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
+    if (q & (q-1))   /* check that modulus is a power of 2 */
+        return NTRU_ERR_INVALID_PARAM;
+
     NtruIntPoly fq;
 
     /* choose a random f that is invertible mod q */
@@ -35,7 +38,7 @@ uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruR
             /* choose random t, find the inverse of 3t+1 */
             if (!ntru_rand_prod(N, df1, df2, df3, df3, &t->poly.prod, rand_ctx))
                 return NTRU_ERR_PRNG;
-            if (ntru_invert(t, q, &fq))
+            if (ntru_invert(t, q-1, &fq))
                 break;
         }
     }
@@ -49,7 +52,7 @@ uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruR
             /* choose random t, find the inverse of 3t+1 */
             if (!ntru_rand_tern(N, df1, df1, &t->poly.tern, rand_ctx))
                 return NTRU_ERR_PRNG;
-            if (ntru_invert(t, q, &fq))
+            if (ntru_invert(t, q-1, &fq))
                 break;
         }
     }
@@ -73,15 +76,15 @@ uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruR
         if (!NTRU_CHECK_INVERTIBILITY_G)
             break;
         NtruIntPoly gq;
-        if (ntru_invert(&g, q, &gq))
+        if (ntru_invert(&g, q-1, &gq))
             break;
     }
 
     NtruIntPoly *h = &kp->pub.h;
-    if (!ntru_mult_priv(&g, &fq, h, q))
+    if (!ntru_mult_priv(&g, &fq, h, q-1))
         return NTRU_ERR_PRNG;
     ntru_mult_fac(h, 3);
-    ntru_mod(h, q);
+    ntru_mod_mask(h, q-1);
 
     ntru_clear_priv(&g);
     ntru_clear_int(&fq);
@@ -324,6 +327,8 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
     uint16_t max_len_bytes = ntru_max_msg_len(params);
     uint16_t dm0 = params->dm0;
 
+    if (q & (q-1))   /* check that modulus is a power of 2 */
+        return NTRU_ERR_INVALID_PARAM;
     if (max_len_bytes > 255)
         return NTRU_ERR_INVALID_MAX_LEN;
     if (msg_len > max_len_bytes)
@@ -356,7 +361,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
         NtruIntPoly R;
         NtruPrivPoly r;
         ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &r);
-        ntru_mult_priv(&r, &pub->h, &R, q);
+        ntru_mult_priv(&r, &pub->h, &R, q-1);
         uint16_t oR4_len = (N*2+7) / 8;
         uint8_t oR4[oR4_len];
         ntru_to_arr4(&R, (uint8_t*)&oR4);
@@ -376,7 +381,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
 }
 
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
-    ntru_mult_priv(&priv->t, e, d, q);
+    ntru_mult_priv(&priv->t, e, d, q-1);
     ntru_mult_fac(d, 3);
     ntru_add_int(d, e);
     ntru_mod_center(d, q);
@@ -390,6 +395,8 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *para
     uint16_t max_len_bytes = ntru_max_msg_len(params);
     uint16_t dm0 = params->dm0;
 
+    if (q & (q-1))   /* check that modulus is a power of 2 */
+        return NTRU_ERR_INVALID_PARAM;
     if (max_len_bytes > 255)
         return NTRU_ERR_INVALID_MAX_LEN;
 
@@ -406,7 +413,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *para
 
     NtruIntPoly cR = e;
     ntru_sub_int(&cR, &ci);
-    ntru_mod(&cR, q);
+    ntru_mod_mask(&cR, q-1);
 
     uint16_t coR4_len = (N*2+7) / 8;
     uint8_t coR4[coR4_len];
@@ -450,7 +457,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *para
     NtruPrivPoly cr;
     ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &cr);
     NtruIntPoly cR_prime;
-    ntru_mult_priv(&cr, &kp->pub.h, &cR_prime, q);
+    ntru_mult_priv(&cr, &kp->pub.h, &cR_prime, q-1);
     if (!ntru_equals_int(&cR_prime, &cR) && retcode==NTRU_SUCCESS)
         retcode = NTRU_ERR_INVALID_ENCODING;
 

@@ -66,9 +66,9 @@ void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b);
  *
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to add to the polynomial a
- * @param modulus the modulus to apply to the coefficients of c
+ * @param mod_mask an AND mask to apply
  */
-void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
+void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t mod_mask);
 
 /**
  * @brief Subtraction of two polynomials
@@ -115,10 +115,10 @@ void ntru_priv_to_int(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus);
  * @param a a general polynomial
  * @param b a ternary polynomial
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief General polynomial by ternary polynomial multiplication
@@ -130,10 +130,10 @@ uint8_t ntru_mult_tern(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t
  * @param a a general polynomial
  * @param b a ternary polynomial
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_tern_32(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_tern_32(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief General polynomial by ternary polynomial multiplication
@@ -145,10 +145,10 @@ uint8_t ntru_mult_tern_32(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
  * @param a a general polynomial
  * @param b a ternary polynomial
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief General polynomial by ternary polynomial multiplication, SSSE3 version
@@ -160,10 +160,10 @@ uint8_t ntru_mult_tern_64(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint1
  * @param a a general polynomial
  * @param b a ternary polynomial
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
 /**
@@ -175,10 +175,10 @@ uint8_t ntru_mult_tern_sse(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint
  * @param a a general polynomial
  * @param b a product-form polynomial
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**
@@ -191,10 +191,10 @@ uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t
  * @param a a "private" polynomial
  * @param b a general polynomial
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief Polynomial to binary
@@ -281,10 +281,10 @@ void ntru_mult_fac(NtruIntPoly *a, int16_t factor);
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to multiply by
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus to apply to the coefficients of c
+ * @param mod_mask an AND mask to apply to the coefficients of c
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief Multiplication of two general polynomials with a modulus
@@ -296,10 +296,10 @@ uint8_t ntru_mult_int(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t m
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to multiply by
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus to apply to the coefficients of c
+ * @param mod_mask an AND mask to apply to the coefficients of c
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief Multiplication of two general polynomials with a modulus
@@ -311,10 +311,10 @@ uint8_t ntru_mult_int_16(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to multiply by
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus to apply to the coefficients of c
+ * @param mod_mask an AND mask to apply to the coefficients of c
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief Multiplication of two general polynomials with a modulus
@@ -326,20 +326,20 @@ uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to multiply by
  * @param c output parameter; a pointer to store the new polynomial
- * @param modulus the modulus to apply to the coefficients of c
+ * @param mod_mask an AND mask to apply to the coefficients of c
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+uint8_t ntru_mult_int_sse(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
- * @brief Reduction modulo an integer
+ * @brief Reduction modulo a power of two
  *
- * Reduces the coefficients of an NtruIntPoly modulo an integer.
+ * Reduces the coefficients of an NtruIntPoly modulo a power of two.
  *
  * @param p input and output parameter; coefficients are overwritten
- * @param modulus the modulus to apply to the coefficients of c
+ * @param mod_mask an AND mask to apply to the coefficients of c
  */
-void ntru_mod(NtruIntPoly *p, uint16_t modulus);
+void ntru_mod_mask(NtruIntPoly *p, uint16_t mod_mask);
 
 /**
  * @brief Reduction modulo 3
@@ -412,11 +412,11 @@ void ntru_clear_int(NtruIntPoly *p);
  * http://www.securityinnovation.com/uploads/Crypto/NTRUTech014.pdf
  *
  * @param a a ternary or product-form polynomial
- * @param q the modulus
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+uint8_t ntru_invert(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
 /**
  * @brief Inverse modulo q
@@ -428,11 +428,11 @@ uint8_t ntru_invert(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
  * This function uses 32-bit arithmetic.
  *
  * @param a a ternary or product-form polynomial
- * @param q the modulus
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
 /**
  * @brief Inverse modulo q
@@ -444,11 +444,11 @@ uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
  * This function uses 64-bit arithmetic.
  *
  * @param a a ternary or product-form polynomial
- * @param q the modulus
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
 /**
  * @brief Inverse modulo q
@@ -460,10 +460,10 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
  * This function requires SSSE3 support.
  *
  * @param a a ternary or product-form polynomial
- * @param q the modulus
+ * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t ntru_invert_sse(NtruPrivPoly *a, uint16_t q, NtruIntPoly *Fq);
+uint8_t ntru_invert_sse(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
 #endif   /* NTRU_POLY_H */
