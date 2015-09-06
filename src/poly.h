@@ -449,20 +449,4 @@ uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
  */
 uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
-/**
- * @brief Inverse modulo q
- *
- * Computes the inverse of 1+3a mod q; q must be a power of 2.
- * Returns 0 if the polynomial is not invertible, 1 otherwise.
- * The algorithm is described in "Almost Inverses and Fast NTRU Key Generation" at
- * http://www.securityinnovation.com/uploads/Crypto/NTRUTech014.pdf
- * This function requires SSSE3 support.
- *
- * @param a a ternary or product-form polynomial
- * @param mod_mask an AND mask to apply; must be a power of two minus one
- * @param Fq output parameter; a pointer to store the new polynomial
- * @return 1 if a is invertible, 0 otherwise
- */
-uint8_t ntru_invert_sse(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
-
 #endif   /* NTRU_POLY_H */
