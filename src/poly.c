@@ -110,12 +110,6 @@ void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b) {
         a->coeffs[i] += b->coeffs[i];
 }
 
-void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t mod_mask) {
-    uint16_t i;
-    for (i=0; i<b->N; i++)
-        a->coeffs[i] = (a->coeffs[i]+b->coeffs[i]) & mod_mask;
-}
-
 void ntru_add_int_mod2_32(uint32_t *a, uint32_t *b, uint16_t len) {
     uint16_t i;
     for (i=0; i<len; i++)

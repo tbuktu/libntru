@@ -59,18 +59,6 @@ void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b);
 void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b);
 
 /**
- * @brief Addition of two polynomials with a modulus
- *
- * Adds a NtruIntPoly to another, taking the coefficient values modulo an integer.
- * The polynomial b must not have more coefficients than a.
- *
- * @param a input and output parameter; coefficients are overwritten
- * @param b a polynomial to add to the polynomial a
- * @param mod_mask an AND mask to apply
- */
-void ntru_add_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t mod_mask);
-
-/**
  * @brief Subtraction of two polynomials
  *
  * Subtracts a NtruIntPoly from another.
