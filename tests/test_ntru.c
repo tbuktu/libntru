@@ -10,17 +10,17 @@ void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *
     ntru_mod_mask(e, q-1);
 }
 
-void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d, uint16_t modulus) {
+void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, NtruIntPoly *d, uint16_t modulus) {
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (priv->t.prod_flag)
         ntru_mult_prod(e, &priv->t.poly.prod, d, modulus-1);
     else
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
         ntru_mult_tern(e, &priv->t.poly.tern, d, modulus-1);
-    ntru_mod_mask(d, q-1);
+    ntru_mod_mask(d, modulus-1);
     ntru_mult_fac(d, 3);
     ntru_add_int(d, e);
-    ntru_mod_center(d, q);
+    ntru_mod_center(d, modulus);
     ntru_mod3(d);
     uint16_t i;
     for (i=0; i<d->N; i++)
@@ -70,7 +70,7 @@ uint8_t test_keygen() {
 
         /* decrypt and verify */
         NtruIntPoly c;
-        decrypt_poly(&e, &kp.priv, params.q, &c, params.q);
+        decrypt_poly(&e, &kp.priv, &c, params.q);
         valid &= ntru_equals_int(&m_int, &c);
 
         /* test deterministic key generation */
