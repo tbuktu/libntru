@@ -1211,9 +1211,7 @@ void ntru_mod_center(NtruIntPoly *p, uint16_t modulus) {
     uint16_t mod_mask = modulus - 1;
     uint16_t i;
     for (i=0; i<p->N; i++) {
-        int16_t c = p->coeffs[i] & mod_mask;
-        if (c < -m2)
-            c += modulus;
+        uint16_t c = p->coeffs[i] & mod_mask;   // note that c is unsigned
         if (c > m2)
             c -= modulus;
         p->coeffs[i] = c;
