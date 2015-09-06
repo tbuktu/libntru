@@ -38,16 +38,6 @@ uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**
- * @brief Ternary to general integer polynomial
- *
- * Converts a NtruTernPoly to an equivalent NtruIntPoly.
- *
- * @param a a ternary polynomial
- * @param b output parameter; a pointer to store the new polynomial
- */
-void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b);
-
-/**
  * @brief Addition of two polynomials
  *
  * Adds a NtruIntPoly to another.
@@ -68,31 +58,6 @@ void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b);
  * @param b a polynomial to subtract from the polynomial a
  */
 void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b);
-
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-/**
- * @brief Product-form to general polynomial
- *
- * Converts a NtruProdPoly to an equivalent NtruIntPoly.
- *
- * @param a a product-form polynomial
- * @param b output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
- */
-void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b, uint16_t modulus);
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-
-/**
- * @brief Private polynomial to general polynomial
- *
- * Converts a NtruPrivPoly (i.e. a NtruTernPoly or NtruProdPoly) to an
- * equivalent NtruIntPoly.
- *
- * @param a a "private" polynomial
- * @param b output parameter; a pointer to store the new polynomial
- * @param modulus the modulus; must be a power of two
- */
-void ntru_priv_to_int(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus);
 
 /**
  * @brief General polynomial by ternary polynomial multiplication

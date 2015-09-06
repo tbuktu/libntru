@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "test_util.h"
+#include "poly.h"
 
 /** For equals_hash_func() */
 #define HASH_INPUT_LEN 100
@@ -133,6 +134,46 @@ uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, NtruRandContext 
         poly->coeffs[N] = rand_data[N] >> shift;
 
     return 1;
+}
+
+void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
+    memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
+    uint16_t i;
+    for (i=0; i<a->num_ones; i++)
+        b->coeffs[a->ones[i]] = 1;
+    for (i=0; i<a->num_neg_ones; i++)
+        b->coeffs[a->neg_ones[i]] = -1;
+
+    b->N = a->N;
+}
+
+void ntru_add_tern(NtruIntPoly *a, NtruTernPoly *b) {
+    uint16_t i;
+    for (i=0; i<b->num_ones; i++)
+        a->coeffs[b->ones[i]]++;
+    for (i=0; i<b->num_neg_ones; i++)
+        a->coeffs[b->neg_ones[i]]--;
+}
+
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b, uint16_t modulus) {
+    memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
+    b->N = a->N;
+    uint16_t mod_mask = modulus - 1;
+    NtruIntPoly c;
+    ntru_tern_to_int(&a->f1, &c);
+    ntru_mult_tern(&c, &a->f2, b, mod_mask);
+    ntru_add_tern(b, &a->f3);
+}
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+
+void ntru_priv_to_int(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    if (a->prod_flag)
+        ntru_prod_to_int(&a->poly.prod, b, modulus);
+    else
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+        ntru_tern_to_int(&a->poly.tern, b);
 }
 
 void str_to_uint8(char *in, uint8_t *out) {

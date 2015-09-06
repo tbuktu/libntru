@@ -96,14 +96,6 @@ uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones
 }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
-void ntru_add_tern(NtruIntPoly *a, NtruTernPoly *b) {
-    uint16_t i;
-    for (i=0; i<b->num_ones; i++)
-        a->coeffs[b->ones[i]]++;
-    for (i=0; i<b->num_neg_ones; i++)
-        a->coeffs[b->neg_ones[i]]--;
-}
-
 void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b) {
     uint16_t i;
     for (i=0; i<b->N; i++)
@@ -757,38 +749,6 @@ uint8_t ntru_mult_priv(NtruPrivPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t
     else
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
         return ntru_mult_tern(b, &a->poly.tern, c, mod_mask);
-}
-
-void ntru_tern_to_int(NtruTernPoly *a, NtruIntPoly *b) {
-    memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
-    uint16_t i;
-    for (i=0; i<a->num_ones; i++)
-        b->coeffs[a->ones[i]] = 1;
-    for (i=0; i<a->num_neg_ones; i++)
-        b->coeffs[a->neg_ones[i]] = -1;
-
-    b->N = a->N;
-}
-
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-void ntru_prod_to_int(NtruProdPoly *a, NtruIntPoly *b, uint16_t modulus) {
-    memset(&b->coeffs, 0, a->N * sizeof b->coeffs[0]);
-    b->N = a->N;
-    uint16_t mod_mask = modulus - 1;
-    NtruIntPoly c;
-    ntru_tern_to_int(&a->f1, &c);
-    ntru_mult_tern(&c, &a->f2, b, mod_mask);
-    ntru_add_tern(b, &a->f3);
-}
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-
-void ntru_priv_to_int(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus) {
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    if (a->prod_flag)
-        ntru_prod_to_int(&a->poly.prod, b, modulus);
-    else
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-        ntru_tern_to_int(&a->poly.tern, b);
 }
 
 /** NtruPrivPoly to binary (coefficients reduced mod 2), 64 bit version */
