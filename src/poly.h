@@ -348,7 +348,6 @@ void ntru_mod_mask(NtruIntPoly *p, uint16_t mod_mask);
  * coefficients are ternary.
  *
  * @param p input and output parameter; coefficients are overwritten
- * @param modulus the modulus to apply to the coefficients of c
  */
 void ntru_mod3(NtruIntPoly *p);
 
