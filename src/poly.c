@@ -19,6 +19,12 @@
 #define htole32(x) (x)
 #endif
 
+#if GLIBC <= 2 || ( GLIBC == 2 && GLIBC_MINOR < 9 )
+/* assume little endian */
+#define htole64(x) (x)
+#define htole32(x) (x)
+#endif
+
 #ifdef __OS2__
 #include <endian.h>
 #endif
