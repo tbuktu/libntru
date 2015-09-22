@@ -888,6 +888,13 @@ void ntru_priv_to_mod2_32(NtruPrivPoly *a, uint32_t *b_coeffs32) {
 void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     uint16_t N = p->N;
     uint8_t log_q = ntru_log2(q);
+	uint16_t enc_bytes = ntru_enc_len_Nq(N, q);
+	uint16_t rem = enc_bytes % sizeof(uint64_t);
+	uint16_t quo = enc_bytes / sizeof(uint64_t);
+	uint16_t enc_last_int = rem ? quo : quo - 1; 
+	uint16_t enc_last_int_valid = rem ? rem : sizeof(uint64_t);
+	uint64_t last = 0;
+
     typedef uint64_t __attribute__((__may_alias__)) *uint64_t_alias;
     uint64_t *a64 = (uint64_t_alias)a;
     uint16_t a_idx = 0;   /* index into a64 */
@@ -898,6 +905,9 @@ void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     for (p_idx=0; p_idx<N; p_idx++) {
         uint64_t coeff = p->coeffs[p_idx] & mod_mask;
         if (bit_idx < 64-log_q) {
+			if (a_idx == enc_last_int)
+				last |= coeff << bit_idx;
+			else
             a64[a_idx] |= coeff << bit_idx;
             bit_idx += log_q;
         }
@@ -905,19 +915,37 @@ void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a) {
             a64[a_idx] |= coeff << bit_idx;
             a_idx++;
             bit_idx += log_q - 64;
+
+			if (a_idx == enc_last_int)
+				last = coeff >> (log_q - bit_idx);
+			else
             a64[a_idx] = coeff >> (log_q-bit_idx);
         }
     }
 
     /* reverse byte order on big-endian machines */
     uint16_t i;
-    for (i=0; i<=a_idx; i++)
+	for (i = 0; i <= a_idx; i++)
+	{
+		if (i == enc_last_int) {
+			last = htole64(last);
+			memcpy(&a64[i], &last, enc_last_int_valid);
+		}
+		else
         a64[i] = htole64(a64[i]);
+	}
 }
 
 void ntru_to_arr_32(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     uint16_t N = p->N;
     uint8_t log_q = ntru_log2(q);
+	uint16_t enc_bytes = ntru_enc_len_Nq(N, q);
+	uint16_t rem = enc_bytes % sizeof(uint32_t);
+	uint16_t quo = enc_bytes / sizeof(uint32_t);
+	uint16_t enc_last_int = rem ? quo : quo - 1;
+	uint16_t enc_last_int_valid = rem ? rem : sizeof(uint32_t);
+	uint32_t last = 0;
+
     typedef uint32_t __attribute__((__may_alias__)) *uint32_t_alias;
     uint32_t *a32 = (uint32_t_alias)a;
     uint16_t a_idx = 0;   /* index into a32 */
@@ -928,6 +956,9 @@ void ntru_to_arr_32(NtruIntPoly *p, uint16_t q, uint8_t *a) {
     for (p_idx=0; p_idx<N; p_idx++) {
         uint32_t coeff = p->coeffs[p_idx] & mod_mask;
         if (bit_idx < 32-log_q) {
+			if (a_idx == enc_last_int) 
+				last |= coeff << bit_idx;
+			else
             a32[a_idx] |= coeff << bit_idx;
             bit_idx += log_q;
         }
@@ -935,14 +966,25 @@ void ntru_to_arr_32(NtruIntPoly *p, uint16_t q, uint8_t *a) {
             a32[a_idx] |= coeff << bit_idx;
             a_idx++;
             bit_idx += log_q - 32;
+
+			if (a_idx == enc_last_int)
+				last = coeff >> (log_q - bit_idx);
+			else
             a32[a_idx] = coeff >> (log_q-bit_idx);
         }
     }
 
     /* reverse byte order on big-endian machines */
     uint16_t i;
-    for (i=0; i<=a_idx; i++)
+	for (i = 0; i <= a_idx; i++)
+	{
+		if (i == enc_last_int) {
+			last = htole32(last);
+			memcpy(&a32[i], &last, enc_last_int_valid);
+		}
+		else
         a32[i] = htole32(a32[i]);
+	}
 }
 
 #ifdef __SSSE3__
