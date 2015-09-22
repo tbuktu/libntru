@@ -7,6 +7,7 @@
 #include "rand.h"
 #include "err.h"
 #include "arith.h"
+#include "encparams.h"
 
 #ifdef __APPLE__
 #include <libkern/OSByteOrder.h>
