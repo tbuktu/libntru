@@ -79,7 +79,7 @@ For encryption of messages longer than `ntru_max_msg_len(...)`, see `src/hybrid.
 (requires OpenSSL lib+headers, use `make hybrid` to build).
 
 ## Supported Platforms
-  libntru has been tested on Linux, Mac OS X and Windows (MingW).
+  libntru has been tested on Linux, FreeBSD (using gmake), Mac OS X and Windows (MingW).
 
 ## Further reading
 

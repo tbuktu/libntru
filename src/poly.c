@@ -19,11 +19,16 @@
 #define htole64(x) (x)
 #define htole32(x) (x)
 #endif
+#ifdef __FreeBSD__
+#include <sys/endian.h>
+#endif
 
-#if GLIBC <= 2 || ( GLIBC == 2 && GLIBC_MINOR < 9 )
+#ifdef __GLIBC__
+#if __GLIBC__ <= 2 || ( __GLIBC__ == 2 && __GLIBC_MINOR__ < 9 )
 /* assume little endian */
 #define htole64(x) (x)
 #define htole32(x) (x)
+#endif
 #endif
 
 #ifdef __OS2__

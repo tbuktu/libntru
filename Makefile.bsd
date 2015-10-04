@@ -1,0 +1,165 @@
+CC?=cc
+AS=$(CC) -c
+AR?=ar
+
+CFLAGS?=-g
+CFLAGS+=-Wall -Wextra -Wno-unused-parameter
+SSSE3_FLAG = $(shell /sbin/sysctl hw | /usr/bin/grep -m 1 -o ssse3)
+ifneq ($(SSE), no)
+    ifeq ($(SSSE3_FLAG), ssse3)
+        SSE=yes
+    endif
+endif
+ifeq ($(SSE), yes)
+    CFLAGS+=-mssse3
+endif
+
+# use -march=native if we're compiling for x86
+BENCH_ARCH_OPTION=
+MACHINE=$(shell uname -m | sed 's/i.86/i386/g')
+ifeq ($(SSE), yes)
+    ifeq ($(MACHINE), i386)
+        BENCH_ARCH_OPTION=-march=native
+    endif
+    ifeq ($(MACHINE), x86_64)
+        BENCH_ARCH_OPTION=-march=native
+    endif
+endif
+OPTFLAGS=-O2
+bench: OPTFLAGS=-O3 $(BENCH_ARCH_OPTION)
+CFLAGS+=$(OPTFLAGS)
+
+LIBS+=-lrt
+SRCDIR=src
+TESTDIR=tests
+LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o
+ifeq ($(SSE), yes)
+    ifeq ($(MACHINE), x86_64)
+        LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
+    endif
+endif
+TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
+VERSION=0.4
+INST_PFX=/usr
+INST_LIBDIR=$(INST_PFX)/lib
+INST_INCLUDE=$(INST_PFX)/include/libntru
+INST_DOCDIR=$(INST_PFX)/share/doc/libntru-$(VERSION)
+INST_HEADERS=ntru.h types.h key.h encparams.h hash.h rand.h err.h
+PERL=/usr/bin/perl
+PERLASM_SCHEME=elf
+
+LIB_OBJS_PATHS=$(patsubst %,$(SRCDIR)/%,$(LIB_OBJS))
+TEST_OBJS_PATHS=$(patsubst %,$(TESTDIR)/%,$(TEST_OBJS))
+DIST_NAME=libntru-$(VERSION)
+MAKEFILENAME=$(lastword $(MAKEFILE_LIST))
+
+.PHONY: all lib install uninstall dist test clean distclean
+
+all: lib
+
+lib: libntru.so
+
+static-lib: libntru.a
+
+libntru.so: $(LIB_OBJS_PATHS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -Wl,-soname,libntru.so -o libntru.so $(LIB_OBJS_PATHS) $(LDFLAGS) $(LIBS)
+
+libntru.a: $(LIB_OBJS_PATHS)
+	$(AR) cru libntru.a $(LIB_OBJS_PATHS)
+
+install: install-lib install-doc install-headers
+
+install-lib: lib
+	test -d "$(DESTDIR)$(INST_LIBDIR)" || mkdir -p "$(DESTDIR)$(INST_LIBDIR)"
+	install -m 0755 libntru.so "$(DESTDIR)$(INST_LIBDIR)/libntru.so"
+
+install-static-lib: static-lib
+	test -d "$(DESTDIR)$(INST_LIBDIR)" || mkdir -p "$(DESTDIR)$(INST_LIBDIR)"
+	install -m 0755 libntru.a "$(DESTDIR)$(INST_LIBDIR)/libntru.a"
+
+install-doc:
+	test -d "$(DESTDIR)$(INST_DOCDIR)" || mkdir -p "$(DESTDIR)$(INST_DOCDIR)"
+	install -m 0644 README.md "$(DESTDIR)$(INST_DOCDIR)/README.md"
+
+install-headers:
+	test -d "$(DESTDIR)$(INST_INCLUDE)" || mkdir -p "$(DESTDIR)$(INST_INCLUDE)"
+	for header in $(INST_HEADERS) ; do \
+		install -m 0644 "$(SRCDIR)/$$header" "$(DESTDIR)$(INST_INCLUDE)/" ; \
+	done
+
+uninstall: uninstall-lib uninstall-doc uninstall-headers
+
+uninstall-lib:
+	rm -f "$(DESTDIR)$(INST_LIBDIR)/libntru.so"
+
+uninstall-static-lib:
+	rm -f "$(DESTDIR)$(INST_LIBDIR)/libntru.a"
+
+uninstall-doc:
+	rm -f "$(DESTDIR)$(INST_DOCDIR)/README.md"
+	rmdir "$(DESTDIR)$(INST_DOCDIR)/"
+
+uninstall-headers:
+	for header in $(INST_HEADERS) ; do \
+		rm "$(DESTDIR)$(INST_INCLUDE)/$$header" ; \
+	done
+	rmdir "$(DESTDIR)$(INST_INCLUDE)/"
+
+dist:
+	rm -rf $(DIST_NAME)
+	mkdir $(DIST_NAME)
+	mkdir $(DIST_NAME)/$(SRCDIR)
+	mkdir $(DIST_NAME)/$(TESTDIR)
+	cp Makefile Makefile.win Makefile.osx README.md LICENSE PATENTS $(DIST_NAME)
+	cp $(SRCDIR)/*.c $(DIST_NAME)/$(SRCDIR)
+	cp $(SRCDIR)/*.h $(DIST_NAME)/$(SRCDIR)
+	cp $(TESTDIR)/*.c $(DIST_NAME)/$(TESTDIR)
+	cp $(TESTDIR)/*.h $(DIST_NAME)/$(TESTDIR)
+	tar cf $(DIST_NAME).tar.xz $(DIST_NAME) --lzma
+	rm -rf $(DIST_NAME)
+
+test:
+	$(MAKE) -f $(MAKEFILENAME) testnoham
+	@echo
+	@echo Testing patent-reduced build
+	LD_LIBRARY_PATH=. ./testnoham
+	$(MAKE) -f $(MAKEFILENAME) testham
+	@echo
+	@echo Testing full build
+	LD_LIBRARY_PATH=. ./testham
+
+testham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testham $(TEST_OBJS_PATHS) -L. -lntru -lm
+
+testnoham: CFLAGS += -DNTRU_AVOID_HAMMING_WT_PATENT
+testnoham: clean lib $(TEST_OBJS_PATHS)
+	@echo CFLAGS=$(CFLAGS)
+	$(CC) $(CFLAGS) -o testnoham $(TEST_OBJS_PATHS) -L. -lntru -lm
+
+bench: static-lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c $(LDFLAGS) $(LIBS) -L. -lntru
+
+hybrid: static-lib
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hybrid $(SRCDIR)/hybrid.c $(LDFLAGS) $(LIBS) -L. -lntru -lcrypto
+
+$(SRCDIR)/%.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
+
+$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha1-mb-x86_64.o: $(SRCDIR)/sha1-mb-x86_64.s
+	$(AS) $(SRCDIR)/sha1-mb-x86_64.s -o $@
+$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha256-mb-x86_64.o: $(SRCDIR)/sha256-mb-x86_64.s
+	$(AS) $(SRCDIR)/sha256-mb-x86_64.s -o $@
+
+tests/%.o: tests/%.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -I$(SRCDIR) -c $< -o $@
+
+clean:
+	@# also clean files generated on other OSes
+	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.s $(TESTDIR)/*.o libntru.so libntru.a libntru.dylib libntru.dll testham testnoham testham.exe testnoham.exe bench bench.exe hybrid hybrid.exe
+
+distclean: clean
+	rm -rf $(DIST_NAME)
+	rm -f $(DIST_NAME).tar.xz $(DIST_NAME).zip
