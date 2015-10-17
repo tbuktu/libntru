@@ -18,6 +18,7 @@ page at https://tbuktu.github.com/ntru/.
 ## Compiling
 
 Run ```make``` to build the library, or ```make test``` to run unit tests. ```make bench``` builds a benchmark program.
+On *BSD, use ```gmake``` instead of ```make```.
 
 The ```SSE``` environment variable enables SSSE3 support (```SSE=yes```)
 or disables it (```SSE=no```).
@@ -79,7 +80,7 @@ For encryption of messages longer than `ntru_max_msg_len(...)`, see `src/hybrid.
 (requires OpenSSL lib+headers, use `make hybrid` to build).
 
 ## Supported Platforms
-  libntru has been tested on Linux, FreeBSD (using gmake), Mac OS X and Windows (MingW).
+  libntru has been tested on Linux, FreeBSD, OpenBSD, Mac OS X, and Windows (MingW).
 
 ## Further reading
 

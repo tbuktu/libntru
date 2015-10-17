@@ -29,7 +29,9 @@ OPTFLAGS=-O2
 bench: OPTFLAGS=-O3 $(BENCH_ARCH_OPTION)
 CFLAGS+=$(OPTFLAGS)
 
-LIBS+=-lrt
+ifneq ($(shell uname), OpenBSD)
+    LIBS+=-lrt
+endif
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o
