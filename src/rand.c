@@ -19,6 +19,7 @@ const NtruEncParams NTRU_IGF2_RAND_PARAMS = {\
     0,             /* df */\
     0,\
     0,\
+    0,             /* dg */\
     0,             /* dm0 */\
     0,             /* db */\
     11,            /* c */\

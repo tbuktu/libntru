@@ -9,6 +9,7 @@ const NtruEncParams EES401EP1 = {\
     113,           /* df */\
     0,\
     0,\
+    133,           /* dg */\
     113,           /* dm0 */\
     112,           /* db */\
     11,            /* c */\
@@ -30,6 +31,7 @@ const NtruEncParams EES449EP1 = {\
     134,           /* df */\
     0,\
     0,\
+    149,           /* dg */\
     134,           /* dm0 */\
     128,           /* db */\
     9,             /* c */\
@@ -51,6 +53,7 @@ const NtruEncParams EES677EP1 = {\
     157,           /* df */\
     0,\
     0,\
+    225,           /* dg */\
     157,           /* dm0 */\
     192,           /* db */\
     11,            /* c */\
@@ -72,6 +75,7 @@ const NtruEncParams EES1087EP2 = {\
     120,           /* df */\
     0,\
     0,\
+    362,           /* dg */\
     120,           /* dm0 */\
     256,           /* db */\
     13,            /* c */\
@@ -93,6 +97,7 @@ const NtruEncParams EES541EP1 = {\
     49,            /* df */\
     0,\
     0,\
+    180,           /* dg */\
     49,            /* dm0 */\
     112,           /* db */\
     12,            /* c */\
@@ -114,6 +119,7 @@ const NtruEncParams EES613EP1 = {\
     55,            /* df */\
     0,\
     0,\
+    204,           /* dg */\
     55,            /* dm0 */\
     128,           /* db */\
     11,            /* c */\
@@ -135,6 +141,7 @@ const NtruEncParams EES887EP1 = {\
     81,            /* df */\
     0,\
     0,\
+    295,           /* dg */\
     81,            /* dm0 */\
     192,           /* db */\
     10,            /* c */\
@@ -156,6 +163,7 @@ const NtruEncParams EES1171EP1 = {\
     106,           /* df */\
     0,\
     0,\
+    390,           /* dg */\
     106,           /* dm0 */\
     256,           /* db */\
     12,            /* c */\
@@ -177,6 +185,7 @@ const NtruEncParams EES659EP1 = {\
     38,            /* df */\
     0,\
     0,\
+    219,           /* dg */\
     38,            /* dm0 */\
     112,           /* db */\
     11,            /* c */\
@@ -198,6 +207,7 @@ const NtruEncParams EES761EP1 = {\
     42,            /* df */\
     0,\
     0,\
+    253,           /* dg */\
     42,            /* dm0 */\
     128,           /* db */\
     12,            /* c */\
@@ -219,6 +229,7 @@ const NtruEncParams EES1087EP1 = {\
     63,            /* df */\
     0,\
     0,\
+    362,           /* dg */\
     63,            /* dm0 */\
     192,           /* db */\
     13,            /* c */\
@@ -240,6 +251,7 @@ const NtruEncParams EES1499EP1 = {\
     79,            /* df */\
     0,\
     0,\
+    499,           /* dg */\
     79,            /* dm0 */\
     256,           /* db */\
     13,            /* c */\
@@ -263,6 +275,7 @@ const NtruEncParams EES401EP2 = {\
     8,             /* df1 */\
     8,             /* df2 */\
     6,             /* df3 */\
+    133,           /* dg */\
     101,           /* dm0 */\
     112,           /* db */\
     11,            /* c */\
@@ -284,6 +297,7 @@ const NtruEncParams EES439EP1 = {\
     9,             /* df1 */\
     8,             /* df2 */\
     5,             /* df3 */\
+    146,           /* dg */\
     112,           /* dm0 */\
     128,           /* db */\
     9,             /* c */\
@@ -297,6 +311,28 @@ const NtruEncParams EES439EP1 = {\
     128            /* pklen */\
 };
 
+const NtruEncParams EES443EP1 = {\
+    "EES443EP1",   /* name */\
+    443,           /* N */\
+    2048,          /* q */\
+    1,             /* prod_flag */\
+    9,             /* df1 */\
+    8,             /* df2 */\
+    5,             /* df3 */\
+    148,           /* dg */\
+    115,           /* dm0 */\
+    128,           /* db */\
+    9,             /* c */\
+    8,             /* min_calls_r */\
+    5,             /* min_calls_mask */\
+    1,             /* hash_seed */\
+    {0, 3, 17},    /* oid */\
+    ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
+    32,            /* hlen */\
+    128            /* pklen */\
+};
+
 const NtruEncParams EES593EP1 = {\
     "EES593EP1",   /* name */\
     593,           /* N */\
@@ -305,6 +341,7 @@ const NtruEncParams EES593EP1 = {\
     10,            /* df1 */\
     10,            /* df2 */\
     8,             /* df3 */\
+    197,           /* dg */\
     158,           /* dm0 */\
     192,           /* db */\
     11,            /* c */\
@@ -312,6 +349,28 @@ const NtruEncParams EES593EP1 = {\
     5,             /* min_calls_mask */\
     1,             /* hash_seed */\
     {0, 5, 16},    /* oid */\
+    ntru_sha256,   /* hash */\
+    ntru_sha256_4way, /* hash_4way */\
+    32,            /* hlen */\
+    192            /* pklen */\
+};
+
+const NtruEncParams EES587EP1 = {\
+    "EES587EP1",   /* name */\
+    587,           /* N */\
+    2048,          /* q */\
+    1,             /* prod_flag */\
+    10,            /* df1 */\
+    10,            /* df2 */\
+    8,             /* df3 */\
+    196,           /* dg */\
+    157,           /* dm0 */\
+    192,           /* db */\
+    11,            /* c */\
+    13,            /* min_calls_r */\
+    7,             /* min_calls_mask */\
+    1,             /* hash_seed */\
+    {0, 5, 17},    /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
     32,            /* hlen */\
@@ -326,6 +385,7 @@ const NtruEncParams EES743EP1 = {\
     11,            /* df1 */\
     11,            /* df2 */\
     15,            /* df3 */\
+    247,           /* dg */\
     204,           /* dm0 */\
     256,           /* db */\
     13,            /* c */\

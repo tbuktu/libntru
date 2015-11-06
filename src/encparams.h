@@ -43,6 +43,11 @@ typedef struct NtruEncParams {
     uint16_t df3;
 
     /*
+     * number of ones in the polynomial g (used during key generation)
+     */
+    uint16_t dg;
+
+    /*
      * minimum acceptable number of -1's, 0's, and 1's in the polynomial m'
      * in the last encryption step
      */
@@ -158,13 +163,25 @@ extern const NtruEncParams EES401EP2;
 
 /*
  * A product-form parameter set that gives 128 bits of security.
+ * DEPRECATED -- use EES443EP1 instead.
  */
 extern const NtruEncParams EES439EP1;
 
 /*
+ * A product-form parameter set that gives 128 bits of security.
+ */
+extern const NtruEncParams EES443EP1;
+
+/*
  * A product-form parameter set that gives 192 bits of security.
+ * DEPRECATED -- use EES587EP1 instead.
  */
 extern const NtruEncParams EES593EP1;
+
+/*
+ * A product-form parameter set that gives 192 bits of security.
+ */
+extern const NtruEncParams EES587EP1;
 
 /*
  * A product-form parameter set that gives 256 bits of security.
@@ -173,7 +190,7 @@ extern const NtruEncParams EES743EP1;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
-#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1, EES401EP2, EES439EP1, EES593EP1, EES743EP1}
+#define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1, EES401EP2, EES439EP1, EES443EP1, EES593EP1, EES587EP1, EES743EP1}
 #else
 #define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1}
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
