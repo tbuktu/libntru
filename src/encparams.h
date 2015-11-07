@@ -190,9 +190,53 @@ extern const NtruEncParams EES743EP1;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
+
+/*
+ * The default parameter set for 112 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_112_BITS EES401EP2
+
+/*
+ * The default parameter set for 128 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_128_BITS EES443EP1
+
+/*
+ * The default parameter set for 192 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_192_BITS EES587EP1
+
+/*
+ * The default parameter set for 256 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_256_BITS EES743EP1
+
 #define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1, EES401EP2, EES439EP1, EES443EP1, EES593EP1, EES587EP1, EES743EP1}
+
 #else
+
+/*
+ * The default parameter set for 112 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_112_BITS EES401EP1
+
+/*
+ * The default parameter set for 128 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_128_BITS EES449EP1
+
+/*
+ * The default parameter set for 192 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_192_BITS EES677EP1
+
+/*
+ * The default parameter set for 256 bits of security.
+ */
+#define NTRU_DEFAULT_PARAMS_256_BITS EES1087EP2
+
 #define ALL_PARAM_SETS {EES401EP1, EES449EP1, EES677EP1, EES1087EP2, EES541EP1, EES613EP1, EES887EP1, EES1171EP1, EES659EP1, EES761EP1, EES1087EP1, EES1499EP1}
+
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
 /**

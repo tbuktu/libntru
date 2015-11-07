@@ -94,19 +94,19 @@ int main(int arc, char **argv) {
     NtruRandContext rand_ctx;
     if (ntru_rand_init(&rand_ctx, &rng) != NTRU_SUCCESS)
         printf("rng fail\n");
-    if (ntru_gen_key_pair(&EES449EP1, &kp, &rand_ctx) != NTRU_SUCCESS)
+    if (ntru_gen_key_pair(&NTRU_DEFAULT_PARAMS_128_BITS, &kp, &rand_ctx) != NTRU_SUCCESS)
         printf("keygen fail\n");
 
     /* encrypt */
-    uint8_t enc[ntru_enc_len(&EES449EP1)+strlen(plain_char)+16];
+    uint8_t enc[ntru_enc_len(&NTRU_DEFAULT_PARAMS_128_BITS)+strlen(plain_char)+16];
     int enc_len;
-    if (ntru_encrypt_hybrid(plain, strlen(plain_char), &kp.pub, &EES449EP1, &rand_ctx, enc, &enc_len) != NTRU_SUCCESS)
+    if (ntru_encrypt_hybrid(plain, strlen(plain_char), &kp.pub, &NTRU_DEFAULT_PARAMS_128_BITS, &rand_ctx, enc, &enc_len) != NTRU_SUCCESS)
         printf("encrypt fail\n");
 
     /* decrypt */
-    uint8_t dec[enc_len-ntru_enc_len(&EES449EP1)];
+    uint8_t dec[enc_len-ntru_enc_len(&NTRU_DEFAULT_PARAMS_128_BITS)];
     int dec_len;
-    if (ntru_decrypt_hybrid((uint8_t*)&enc, enc_len, &kp, &EES449EP1, (uint8_t*)&dec, &dec_len) != NTRU_SUCCESS)
+    if (ntru_decrypt_hybrid((uint8_t*)&enc, enc_len, &kp, &NTRU_DEFAULT_PARAMS_128_BITS, (uint8_t*)&dec, &dec_len) != NTRU_SUCCESS)
         printf("decrypt fail\n");
     dec[dec_len] = 0;   /* string terminator */
     ntru_rand_release(&rand_ctx);

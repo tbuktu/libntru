@@ -30,7 +30,7 @@ Windows default is no SSSE3.
     #include "ntru.h"
 
     /* key generation */
-    struct NtruEncParams params = EES449EP1; /*see encparams.h for more*/
+    struct NtruEncParams params = NTRU_DEFAULT_PARAMS_128_BITS; /*see encparams.h for more*/
     NtruRandGen rng_def = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx_def;
     if (ntru_rand_init(&rand_ctx_def, &rng_def) != NTRU_SUCCESS)
