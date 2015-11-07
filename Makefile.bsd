@@ -4,9 +4,9 @@ AR?=ar
 
 CFLAGS?=-g
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
-SSSE3_FLAG = $(shell /sbin/sysctl hw | /usr/bin/grep -m 1 -o ssse3)
+SSSE3_FLAG = $(shell /usr/bin/grep -o SSSE3 /var/run/dmesg.boot | /usr/bin/head -1)
 ifneq ($(SSE), no)
-    ifeq ($(SSSE3_FLAG), ssse3)
+    ifeq ($(SSSE3_FLAG), SSSE3)
         SSE=yes
     endif
 endif
@@ -21,7 +21,7 @@ ifeq ($(SSE), yes)
     ifeq ($(MACHINE), i386)
         BENCH_ARCH_OPTION=-march=native
     endif
-    ifeq ($(MACHINE), x86_64)
+    ifeq ($(MACHINE), amd64)
         BENCH_ARCH_OPTION=-march=native
     endif
 endif
@@ -36,7 +36,7 @@ SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o
 ifeq ($(SSE), yes)
-    ifeq ($(MACHINE), x86_64)
+    ifeq ($(MACHINE), amd64)
         LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
     endif
 endif

@@ -22,7 +22,7 @@ On *BSD, use ```gmake``` instead of ```make```.
 
 The ```SSE``` environment variable enables SSSE3 support (```SSE=yes```)
 or disables it (```SSE=no```).
-Default on Linux and MacOS is to autodetect SSSE3 on the build host,
+Default on Linux, BSD, and MacOS is to autodetect SSSE3 on the build host,
 Windows default is no SSSE3.
 
 ## Usage
