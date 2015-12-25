@@ -94,11 +94,31 @@ uint8_t test_keygen() {
 
 /* tests ntru_encrypt() with a non-deterministic RNG */
 uint8_t test_encr_decr_nondet(NtruEncParams *params) {
-    NtruEncKeyPair kp;
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
     uint8_t valid = ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
+
+    /* create a regular key pair (one private, one public) */
+    NtruEncKeyPair kp;
     valid &= ntru_gen_key_pair(params, &kp, &rand_ctx) == NTRU_SUCCESS;
+
+    /* randomly choose the number of public keys for testing ntru_gen_key_pair_multi and ntru_gen_pub */
+    uint32_t num_pub_keys;
+    valid &= ntru_rand_generate((uint8_t*)&num_pub_keys, sizeof(num_pub_keys), &rand_ctx) == NTRU_SUCCESS;
+    num_pub_keys %= 10;
+    num_pub_keys++;   /* 1 <= num_pub_keys <= 10 */
+
+    /* create a key pair with multiple public keys (using ntru_gen_key_pair_multi) */
+    NtruEncPrivKey priv_multi1;
+    NtruEncPubKey pub_multi1[num_pub_keys];
+    valid &= ntru_gen_key_pair_multi(params, &priv_multi1, pub_multi1, &rand_ctx, num_pub_keys) == NTRU_SUCCESS;
+    /* create a key pair with multiple public keys (using ntru_gen_pub) */
+    NtruEncKeyPair kp_multi2;
+    NtruEncPubKey pub_multi2[num_pub_keys-1];
+    valid &= ntru_gen_key_pair(params, &kp_multi2, &rand_ctx) == NTRU_SUCCESS;
+    uint16_t i;
+    for (i=0; i<num_pub_keys-1; i++)
+      valid &= ntru_gen_pub(params, &kp_multi2.priv, &pub_multi2[i], &rand_ctx) == NTRU_SUCCESS;
 
     uint16_t max_len = ntru_max_msg_len(params);
     uint8_t plain[max_len];
@@ -108,10 +128,34 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
     uint8_t decrypted[max_len];
     uint16_t plain_len;
     for (plain_len=0; plain_len<=max_len; plain_len++) {
+        /* test single public key */
         valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &kp.pub, params, &rand_ctx, (uint8_t*)&encrypted) == NTRU_SUCCESS;
         uint16_t dec_len;
         valid &= ntru_decrypt((uint8_t*)&encrypted, &kp, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
         valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
+
+        /* test multiple public keys */
+        uint8_t i;
+        for (i=0; i<num_pub_keys; i++) {
+            uint8_t rand_value;
+            valid &= ntru_rand_generate(&rand_value, 1, &rand_ctx) == NTRU_SUCCESS;
+            if (rand_value%100 != 0)   /* only test 1 out of 100 */
+                continue;
+
+            /* test priv_multi1/pub_multi1  */
+            valid &= ntru_encrypt((uint8_t*)&plain, plain_len, &pub_multi1[i], params, &rand_ctx, (uint8_t*)&encrypted) == NTRU_SUCCESS;
+            NtruEncKeyPair kp_decrypt1 = {priv_multi1, pub_multi1[i]};
+            uint16_t dec_len;
+            valid &= ntru_decrypt((uint8_t*)&encrypted, &kp_decrypt1, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
+            valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
+
+            /* test kp_multi2 + pub_multi2 */
+            NtruEncPubKey *pub = i==0 ? &kp_multi2.pub : &pub_multi2[i-1];
+            valid &= ntru_encrypt((uint8_t*)&plain, plain_len, pub, params, &rand_ctx, (uint8_t*)&encrypted) == NTRU_SUCCESS;
+            NtruEncKeyPair kp_decrypt2 = {kp_multi2.priv, *pub};
+            valid &= ntru_decrypt((uint8_t*)&encrypted, &kp_decrypt2, params, (uint8_t*)&decrypted, &dec_len) == NTRU_SUCCESS;
+            valid &= equals_arr((uint8_t*)&plain, (uint8_t*)&decrypted, plain_len);
+        }
     }
 
     valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;

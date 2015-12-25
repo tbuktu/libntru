@@ -13,7 +13,38 @@
 const int8_t NTRU_COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
 const int8_t NTRU_COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
 
-uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx) {
+/* Generates a random g. If NTRU_CHECK_INVERTIBILITY_G, g will be invertible mod q */
+uint8_t ntru_gen_g(const NtruEncParams *params, NtruPrivPoly *g, NtruRandContext *rand_ctx) {
+    uint16_t N = params->N;
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+    uint16_t df1 = params->df1;
+    uint16_t df2 = params->df2;
+    uint16_t df3 = params->df3;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    uint16_t dg = N / 3;
+    for (;;) {
+#ifndef NTRU_AVOID_HAMMING_WT_PATENT
+        if (params->prod_flag && !ntru_rand_prod(N, df1, df2, df3, df3, &g->poly.prod, rand_ctx))
+            return NTRU_ERR_PRNG;
+        if (!params->prod_flag && !ntru_rand_tern(N, dg, dg, &g->poly.tern, rand_ctx))
+            return NTRU_ERR_PRNG;
+        g->prod_flag = params->prod_flag;
+#else
+        if (!ntru_rand_tern(N, dg, dg, &g->poly.tern, rand_ctx))
+            return NTRU_ERR_PRNG;
+        g->prod_flag = 0;
+#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+
+        if (!NTRU_CHECK_INVERTIBILITY_G)
+            break;
+        NtruIntPoly gq;
+        if (ntru_invert(g, params->q-1, &gq))
+            break;
+    }
+    return NTRU_SUCCESS;
+}
+
+uint8_t ntru_gen_key_pair_single(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncPubKey *pub, NtruIntPoly *fq, NtruRandContext *rand_ctx) {
     uint16_t N = params->N;
     uint16_t q = params->q;
     uint16_t df1 = params->df1;
@@ -25,72 +56,101 @@ uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruR
     if (q & (q-1))   /* check that modulus is a power of 2 */
         return NTRU_ERR_INVALID_PARAM;
 
-    NtruIntPoly fq;
-
     /* choose a random f that is invertible mod q */
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT
     if (params->prod_flag) {
-        NtruPrivPoly *t = &kp->priv.t;
+        NtruPrivPoly *t = &priv->t;
         t->prod_flag = 1;
         t->poly.prod.N = N;
-        kp->priv.q = q;
+        priv->q = q;
         for (;;) {
             /* choose random t, find the inverse of 3t+1 */
             if (!ntru_rand_prod(N, df1, df2, df3, df3, &t->poly.prod, rand_ctx))
                 return NTRU_ERR_PRNG;
-            if (ntru_invert(t, q-1, &fq))
+            if (ntru_invert(t, q-1, fq))
                 break;
         }
     }
     else
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     {
-        NtruPrivPoly *t = &kp->priv.t;
+        NtruPrivPoly *t = &priv->t;
         t->prod_flag = 0;
-        kp->priv.q = q;
+        priv->q = q;
         for (;;) {
             /* choose random t, find the inverse of 3t+1 */
             if (!ntru_rand_tern(N, df1, df1, &t->poly.tern, rand_ctx))
                 return NTRU_ERR_PRNG;
-            if (ntru_invert(t, q-1, &fq))
+            if (ntru_invert(t, q-1, fq))
                 break;
         }
     }
 
-    /* choose a random g that is invertible mod q */
+    /* choose a random g */
     NtruPrivPoly g;
-    uint16_t dg = N / 3;
-    for (;;) {
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-        if (params->prod_flag && !ntru_rand_prod(N, df1, df2, df3, df3, &g.poly.prod, rand_ctx))
-            return NTRU_ERR_PRNG;
-        if (!params->prod_flag && !ntru_rand_tern(N, dg, dg, &g.poly.tern, rand_ctx))
-            return NTRU_ERR_PRNG;
-        g.prod_flag = params->prod_flag;
-#else
-        if (!ntru_rand_tern(N, dg, dg, &g.poly.tern, rand_ctx))
-            return NTRU_ERR_PRNG;
-        g.prod_flag = 0;
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
+    uint8_t result = ntru_gen_g(params, &g, rand_ctx);
+    if (result != NTRU_SUCCESS)
+        return result;
 
-        if (!NTRU_CHECK_INVERTIBILITY_G)
-            break;
-        NtruIntPoly gq;
-        if (ntru_invert(&g, q-1, &gq))
-            break;
-    }
-
-    NtruIntPoly *h = &kp->pub.h;
-    if (!ntru_mult_priv(&g, &fq, h, q-1))
+    NtruIntPoly *h = &pub->h;
+    if (!ntru_mult_priv(&g, fq, h, q-1))
         return NTRU_ERR_PRNG;
     ntru_mult_fac(h, 3);
     ntru_mod_mask(h, q-1);
 
     ntru_clear_priv(&g);
+
+    pub->q = q;
+
+    return NTRU_SUCCESS;
+}
+
+uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx) {
+    NtruIntPoly fq;
+    uint8_t result = ntru_gen_key_pair_single(params, &kp->priv, &kp->pub, &fq, rand_ctx);
     ntru_clear_int(&fq);
+    return result;
+}
 
-    kp->pub.q = q;
+uint8_t ntru_gen_key_pair_multi(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncPubKey *pub, NtruRandContext *rand_ctx, uint32_t num_pub) {
+    uint16_t q = params->q;
+    NtruIntPoly fq;
+    uint8_t result = ntru_gen_key_pair_single(params, priv, pub, &fq, rand_ctx);
+    if (result != NTRU_SUCCESS)
+        return result;
+    uint32_t i;
+    for (i=1; i<num_pub; i++) {
+        NtruIntPoly *h = &pub[i].h;
+        NtruPrivPoly g;
+        result = ntru_gen_g(params, &g, rand_ctx);
+        if (result != NTRU_SUCCESS)
+            return result;
+        if (!ntru_mult_priv(&g, &fq, h, q-1))
+            return NTRU_ERR_PRNG;
+        ntru_mult_fac(h, 3);
+        ntru_mod_mask(h, q-1);
+        pub[i].q = q;
+    }
+    ntru_clear_int(&fq);
+    return result;
+}
 
+uint8_t ntru_gen_pub(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncPubKey *pub, NtruRandContext *rand_ctx) {
+    uint16_t q = params->q;
+    NtruIntPoly fq;
+    if (!ntru_invert(&priv->t, q-1, &fq))
+        return NTRU_ERR_INVALID_KEY;
+    NtruIntPoly *h = &pub->h;
+    NtruPrivPoly g;
+    uint8_t result = ntru_gen_g(params, &g, rand_ctx);
+    if (result != NTRU_SUCCESS)
+        return result;
+    if (!ntru_mult_priv(&g, &fq, h, q-1))
+        return NTRU_ERR_PRNG;
+    ntru_clear_int(&fq);
+    ntru_mult_fac(h, 3);
+    ntru_mod_mask(h, q-1);
+    pub->q = q;
     return NTRU_SUCCESS;
 }
 

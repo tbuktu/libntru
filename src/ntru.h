@@ -26,6 +26,47 @@ extern "C" {
 uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx);
 
 /**
+ * @brief Key generation with multiple public keys
+ *
+ * Generates num_pub NtruEncrypt key pairs. They all share a private key but their public keys
+ * differ. The private key decrypts messages encrypted for any of the public keys.
+ * Note that when decrypting, the public key of the key pair passed into ntru_decrypt() must
+ * match the public key used for encrypting the message.
+ * If a deterministic RNG is used, the key pair will be deterministic for a given random seed;
+ * otherwise, the key pair will be completely random.
+ *
+ * @param params the NtruEncrypt parameters to use
+ * @param priv the private key (output parameter)
+ * @param pub an array of length num_pub or more (output parameter)
+ * @param rand_ctx an initialized random number generator. See ntru_rand_init() in rand.h.
+ * @param num_pub the number of public keys to generate
+ * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
+ */
+uint8_t ntru_gen_key_pair_multi(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncPubKey *pub, NtruRandContext *rand_ctx, uint32_t num_pub);
+
+/**
+ * @brief New public key
+ *
+ * Generates a new public key for an existing private key. The new public key can be used
+ * interchangeably with the existing public key(s).
+ * Generating n keys via ntru_gen_key_pair_multi() is more efficient than generating one
+ * and then calling ntru_gen_pub() n-1 times, so if the number of public keys needed is
+ * known beforehand and if speed matters, ntru_gen_key_pair_multi() should be used.
+ * Note that when decrypting, the public key of the key pair passed into ntru_decrypt() must
+ * match the public key used for encrypting the message.
+ * If a deterministic RNG is used, the key will be deterministic for a given random seed;
+ * otherwise, the key will be completely random.
+ *
+ * @param params the NtruEncrypt parameters to use
+ * @param priv a private key
+ * @param pub the new public key (output parameter)
+ * @param rand_ctx an initialized random number generator. See ntru_rand_init() in rand.h.
+ * @param num_pub the number of public keys to generate
+ * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
+ */
+uint8_t ntru_gen_pub(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncPubKey *pub, NtruRandContext *rand_ctx);
+
+/**
  * @brief Encryption
  *
  * Encrypts a message.
