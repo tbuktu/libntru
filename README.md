@@ -1,6 +1,6 @@
 # C implementation of NTRUEncrypt
 
-An implementation of the public-key encryption scheme NTRUEncrypt in C.
+An implementation of the public-key encryption scheme NTRUEncrypt in C, following the IEEE P1363.1 standard.
 
 NTRU's main strengths are high performance and resistance to quantum computer
 attacks. Its main drawback is that it is patent encumbered. The patents expire
@@ -56,17 +56,22 @@ Windows default is no SSSE3.
     if (ntru_encrypt(msg, strlen(msg), &kp.pub, &params, &rand_ctx_def, enc) != NTRU_SUCCESS)
         printf("encrypt fail\n");
 
-    /* release RNG resources */
-    if (ntru_rand_release(&rand_ctx_def) != NTRU_SUCCESS)
-        printf("rng fail\n");
-    if (ntru_rand_release(&rand_ctx_igf2) != NTRU_SUCCESS)
-        printf("rng fail\n");
-
     /* decryption */
     uint8_t dec[ntru_max_msg_len(&params)];
     uint16_t dec_len;
     if (ntru_decrypt((uint8_t*)&enc, &kp, &params, (uint8_t*)&dec, &dec_len) != NTRU_SUCCESS)
         printf("decrypt fail\n");
+
+    /* generate another public key for the existing private key */
+    NtruEncPubKey pub2;
+    if (ntru_gen_pub(&params, &kp.priv, &pub2, &rand_ctx_def) != NTRU_SUCCESS)
+        printf("pub key generation fail\n");
+
+    /* release RNG resources */
+    if (ntru_rand_release(&rand_ctx_def) != NTRU_SUCCESS)
+        printf("rng fail\n");
+    if (ntru_rand_release(&rand_ctx_igf2) != NTRU_SUCCESS)
+        printf("rng fail\n");
 
     /* export key to uint8_t array */
     uint8_t pub_arr[ntru_pub_len(&params)];
