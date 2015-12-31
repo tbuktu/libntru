@@ -16,24 +16,11 @@ const int8_t NTRU_COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
 /* Generates a random g. If NTRU_CHECK_INVERTIBILITY_G, g will be invertible mod q */
 uint8_t ntru_gen_g(const NtruEncParams *params, NtruPrivPoly *g, NtruRandContext *rand_ctx) {
     uint16_t N = params->N;
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-    uint16_t df1 = params->df1;
-    uint16_t df2 = params->df2;
-    uint16_t df3 = params->df3;
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
-    uint16_t dg = N / 3;
+    uint16_t dg = params->dg;
     for (;;) {
-#ifndef NTRU_AVOID_HAMMING_WT_PATENT
-        if (params->prod_flag && !ntru_rand_prod(N, df1, df2, df3, df3, &g->poly.prod, rand_ctx))
-            return NTRU_ERR_PRNG;
-        if (!params->prod_flag && !ntru_rand_tern(N, dg, dg, &g->poly.tern, rand_ctx))
-            return NTRU_ERR_PRNG;
-        g->prod_flag = params->prod_flag;
-#else
         if (!ntru_rand_tern(N, dg, dg, &g->poly.tern, rand_ctx))
             return NTRU_ERR_PRNG;
         g->prod_flag = 0;
-#endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
         if (!NTRU_CHECK_INVERTIBILITY_G)
             break;
