@@ -81,7 +81,7 @@ uint8_t ntru_gen_key_pair_single(const NtruEncParams *params, NtruEncPrivKey *pr
 
     NtruIntPoly *h = &pub->h;
     if (!ntru_mult_priv(&g, fq, h, q-1))
-        return NTRU_ERR_PRNG;
+        return NTRU_ERR_INVALID_PARAM;
     ntru_mult_fac(h, 3);
     ntru_mod_mask(h, q-1);
 
@@ -113,7 +113,7 @@ uint8_t ntru_gen_key_pair_multi(const NtruEncParams *params, NtruEncPrivKey *pri
         if (result != NTRU_SUCCESS)
             return result;
         if (!ntru_mult_priv(&g, &fq, h, q-1))
-            return NTRU_ERR_PRNG;
+            return NTRU_ERR_INVALID_PARAM;
         ntru_mult_fac(h, 3);
         ntru_mod_mask(h, q-1);
         pub[i].q = q;
@@ -133,7 +133,7 @@ uint8_t ntru_gen_pub(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncP
     if (result != NTRU_SUCCESS)
         return result;
     if (!ntru_mult_priv(&g, &fq, h, q-1))
-        return NTRU_ERR_PRNG;
+        return NTRU_ERR_INVALID_PARAM;
     ntru_clear_int(&fq);
     ntru_mult_fac(h, 3);
     ntru_mod_mask(h, q-1);
@@ -408,7 +408,8 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
         NtruIntPoly R;
         NtruPrivPoly r;
         ntru_gen_blind_poly((uint8_t*)&sdata, sdata_len, params, &r);
-        ntru_mult_priv(&r, &pub->h, &R, q-1);
+        if (!ntru_mult_priv(&r, &pub->h, &R, q-1))
+            return NTRU_ERR_INVALID_PARAM;
         uint16_t oR4_len = (N*2+7) / 8;
         uint8_t oR4[oR4_len];
         ntru_to_arr4(&R, (uint8_t*)&oR4);
