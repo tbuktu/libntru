@@ -414,14 +414,14 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
         ntru_to_arr4(&R, (uint8_t*)&oR4);
         NtruIntPoly mask;
         ntru_MGF((uint8_t*)&oR4, oR4_len, params, &mask);
-        ntru_add_int(&mtrin, &mask);
+        ntru_add(&mtrin, &mask);
 
         ntru_mod3(&mtrin);
 
         if (!ntru_check_rep_weight(&mtrin, dm0))
             continue;
 
-        ntru_add_int(&R, &mtrin);
+        ntru_add(&R, &mtrin);
         ntru_to_arr(&R, q, enc);
         return NTRU_SUCCESS;
     }
@@ -430,7 +430,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
 void ntru_decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, uint16_t q, NtruIntPoly *d) {
     ntru_mult_priv(&priv->t, e, d, q-1);
     ntru_mult_fac(d, 3);
-    ntru_add_int(d, e);
+    ntru_add(d, e);
     ntru_mod_center(d, q);
     ntru_mod3(d);
 }
@@ -459,7 +459,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *para
         retcode = NTRU_ERR_DM0_VIOLATION;
 
     NtruIntPoly cR = e;
-    ntru_sub_int(&cR, &ci);
+    ntru_sub(&cR, &ci);
     ntru_mod_mask(&cR, q-1);
 
     uint16_t coR4_len = (N*2+7) / 8;
@@ -469,7 +469,7 @@ uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *para
     NtruIntPoly mask;
     ntru_MGF((uint8_t*)&coR4, coR4_len, params, &mask);
     NtruIntPoly cmtrin = ci;
-    ntru_sub_int(&cmtrin, &mask);
+    ntru_sub(&cmtrin, &mask);
     ntru_mod3(&cmtrin);
     uint16_t cM_len_bits = (N*3+1) / 2;
     uint16_t cM_len_bytes = (cM_len_bits+7) / 8;

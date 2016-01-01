@@ -108,25 +108,25 @@ uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones
 }
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
-void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b) {
+void ntru_add(NtruIntPoly *a, NtruIntPoly *b) {
     uint16_t i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] += b->coeffs[i];
 }
 
-void ntru_add_int_mod2_32(uint32_t *a, uint32_t *b, uint16_t len) {
+void ntru_add_mod2_32(uint32_t *a, uint32_t *b, uint16_t len) {
     uint16_t i;
     for (i=0; i<len; i++)
         a[i] ^= b[i];
 }
 
-void ntru_add_int_mod2_64(uint64_t *a, uint64_t *b, uint16_t len) {
+void ntru_add_mod2_64(uint64_t *a, uint64_t *b, uint16_t len) {
     uint16_t i;
     for (i=0; i<len; i++)
         a[i] ^= b[i];
 }
 
-void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b) {
+void ntru_sub(NtruIntPoly *a, NtruIntPoly *b) {
     uint16_t i;
     for (i=0; i<b->N; i++)
         a->coeffs[i] -= b->coeffs[i];
@@ -747,7 +747,7 @@ uint8_t ntru_mult_prod(NtruIntPoly *a, NtruProdPoly *b, NtruIntPoly *c, uint16_t
     ntru_mult_tern(&temp, &b->f2, c, mod_mask);
     NtruIntPoly f3a;
     ntru_mult_tern(a, &b->f3, &f3a, mod_mask);
-    ntru_add_int(c, &f3a);
+    ntru_add(c, &f3a);
 
     ntru_mod_mask(c, mod_mask);
     return 1;
@@ -1358,7 +1358,7 @@ void ntru_lift_inverse(NtruPrivPoly *a, NtruIntPoly *Fq, uint16_t q) {
         /* temp1 = (1+3a)*Fq */
         ntru_mult_priv(a, Fq, &temp1, q-1);
         ntru_mult_fac(&temp1, 3);
-        ntru_add_int(&temp1, Fq);
+        ntru_add(&temp1, Fq);
 
         ntru_neg_mod(&temp1, q);
         temp1.coeffs[0] += 2;
@@ -1460,11 +1460,11 @@ uint8_t ntru_invert_32(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq) {
             b_coeffs32 = c_coeffs32;
             c_coeffs32 = temp_coeffs;
         }
-        ntru_add_int_mod2_32(f_coeffs32, g_coeffs32, N32);
+        ntru_add_mod2_32(f_coeffs32, g_coeffs32, N32);
         /* adding f+g may have lowered the degree of f */
         while (deg_f>0 && (f_coeffs32[deg_f/32]&(((uint32_t)1)<<(deg_f%32)))==0)
             deg_f--;
-        ntru_add_int_mod2_32(b_coeffs32, c_coeffs32, N32);
+        ntru_add_mod2_32(b_coeffs32, c_coeffs32, N32);
     }
 
     if ((b_coeffs32[(N+1-1)/32]&(((uint32_t)1)<<((N+1-1)%32))) != 0)   /* if (b[N]!=0) */
@@ -1573,11 +1573,11 @@ uint8_t ntru_invert_64(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq) {
             b_coeffs64 = c_coeffs64;
             c_coeffs64 = temp_coeffs;
         }
-        ntru_add_int_mod2_64(f_coeffs64, g_coeffs64, N64);
+        ntru_add_mod2_64(f_coeffs64, g_coeffs64, N64);
         /* adding f+g may have lowered the degree of f */
         while (deg_f>0 && (f_coeffs64[deg_f/64]&(((uint64_t)1)<<(deg_f%64)))==0)
             deg_f--;
-        ntru_add_int_mod2_64(b_coeffs64, c_coeffs64, N64);
+        ntru_add_mod2_64(b_coeffs64, c_coeffs64, N64);
     }
 
     if ((b_coeffs64[(N+1-1)/64]&(((uint64_t)1)<<((N+1-1)%64))) != 0)   /* if (b[N]!=0) */

@@ -6,7 +6,7 @@
 
 void encrypt_poly(NtruIntPoly *m, NtruTernPoly *r, NtruIntPoly *h, NtruIntPoly *e, uint16_t q) {
     ntru_mult_tern(h, r, e, q);
-    ntru_add_int(e, m);
+    ntru_add(e, m);
     ntru_mod_mask(e, q-1);
 }
 
@@ -19,7 +19,7 @@ void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, NtruIntPoly *d, uint16_t
         ntru_mult_tern(e, &priv->t.poly.tern, d, modulus-1);
     ntru_mod_mask(d, modulus-1);
     ntru_mult_fac(d, 3);
-    ntru_add_int(d, e);
+    ntru_add(d, e);
     ntru_mod_center(d, modulus);
     ntru_mod3(d);
     uint16_t i;

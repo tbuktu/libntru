@@ -46,7 +46,7 @@ uint8_t ntru_rand_prod(uint16_t N, uint16_t df1, uint16_t df2, uint16_t df3_ones
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to add to the polynomial a
  */
-void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b);
+void ntru_add(NtruIntPoly *a, NtruIntPoly *b);
 
 /**
  * @brief Subtraction of two polynomials
@@ -57,7 +57,7 @@ void ntru_add_int(NtruIntPoly *a, NtruIntPoly *b);
  * @param a input and output parameter; coefficients are overwritten
  * @param b a polynomial to subtract from the polynomial a
  */
-void ntru_sub_int(NtruIntPoly *a, NtruIntPoly *b);
+void ntru_sub(NtruIntPoly *a, NtruIntPoly *b);
 
 /**
  * @brief General polynomial by ternary polynomial multiplication
