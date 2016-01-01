@@ -19,7 +19,7 @@ uint8_t test_export_import() {
         NtruRandGen rng = NTRU_RNG_DEFAULT;
         ntru_rand_init(&rand_ctx, &rng);
         ntru_gen_key_pair(&params, &kp, &rand_ctx);
-        ntru_rand_release(&rand_ctx);
+        valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
         /* test public key */
         uint8_t pub_arr[ntru_pub_len(&params)];
@@ -56,7 +56,7 @@ uint8_t test_params_from_key() {
         ntru_rand_init(&rand_ctx, &rng);
         NtruEncKeyPair kp;
         valid &= ntru_gen_key_pair(&params, &kp, &rand_ctx) == NTRU_SUCCESS;
-        ntru_rand_release(&rand_ctx);
+        valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
         NtruEncParams params2;
         valid &= ntru_params_from_priv_key(&kp.priv, &params2) == NTRU_SUCCESS;

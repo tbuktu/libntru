@@ -28,6 +28,7 @@ void decrypt_poly(NtruIntPoly *e, NtruEncPrivKey *priv, NtruIntPoly *d, uint16_t
             d->coeffs[i] = -1;
 }
 
+/** Returns 0 on error, 1 on success */
 uint8_t gen_key_pair(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
     uint16_t seed_len = strlen(seed);
     uint8_t seed_uint8[seed_len];
@@ -38,8 +39,8 @@ uint8_t gen_key_pair(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
     rand_ctx.seed = seed_uint8;
     rand_ctx.seed_len = seed_len;
     uint8_t result = 1;
-    result &= ntru_gen_key_pair(params, kp, &rand_ctx);
-    result &= ntru_rand_release(&rand_ctx);
+    result &= ntru_gen_key_pair(params, kp, &rand_ctx) == NTRU_SUCCESS;
+    result &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
     return result;
 }
 
@@ -64,7 +65,7 @@ uint8_t test_keygen() {
 
         NtruTernPoly r;
         ntru_rand_tern(params.N, params.N/3, params.N/3, &r, &rand_ctx);
-        ntru_rand_release(&rand_ctx);
+        valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
         NtruIntPoly e;
         encrypt_poly(&m_int, &r, &kp.pub.h, &e, params.q);
 
@@ -74,7 +75,7 @@ uint8_t test_keygen() {
         valid &= ntru_equals_int(&m_int, &c);
 
         /* test deterministic key generation */
-        valid &= gen_key_pair("my test password", &params, &kp) == NTRU_SUCCESS;
+        valid &= gen_key_pair("my test password", &params, &kp);
         char seed2_char[19];
         strcpy(seed2_char, "my test password");
         uint8_t seed2[strlen(seed2_char)];
@@ -84,7 +85,7 @@ uint8_t test_keygen() {
         NtruRandContext rand_ctx2;
         ntru_rand_init_det(&rand_ctx2, &rng, seed2, strlen(seed2_char));
         valid &= ntru_gen_key_pair(&params, &kp2, &rand_ctx2) == NTRU_SUCCESS;
-        ntru_rand_release(&rand_ctx2);
+        valid &= ntru_rand_release(&rand_ctx2) == NTRU_SUCCESS;
         valid &= equals_key_pair(&kp, &kp2);
     }
 
@@ -165,7 +166,7 @@ uint8_t test_encr_decr_nondet(NtruEncParams *params) {
 /* tests ntru_encrypt() with a deterministic RNG */
 uint8_t test_encr_decr_det(NtruEncParams *params, uint8_t *digest_expected) {
     NtruEncKeyPair kp;
-    uint8_t valid = gen_key_pair("seed value for key generation", params, &kp) == NTRU_SUCCESS;
+    uint8_t valid = gen_key_pair("seed value for key generation", params, &kp);
     uint8_t pub_arr[ntru_pub_len(params)];
     ntru_export_pub(&kp.pub, pub_arr);
     NtruEncPubKey pub2;
