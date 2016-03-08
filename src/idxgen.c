@@ -1,4 +1,5 @@
 #include <string.h>
+#include <endian.h>
 #include "idxgen.h"
 
 void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params, NtruIGFState *s) {
@@ -25,7 +26,8 @@ void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params
         uint8_t *hash_inp[4];
         for (j=0; j<4; j++) {
             memcpy(&hash_inp_arr[j], (uint8_t*)s->Z, s->zlen);
-            memcpy((uint8_t*)&hash_inp_arr[j] + s->zlen, &s->counter, sizeof s->counter);
+            uint16_t counter_endian = htole16(s->counter);
+            memcpy((uint8_t*)&hash_inp_arr[j] + s->zlen, &counter_endian, sizeof s->counter);
             hash_inp[j] = hash_inp_arr[j];
             s->counter++;
         }
@@ -41,7 +43,8 @@ void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params
         uint16_t inp_len = s->zlen + sizeof s->counter;
         uint8_t hash_inp[inp_len];
         memcpy(&hash_inp, (uint8_t*)s->Z, s->zlen);
-        memcpy((uint8_t*)&hash_inp + s->zlen, &s->counter, sizeof s->counter);
+        uint16_t counter_endian = htole16(s->counter);
+        memcpy((uint8_t*)&hash_inp + s->zlen, &counter_endian, sizeof s->counter);
         s->hash((uint8_t*)&hash_inp, inp_len, (uint8_t*)&H);
 
         ntru_append(&s->buf, (uint8_t*)&H, s->hlen);
@@ -65,7 +68,8 @@ void ntru_IGF_next(NtruIGFState *s, uint16_t *i) {
                 uint16_t inp_len = s->zlen + sizeof s->counter;
                 uint8_t hash_inp[inp_len];
                 memcpy(&hash_inp, (uint8_t*)s->Z, s->zlen);
-                memcpy((uint8_t*)&hash_inp + s->zlen, &s->counter, sizeof s->counter);
+                uint16_t counter_endian = htole16(s->counter);
+                memcpy((uint8_t*)&hash_inp + s->zlen, &counter_endian, sizeof s->counter);
                 s->hash((uint8_t*)&hash_inp, inp_len, (uint8_t*)&H);
 
                 ntru_append(&M, (uint8_t*)&H, s->hlen);
