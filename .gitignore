@@ -15,3 +15,5 @@ src/sha256-mb-x86_64.s
 # Executables
 *.exe
 *.out
+
+# demo
