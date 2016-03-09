@@ -1,10 +1,12 @@
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include "rand.h"
 #include "err.h"
 #include "encparams.h"
 #include "idxgen.h"
+#include "nist_ctr_drbg.h"
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -32,6 +34,8 @@ const NtruEncParams NTRU_IGF2_RAND_PARAMS = {\
     20,            /* hlen */\
     0              /* pklen */\
 };
+
+const char NTRU_PERS_STRING[] = "libntru";   /* personalization string for CTR-DRBG */
 
 uint8_t ntru_rand_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
     rand_ctx->rand_gen = rand_gen;
@@ -158,4 +162,61 @@ uint8_t ntru_rand_igf2_generate(uint8_t rand_data[], uint16_t len, NtruRandConte
 uint8_t ntru_rand_igf2_release(NtruRandContext *rand_ctx) {
     free(rand_ctx->state);
     return 1;
+}
+
+uint8_t ntru_get_entropy(uint8_t *buffer, uint16_t len) {
+#ifdef WIN32
+    /* initialize */
+    HCRYPTPROV hCryptProv;
+    uint8_t result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0);
+    if (!result) {
+        if (GetLastError() == (DWORD)NTE_BAD_KEYSET)   /* see http://support.microsoft.com/kb/238187 */
+            result = CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
+        if (!result)
+            return 0;
+    }
+
+    /* generate */
+    result &= CryptGenRandom(hCryptProv, len, buffer);
+
+    /* release */
+    result &= CryptReleaseContext(hCryptProv, 0);
+    return result;
+#else
+    /* open /dev/urandom */
+    int rand_fd = open("/dev/urandom", O_RDONLY);
+    uint8_t result = rand_fd >= 0;
+
+    /* read */
+    ssize_t bytes_read = read(rand_fd, buffer, len);
+    result &= bytes_read == len;
+
+    /* close */
+    result &= close(rand_fd) >= 0;
+    return result;
+#endif /* !WIN32 */
+}
+
+uint8_t ntru_rand_default_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
+    uint8_t result = 1;
+    result &= nist_ctr_initialize() == 0;
+    rand_ctx->state = malloc(sizeof(NIST_CTR_DRBG));
+    if (!rand_ctx->state)
+        return 0;
+    uint8_t entropy[32];
+    result &= ntru_get_entropy(entropy, 32);
+    uint16_t pers_string_size = strlen(NTRU_PERS_STRING) * sizeof(NTRU_PERS_STRING[0]);
+    result &= nist_ctr_drbg_instantiate(rand_ctx->state, entropy, 10, NULL, 0, NTRU_PERS_STRING, pers_string_size) == 0;
+    return result;
+}
+
+uint8_t ntru_rand_default_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
+    nist_ctr_drbg_generate(rand_ctx->state, rand_data, len, NULL, 0);
+    return 1;
+}
+
+uint8_t ntru_rand_default_release(NtruRandContext *rand_ctx) {
+    uint8_t result = nist_ctr_drbg_destroy(rand_ctx->state);
+    free(rand_ctx->state);
+    return result;
 }

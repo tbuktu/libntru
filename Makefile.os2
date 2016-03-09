@@ -10,7 +10,7 @@ endif
 LIBS+=-lrt
 SRCDIR=src
 TESTDIR=tests
-LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o
+LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o nist_ctr_drbg.o rijndael.o rijndael-alg-fst.o
 ifeq ($(SSE), yes)
     LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
 endif

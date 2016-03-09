@@ -33,8 +33,6 @@ uint8_t ntru_rand_release(NtruRandContext *rand_ctx);
 #ifdef WIN32
 
 #define NTRU_RNG_WINCRYPT {ntru_rand_wincrypt_init, ntru_rand_wincrypt_generate, ntru_rand_wincrypt_release}
-/** default RNG (CryptGenRandom() on Windows) */
-#define NTRU_RNG_DEFAULT NTRU_RNG_WINCRYPT
 
 /* CryptGenRandom-based RNG */
 uint8_t ntru_rand_wincrypt_init(NtruRandContext *rand_ctx, NtruRandGen *rand_gen);
@@ -45,8 +43,6 @@ uint8_t ntru_rand_wincrypt_release(NtruRandContext *rand_ctx);
 
 #define NTRU_RNG_DEVURANDOM {ntru_rand_devurandom_init, ntru_rand_devurandom_generate, ntru_rand_devurandom_release}
 #define NTRU_RNG_DEVRANDOM {ntru_rand_devrandom_init, ntru_rand_devrandom_generate, ntru_rand_devrandom_release}
-/** default RNG (/dev/urandom on *nix) */
-#define NTRU_RNG_DEFAULT NTRU_RNG_DEVURANDOM
 
 /* /dev/random-based RNG */
 uint8_t ntru_rand_devrandom_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
@@ -60,11 +56,16 @@ uint8_t ntru_rand_devurandom_release(NtruRandContext *rand_ctx);
 
 #endif /* !WIN32 */
 
+/** default RNG: CTR_DRBG seeded from /dev/urandom (on *nix) or CryptGenRandom() (on Windows) */
+uint8_t ntru_rand_default_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
+uint8_t ntru_rand_default_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_default_release(NtruRandContext *rand_ctx);
+#define NTRU_RNG_DEFAULT {ntru_rand_default_init, ntru_rand_default_generate, ntru_rand_default_release}
+
 /* deterministic RNG based on IGF-2 */
 uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
 uint8_t ntru_rand_igf2_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
 uint8_t ntru_rand_igf2_release(NtruRandContext *rand_ctx);
-
 #define NTRU_RNG_IGF2 {ntru_rand_igf2_init, ntru_rand_igf2_generate, ntru_rand_igf2_release}
 
 #endif   /* NTRU_RAND_H */

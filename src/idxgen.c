@@ -1,6 +1,7 @@
+#include <stdlib.h>
 #include <string.h>
-#include <endian.h>
 #include "idxgen.h"
+#include "ntru_endian.h"
 
 void ntru_IGF_init(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params, NtruIGFState *s) {
     s->Z = seed;
