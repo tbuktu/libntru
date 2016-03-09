@@ -16,4 +16,4 @@ src/sha256-mb-x86_64.s
 *.exe
 *.out
 
-# demo
+# demo add 2 words 
