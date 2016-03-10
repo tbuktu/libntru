@@ -179,7 +179,7 @@ uint8_t ntru_rand_default_init(NtruRandContext *rand_ctx, struct NtruRandGen *ra
     uint8_t entropy[32];
     result &= ntru_get_entropy(entropy, 32);
     uint16_t pers_string_size = strlen(NTRU_PERS_STRING) * sizeof(NTRU_PERS_STRING[0]);
-    result &= nist_ctr_drbg_instantiate(rand_ctx->state, entropy, 10, NULL, 0, NTRU_PERS_STRING, pers_string_size) == 0;
+    result &= nist_ctr_drbg_instantiate(rand_ctx->state, entropy, 32, NULL, 0, NTRU_PERS_STRING, pers_string_size) == 0;
     return result;
 }
 
