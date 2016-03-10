@@ -15,8 +15,8 @@
 
 const NtruEncParams NTRU_IGF2_RAND_PARAMS = {\
     "IGF2_RNG",    /* name */\
-    401,           /* N */\
-    256,           /* q=256 because we want to generate bytes */\
+    256,           /* N=256 because we want to generate bytes */\
+    2048,          /* q */\
     0,             /* prod_flag */\
     0,             /* df */\
     0,\
