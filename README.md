@@ -42,11 +42,11 @@ Windows default is no SSSE3.
     /* deterministic key generation from password */
     uint8_t seed[17];
     strcpy(seed, "my test password");
-    NtruRandGen rng_igf2 = NTRU_RNG_IGF2;
-    NtruRandContext rand_ctx_igf2;
-    if (ntru_rand_init_det(&rand_ctx_igf2, &rng_igf2, seed, strlen(seed)) != NTRU_SUCCESS)
+    NtruRandGen rng_ctr_drbg = NTRU_RNG_CTR_DRBG;
+    NtruRandContext rand_ctx_ctr_drbg;
+    if (ntru_rand_init_det(&rand_ctx_ctr_drbg, &rng_ctr_drbg, seed, strlen(seed)) != NTRU_SUCCESS)
         printf("rng fail\n");
-    if (ntru_gen_key_pair(&params, &kp, &rand_ctx_igf2) != NTRU_SUCCESS)
+    if (ntru_gen_key_pair(&params, &kp, &rand_ctx_ctr_drbg) != NTRU_SUCCESS)
         printf("keygen fail\n");
 
     /* encryption */
@@ -70,7 +70,7 @@ Windows default is no SSSE3.
     /* release RNG resources */
     if (ntru_rand_release(&rand_ctx_def) != NTRU_SUCCESS)
         printf("rng fail\n");
-    if (ntru_rand_release(&rand_ctx_igf2) != NTRU_SUCCESS)
+    if (ntru_rand_release(&rand_ctx_ctr_drbg) != NTRU_SUCCESS)
         printf("rng fail\n");
 
     /* export key to uint8_t array */

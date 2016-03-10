@@ -5,35 +5,12 @@
 #include "rand.h"
 #include "err.h"
 #include "encparams.h"
-#include "idxgen.h"
 #include "nist_ctr_drbg.h"
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <Wincrypt.h>
 #endif
-
-const NtruEncParams NTRU_IGF2_RAND_PARAMS = {\
-    "IGF2_RNG",    /* name */\
-    256,           /* N=256 because we want to generate bytes */\
-    2048,          /* q */\
-    0,             /* prod_flag */\
-    0,             /* df */\
-    0,\
-    0,\
-    0,             /* dg */\
-    0,             /* dm0 */\
-    0,             /* db */\
-    11,            /* c */\
-    0,             /* min_calls_r */\
-    0,             /* min_calls_mask */\
-    1,             /* hash_seed */\
-    {0, 0, 0},     /* oid */\
-    ntru_sha1,     /* hash */\
-    ntru_sha1_4way, /* hash_4way */\
-    20,            /* hlen */\
-    0              /* pklen */\
-};
 
 const char NTRU_PERS_STRING[] = "libntru";   /* personalization string for CTR-DRBG */
 
@@ -141,27 +118,23 @@ uint8_t ntru_rand_devrandom_release(NtruRandContext *rand_ctx) {
 }
 #endif /* !WIN32 */
 
-uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
-    rand_ctx->state = malloc(sizeof(struct NtruIGFState));
+uint8_t ntru_rand_ctr_drbg_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
+    rand_ctx->state = malloc(sizeof(NIST_CTR_DRBG));
     if (!rand_ctx->state)
         return 0;
-    ntru_IGF_init(rand_ctx->seed, rand_ctx->seed_len, &NTRU_IGF2_RAND_PARAMS, rand_ctx->state);
+    uint16_t pers_string_size = strlen(NTRU_PERS_STRING) * sizeof(NTRU_PERS_STRING[0]);
+    return nist_ctr_drbg_instantiate(rand_ctx->state, rand_ctx->seed, rand_ctx->seed_len, NULL, 0, NTRU_PERS_STRING, pers_string_size) == 0;
+}
+
+uint8_t ntru_rand_ctr_drbg_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
+    nist_ctr_drbg_generate(rand_ctx->state, rand_data, len, NULL, 0);
     return 1;
 }
 
-uint8_t ntru_rand_igf2_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx) {
-    uint16_t i;
-    for (i=0; i<len; i++) {
-        uint16_t idx;
-        ntru_IGF_next(rand_ctx->state, &idx);
-        rand_data[i] = idx;
-    }
-    return 1;
-}
-
-uint8_t ntru_rand_igf2_release(NtruRandContext *rand_ctx) {
+uint8_t ntru_rand_ctr_drbg_release(NtruRandContext *rand_ctx) {
+    uint8_t result = nist_ctr_drbg_destroy(rand_ctx->state);
     free(rand_ctx->state);
-    return 1;
+    return result;
 }
 
 uint8_t ntru_get_entropy(uint8_t *buffer, uint16_t len) {

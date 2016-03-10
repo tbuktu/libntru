@@ -62,10 +62,10 @@ uint8_t ntru_rand_default_generate(uint8_t rand_data[], uint16_t len, NtruRandCo
 uint8_t ntru_rand_default_release(NtruRandContext *rand_ctx);
 #define NTRU_RNG_DEFAULT {ntru_rand_default_init, ntru_rand_default_generate, ntru_rand_default_release}
 
-/* deterministic RNG based on IGF-2 */
-uint8_t ntru_rand_igf2_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
-uint8_t ntru_rand_igf2_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
-uint8_t ntru_rand_igf2_release(NtruRandContext *rand_ctx);
-#define NTRU_RNG_IGF2 {ntru_rand_igf2_init, ntru_rand_igf2_generate, ntru_rand_igf2_release}
+/* deterministic RNG based on CTR_DRBG */
+uint8_t ntru_rand_ctr_drbg_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen);
+uint8_t ntru_rand_ctr_drbg_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);
+uint8_t ntru_rand_ctr_drbg_release(NtruRandContext *rand_ctx);
+#define NTRU_RNG_CTR_DRBG {ntru_rand_ctr_drbg_init, ntru_rand_ctr_drbg_generate, ntru_rand_ctr_drbg_release}
 
 #endif   /* NTRU_RAND_H */
