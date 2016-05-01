@@ -9,6 +9,7 @@
 #include "poly.h"
 #include "encparams.h"
 #include "types.h"
+#include "arith.h"
 #include "err.h"
 
 void ntru_export_pub(NtruEncPubKey *key, uint8_t *arr) {
@@ -66,16 +67,35 @@ uint16_t ntru_tern_to_arr(NtruTernPoly *poly, uint8_t *arr) {
     arr_head += sizeof num_neg_ones;
 
     /* write indices of ones and negative ones */
+    uint8_t bits_per_idx = ntru_log2(poly->N-1) + 1;
+    uint32_t buf = 0;
+    uint8_t buf_size = 0;   /* #bits in buf */
     uint16_t i;
     for (i=0; i<poly->num_ones; i++) {
-        uint16_t idx = htons(poly->ones[i]);
-        memcpy(arr_head, &idx, sizeof idx);
-        arr_head += sizeof idx;
+        uint16_t idx = poly->ones[i];
+        buf |= idx << buf_size;
+        buf_size += bits_per_idx;
+        while (buf_size > 8) {
+            *arr_head = buf & 0xFF;
+            arr_head++;
+            buf >>= 8;
+            buf_size -= 8;
+        }
     }
     for (i=0; i<poly->num_neg_ones; i++) {
-        uint16_t idx = htons(poly->neg_ones[i]);
-        memcpy(arr_head, &idx, sizeof idx);
-        arr_head += sizeof idx;
+        uint16_t idx = poly->neg_ones[i];
+        buf |= idx << buf_size;
+        buf_size += bits_per_idx;
+        while (buf_size > 8) {
+            *arr_head = buf & 0xFF;
+            arr_head++;
+            buf >>= 8;
+            buf_size -= 8;
+        }
+    }
+    if (buf_size > 0) {
+        *arr_head = buf & 0xFF;
+        arr_head++;
     }
 
     return arr_head - arr;
@@ -133,18 +153,30 @@ uint16_t ntru_tern_from_arr(uint8_t *arr, uint16_t N, NtruTernPoly *poly) {
     arr_head += sizeof num_neg_ones;
 
     /* read indices of ones and negative ones */
+    uint8_t bits_per_idx = ntru_log2(N-1) + 1;
+    uint16_t mask = (1<<bits_per_idx) - 1;
+    uint32_t buf = 0;
+    uint8_t buf_size = 0;   /* #bits in buf */
     uint16_t i;
     for (i=0; i<poly->num_ones; i++) {
-        uint16_t idx;
-        memcpy(&idx, arr_head, sizeof idx);
-        poly->ones[i] = ntohs(idx);
-        arr_head += sizeof idx;
+        while (buf_size < bits_per_idx) {
+            buf |= *arr_head << buf_size;
+            arr_head++;
+            buf_size += 8;
+        }
+        poly->ones[i] = buf & mask;
+        buf >>= bits_per_idx;
+        buf_size -= bits_per_idx;
     }
     for (i=0; i<poly->num_neg_ones; i++) {
-        uint16_t idx;
-        memcpy(&idx, arr_head, sizeof idx);
-        poly->neg_ones[i] = ntohs(idx);
-        arr_head += sizeof idx;
+        while (buf_size < bits_per_idx) {
+            buf |= *arr_head << buf_size;
+            arr_head++;
+            buf_size += 8;
+        }
+        poly->neg_ones[i] = buf & mask;
+        buf >>= bits_per_idx;
+        buf_size -= bits_per_idx;
     }
 
     return arr_head - arr;
@@ -184,10 +216,15 @@ void ntru_import_priv(uint8_t *arr, NtruEncPrivKey *key) {
 }
 
 uint16_t ntru_priv_len(const NtruEncParams *params) {
-    if (params->prod_flag)
-        return 5 + 4 + 4*params->df1 + 4 + 4*params->df2 + 4 + 4*params->df3;
+    uint8_t bits_per_idx = ntru_log2(params->N-1) + 1;
+    if (params->prod_flag) {
+        uint16_t poly1_len = 4 + (bits_per_idx*2*params->df1+7) / 8;
+        uint16_t poly2_len = 4 + (bits_per_idx*2*params->df2+7) / 8;
+        uint16_t poly3_len = 4 + (bits_per_idx*2*params->df3+7) / 8;
+        return 5 + poly1_len + poly2_len + poly3_len;
+    }
     else
-        return 5 + 4 + 4*params->df1;
+        return 5 + 4 + (bits_per_idx*2*params->df1+7) / 8;
 }
 
 uint8_t ntru_params_from_key_pair(NtruEncKeyPair *kp, NtruEncParams *params) {
