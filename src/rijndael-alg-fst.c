@@ -38,6 +38,8 @@
 #include "rijndael-alg-fst.h"
 #include "rijndael_local.h"
 
+#define FULL_UNROLL 1   /* without this, segfaults can occur in rijndaelEncrypt() */
+
 /*
 Te0[x] = S [x].[02, 01, 01, 03];
 Te1[x] = S [x].[03, 02, 01, 01];
