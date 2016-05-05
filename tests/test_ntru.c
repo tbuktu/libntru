@@ -36,8 +36,6 @@ uint8_t gen_key_pair(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
     NtruRandContext rand_ctx;
     NtruRandGen rng = NTRU_RNG_CTR_DRBG;
     ntru_rand_init_det(&rand_ctx, &rng, seed_uint8, seed_len);
-    rand_ctx.seed = seed_uint8;
-    rand_ctx.seed_len = seed_len;
     uint8_t result = 1;
     result &= ntru_gen_key_pair(params, kp, &rand_ctx) == NTRU_SUCCESS;
     result &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
