@@ -16,11 +16,15 @@ const char NTRU_PERS_STRING[] = "libntru";   /* personalization string for CTR-D
 
 uint8_t ntru_rand_init(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen) {
     rand_ctx->rand_gen = rand_gen;
+    rand_ctx->seed = NULL;
     return rand_gen->init(rand_ctx, rand_gen) ? NTRU_SUCCESS : NTRU_ERR_PRNG;
 }
 
 uint8_t ntru_rand_init_det(NtruRandContext *rand_ctx, struct NtruRandGen *rand_gen, uint8_t *seed, uint16_t seed_len) {
-    rand_ctx->seed = seed;
+    rand_ctx->seed = malloc(seed_len);
+    if (rand_ctx->seed == NULL)
+        return NTRU_ERR_PRNG;
+    memcpy(rand_ctx->seed, seed, seed_len);
     rand_ctx->seed_len = seed_len;
     rand_ctx->rand_gen = rand_gen;
     return rand_gen->init(rand_ctx, rand_gen) ? NTRU_SUCCESS : NTRU_ERR_PRNG;
@@ -31,6 +35,8 @@ uint8_t ntru_rand_generate(uint8_t rand_data[], uint16_t len, NtruRandContext *r
 }
 
 uint8_t ntru_rand_release(NtruRandContext *rand_ctx) {
+    if (rand_ctx->seed != NULL)
+        free(rand_ctx->seed);
     return rand_ctx->rand_gen->release(rand_ctx) ? NTRU_SUCCESS : NTRU_ERR_PRNG;
 }
 
