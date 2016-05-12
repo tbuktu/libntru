@@ -49,6 +49,42 @@ uint8_t test_hash() {
             valid1 &= memcmp(H4[j], H1, 20) == 0;
         }
     }
+
+    /* test ntru_sha1_8way() */
+    valid1 &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
+    for (i=0; i<100; i++) {
+        uint16_t inp_len = i;
+        uint8_t test_a[inp_len];
+        uint8_t test_b[inp_len];
+        uint8_t test_c[inp_len];
+        uint8_t test_d[inp_len];
+        uint8_t test_e[inp_len];
+        uint8_t test_f[inp_len];
+        uint8_t test_g[inp_len];
+        uint8_t test_h[inp_len];
+        uint8_t *hash_inp[8];
+        hash_inp[0] = test_a;
+        hash_inp[1] = test_b;
+        hash_inp[2] = test_c;
+        hash_inp[3] = test_d;
+        hash_inp[4] = test_e;
+        hash_inp[5] = test_f;
+        hash_inp[6] = test_g;
+        hash_inp[7] = test_h;
+        uint8_t j;
+        for (j=0; j<8; j++)
+            valid1 &= ntru_rand_generate(hash_inp[j], inp_len, &rand_ctx) == NTRU_SUCCESS;
+        uint8_t H8_arr[8][20];
+        uint8_t *H8[8];
+        for (j=0; j<8; j++)
+            H8[j] = H8_arr[j];
+        ntru_sha1_8way(hash_inp, inp_len, H8);
+        for (j=0; j<8; j++) {
+            uint8_t H1[20];
+            ntru_sha1(hash_inp[j], inp_len, H1);
+            valid1 &= memcmp(H8[j], H1, 20) == 0;
+        }
+    }
     valid1 &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
     /* test ntru_sha256() */
@@ -88,6 +124,43 @@ uint8_t test_hash() {
             valid256 &= memcmp(H4[j], H1, 32) == 0;
         }
     }
+
+    /* test ntru_sha256_8way() */
+    valid256 &= ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
+    for (i=0; i<100; i++) {
+        uint16_t inp_len = i;
+        uint8_t test_a[inp_len];
+        uint8_t test_b[inp_len];
+        uint8_t test_c[inp_len];
+        uint8_t test_d[inp_len];
+        uint8_t test_e[inp_len];
+        uint8_t test_f[inp_len];
+        uint8_t test_g[inp_len];
+        uint8_t test_h[inp_len];
+        uint8_t *hash_inp[8];
+        hash_inp[0] = test_a;
+        hash_inp[1] = test_b;
+        hash_inp[2] = test_c;
+        hash_inp[3] = test_d;
+        hash_inp[4] = test_e;
+        hash_inp[5] = test_f;
+        hash_inp[6] = test_g;
+        hash_inp[7] = test_h;
+        uint8_t j;
+        for (j=0; j<8; j++)
+            valid256 &= ntru_rand_generate(hash_inp[j], inp_len, &rand_ctx) == NTRU_SUCCESS;
+        uint8_t H8_arr[8][32];
+        uint8_t *H8[8];
+        for (j=0; j<8; j++)
+            H8[j] = H8_arr[j];
+        ntru_sha256_8way(hash_inp, inp_len, H8);
+        for (j=0; j<8; j++) {
+            uint8_t H1[32];
+            ntru_sha256(hash_inp[j], inp_len, H1);
+            valid256 &= memcmp(H8[j], H1, 32) == 0;
+        }
+    }
+
     valid256 &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
     uint8_t valid = valid1 && valid256;

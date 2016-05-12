@@ -10,8 +10,23 @@ ifneq ($(SSE), no)
         SSE=yes
     endif
 endif
+AVX2_FLAG = $(shell /bin/grep -m 1 -o avx2 /proc/cpuinfo)
+ifneq ($(AVX2), no)
+    ifeq ($(AVX2_FLAG), avx2)
+        AVX2=yes
+    endif
+endif
+ifeq ($(AVX2), yes)
+    SSE=yes
+endif
+ifeq ($(SSE), no)
+    AVX2=no
+endif
 ifeq ($(SSE), yes)
     CFLAGS+=-mssse3
+endif
+ifeq ($(AVX2), yes)
+    CFLAGS+=-mavx2
 endif
 
 # use -march=native if we're compiling for x86
@@ -146,10 +161,10 @@ hybrid: static-lib
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
 
-$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; CC=$(CC) ASM="$(AS)" $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
 $(SRCDIR)/sha1-mb-x86_64.o: $(SRCDIR)/sha1-mb-x86_64.s
 	$(AS) $(SRCDIR)/sha1-mb-x86_64.s -o $@
-$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; CC=$(CC) ASM="$(AS)" $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
 $(SRCDIR)/sha256-mb-x86_64.o: $(SRCDIR)/sha256-mb-x86_64.s
 	$(AS) $(SRCDIR)/sha256-mb-x86_64.s -o $@
 

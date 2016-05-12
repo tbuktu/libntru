@@ -19,6 +19,7 @@ const NtruEncParams EES401EP1 = {\
     {0, 2, 4},     /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     114            /* pklen */\
 };
@@ -41,6 +42,7 @@ const NtruEncParams EES449EP1 = {\
     {0, 3, 3},     /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     128            /* pklen */\
 };
@@ -63,6 +65,7 @@ const NtruEncParams EES677EP1 = {\
     {0, 5, 3},     /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     192            /* pklen */\
 };
@@ -85,6 +88,7 @@ const NtruEncParams EES1087EP2 = {\
     {0, 6, 3},     /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     256            /* pklen */\
 };
@@ -107,6 +111,7 @@ const NtruEncParams EES541EP1 = {\
     {0, 2, 5},     /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     112            /* pklen */\
 };
@@ -129,6 +134,7 @@ const NtruEncParams EES613EP1 = {\
     {0, 3, 4},     /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     128            /* pklen */\
 };
@@ -151,6 +157,7 @@ const NtruEncParams EES887EP1 = {\
     {0, 5, 4},     /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     192            /* pklen */\
 };
@@ -173,6 +180,7 @@ const NtruEncParams EES1171EP1 = {\
     {0, 6, 4},     /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     256            /* pklen */\
 };
@@ -195,6 +203,7 @@ const NtruEncParams EES659EP1 = {\
     {0, 2, 6},     /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     112            /* pklen */\
 };
@@ -217,6 +226,7 @@ const NtruEncParams EES761EP1 = {\
     {0, 3, 5},     /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     128            /* pklen */\
 };
@@ -239,6 +249,7 @@ const NtruEncParams EES1087EP1 = {\
     {0, 5, 5},     /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     192            /* pklen */\
 };
@@ -261,6 +272,7 @@ const NtruEncParams EES1499EP1 = {\
     {0, 6, 5},     /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     256            /* pklen */\
 };
@@ -285,6 +297,7 @@ const NtruEncParams EES401EP2 = {\
     {0, 2, 16},    /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     112            /* pklen */\
 };
@@ -307,6 +320,7 @@ const NtruEncParams EES439EP1 = {\
     {0, 3, 16},    /* oid */\
     ntru_sha1,     /* hash */\
     ntru_sha1_4way, /* hash_4way */\
+    ntru_sha1_8way, /* hash_8way */\
     20,            /* hlen */\
     128            /* pklen */\
 };
@@ -329,6 +343,7 @@ const NtruEncParams EES443EP1 = {\
     {0, 3, 17},    /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     128            /* pklen */\
 };
@@ -351,6 +366,7 @@ const NtruEncParams EES593EP1 = {\
     {0, 5, 16},    /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     192            /* pklen */\
 };
@@ -373,6 +389,7 @@ const NtruEncParams EES587EP1 = {\
     {0, 5, 17},    /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     192            /* pklen */\
 };
@@ -395,6 +412,7 @@ const NtruEncParams EES743EP1 = {\
     {0, 6, 16},    /* oid */\
     ntru_sha256,   /* hash */\
     ntru_sha256_4way, /* hash_4way */\
+    ntru_sha256_8way, /* hash_8way */\
     32,            /* hlen */\
     256            /* pklen */\
 };

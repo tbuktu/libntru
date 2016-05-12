@@ -43,25 +43,24 @@ die "can't locate x86_64-xlate.pl";
 
 $avx=0;
 
-# tbuktu 5/10/2015: disable AVX
-#if (`$ENV{CC} -Wa,-v -c -o /dev/null -x assembler /dev/null 2>&1`
-#		=~ /GNU assembler version ([2-9]\.[0-9]+)/) {
-#	$avx = ($1>=2.19) + ($1>=2.22);
-#}
-#
-#if (!$avx && $win64 && ($flavour =~ /nasm/ || $ENV{ASM} =~ /nasm/) &&
-#	   `nasm -v 2>&1` =~ /NASM version ([2-9]\.[0-9]+)/) {
-#	$avx = ($1>=2.09) + ($1>=2.10);
-#}
-#
-#if (!$avx && $win64 && ($flavour =~ /masm/ || $ENV{ASM} =~ /ml64/) &&
-#	   `ml64 2>&1` =~ /Version ([0-9]+)\./) {
-#	$avx = ($1>=10) + ($1>=11);
-#}
-#
-#if (!$avx && `$ENV{CC} -v 2>&1` =~ /(^clang version|based on LLVM) ([3-9]\.[0-9]+)/) {
-#	$avx = ($2>=3.0) + ($2>3.0);
-#}
+if (`$ENV{CC} -Wa,-v -c -o /dev/null -x assembler /dev/null 2>&1`
+		=~ /GNU assembler version ([2-9]\.[0-9]+)/) {
+	$avx = ($1>=2.19) + ($1>=2.22);
+}
+
+if (!$avx && $win64 && ($flavour =~ /nasm/ || $ENV{ASM} =~ /nasm/) &&
+	   `nasm -v 2>&1` =~ /NASM version ([2-9]\.[0-9]+)/) {
+	$avx = ($1>=2.09) + ($1>=2.10);
+}
+
+if (!$avx && $win64 && ($flavour =~ /masm/ || $ENV{ASM} =~ /ml64/) &&
+	   `ml64 2>&1` =~ /Version ([0-9]+)\./) {
+	$avx = ($1>=10) + ($1>=11);
+}
+
+if (!$avx && `$ENV{CC} -v 2>&1` =~ /(^clang version|based on LLVM) ([3-9]\.[0-9]+)/) {
+	$avx = ($2>=3.0) + ($2>3.0);
+}
 
 open OUT,"| \"$^X\" $xlate $flavour $output";
 *STDOUT=*OUT;
@@ -350,20 +349,15 @@ push(@Xi,shift(@Xi));
 $code.=<<___;
 .text
 
-# XXX commented out because it caused a linker error:
-# "relocation R_X86_64_PC32 against symbol `OPENSSL_ia32cap_P' can not be used
-# when making a shared object; recompile with -fPIC"
-# Adding -fPIC didn't help.
-#.extern	OPENSSL_ia32cap_P
+.extern	OPENSSL_ia32cap_P
 
 .globl	sha1_multi_block
 .type	sha1_multi_block,\@function,3
 .align	32
 sha1_multi_block:
-# XXX see comment about the linker error above
-#	mov	OPENSSL_ia32cap_P+4(%rip),%rcx
-#	bt	\$61,%rcx			# check SHA bit
-#	jc	_shaext_shortcut
+	mov	OPENSSL_ia32cap_P+4(%rip),%rcx
+	bt	\$61,%rcx			# check SHA bit
+	jc	_shaext_shortcut
 ___
 $code.=<<___ if ($avx);
 	test	\$`1<<28`,%ecx

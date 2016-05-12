@@ -9,11 +9,26 @@ ifneq ($(SSE), no)
         SSE=yes
     endif
 endif
+AVX2_FLAG = $(shell /usr/sbin/sysctl machdep.cpu.features | grep -m 1 -ow AVX2)
+ifneq ($(AVX2), no)
+    ifeq ($(AVX2_FLAG), AVX2)
+        AVX2=yes
+    endif
+endif
+ifeq ($(AVX2), yes)
+    SSE=yes
+endif
+ifeq ($(SSE), no)
+    AVX2=no
+endif
 ifeq ($(SSE), yes)
     CFLAGS+=-mssse3
 endif
 ifeq ($(SSE), no)
     CFLAGS+=-march=x86-64
+endif
+ifeq ($(AVX2), yes)
+    CFLAGS+=-mavx2
 endif
 SRCDIR=src
 TESTDIR=tests
@@ -104,10 +119,10 @@ hybrid: lib
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
 
-$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; CC=$(CC) ASM="$(AS)" $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
 $(SRCDIR)/sha1-mb-x86_64.o: $(SRCDIR)/sha1-mb-x86_64.s
 	$(AS) $(SRCDIR)/sha1-mb-x86_64.s -o $@
-$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; CC=$(CC) ASM="$(AS)" $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
 $(SRCDIR)/sha256-mb-x86_64.o: $(SRCDIR)/sha256-mb-x86_64.s
 	$(AS) $(SRCDIR)/sha256-mb-x86_64.s -o $@
 

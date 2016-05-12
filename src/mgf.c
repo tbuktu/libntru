@@ -268,6 +268,32 @@ void ntru_MGF(uint8_t *seed, uint16_t seed_len, const NtruEncParams *params, Ntr
     uint8_t H[hlen];
     uint16_t inp_len = hlen + sizeof counter;
     uint8_t hash_inp[inp_len];
+    while (counter < min_calls_mask-7) {
+        uint8_t H_arr[8][NTRU_MAX_HASH_LEN];
+
+        uint8_t j;
+        uint8_t hash_inp_arr[8][inp_len];
+        uint8_t *hash_inp[8];
+        for (j=0; j<8; j++) {
+            uint16_t counter_endian = htons(counter);   /* convert to network byte order */
+            memcpy(&hash_inp_arr[j], Z, sizeof Z);
+            memcpy((uint8_t*)&hash_inp_arr[j] + sizeof Z, &counter_endian, sizeof counter_endian);
+            hash_inp[j] = hash_inp_arr[j];
+            counter++;
+        }
+        uint8_t *H[8];
+        for (j=0; j<8; j++)
+            H[j] = H_arr[j];
+        params->hash_8way(hash_inp, inp_len, H);
+
+        uint16_t i;
+        for (j=0; j<8; j++)
+            for (i=0; i<hlen; i++)
+                if (H[j][i] < 243) {   /* 243 = 3^5 */
+                    buf[buf_len] = H[j][i];
+                    buf_len++;
+                }
+    }
     while (counter < min_calls_mask-3) {
         uint8_t H_arr[4][NTRU_MAX_HASH_LEN];
 

@@ -4,6 +4,10 @@ OPTFLAGS=-O2
 bench: OPTFLAGS=-O3 -march=native
 CFLAGS?=-g $(OPTFLAGS)
 CFLAGS+=-Wall -Wextra -Wno-unused-parameter
+ifeq ($(AVX2), yes)
+    CFLAGS+=-mavx2
+    SSE=yes
+endif
 ifeq ($(SSE), yes)
     CFLAGS+=-mssse3
 endif
@@ -106,10 +110,10 @@ hybrid: lib
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; CC=$(CC) ASM="$(AS)" $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
 $(SRCDIR)/sha1-mb-x86_64.o: $(SRCDIR)/sha1-mb-x86_64.s
 	$(AS) $(SRCDIR)/sha1-mb-x86_64.s -o $@
-$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
+$(SRCDIR)/sha256-mb-x86_64.s: $(SRCDIR)/sha256-mb-x86_64.pl; CC=$(CC) ASM="$(AS)" $(PERL) $(SRCDIR)/sha256-mb-x86_64.pl $(PERLASM_SCHEME) > $@
 $(SRCDIR)/sha256-mb-x86_64.o: $(SRCDIR)/sha256-mb-x86_64.s
 	$(AS) $(SRCDIR)/sha256-mb-x86_64.s -o $@
 

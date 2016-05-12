@@ -80,6 +80,9 @@ typedef struct NtruEncParams {
     /* hash function for 4 inputs, e.g. ntru_sha256_4way */
     void (*hash_4way)(uint8_t *[4], uint16_t, uint8_t *[4]);
 
+    /* hash function for 8 inputs, e.g. ntru_sha256_8way */
+    void (*hash_8way)(uint8_t *[8], uint16_t, uint8_t *[8]);
+
     /* output length of the hash function */
     uint16_t hlen;
 
