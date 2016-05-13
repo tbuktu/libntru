@@ -1,34 +1,3 @@
-/*	$NetBSD: nist_ctr_drbg.c,v 1.1 2011/11/19 22:51:22 tls Exp $ */
-
-/*-
- * Copyright (c) 2011 The NetBSD Foundation, Inc.
- * All rights reserved.
- *
- * This code is derived from software contributed to The NetBSD Foundation
- * by Thor Lancelot Simon.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
-
 /*
  * Copyright (c) 2007 Henric Jungheim <software@henric.info>
  *
@@ -48,13 +17,13 @@
 /*
  * NIST SP 800-90 CTR_DRBG (Random Number Generator)
  */
-#include <sys/types.h>
-#include <string.h>
-//#include <sys/systm.h>
 
 #include "nist_ctr_drbg.h"
 
-//#include <sys/cdefs.h>
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+#include <stddef.h>
 
 /*
  * NIST SP 800-90 March 2007
@@ -78,8 +47,8 @@ static NIST_Key nist_cipher_zero_ctx;
  *            Derivation Function is Used for the DRBG Implementation
  * Global Constants
  */
-static const unsigned int
-    nist_ctr_drgb_generate_null_input[NIST_BLOCK_SEEDLEN_INTS] = { 0 };
+static const unsigned int nist_ctr_drgb_generate_null_input[NIST_BLOCK_SEEDLEN_INTS] = { 0 };
+
 
 /*
  * Utility
@@ -88,13 +57,13 @@ static const unsigned int
  * nist_increment_block
  *    Increment the output block as a big-endian number.
  */
-static inline void
-nist_increment_block(unsigned long *V)
+static void
+nist_increment_block(unsigned int* V)
 {
 	int i;
-	unsigned long x;
+	unsigned int x;
 
-	for (i = NIST_BLOCK_OUTLEN_LONGS - 1; i >= 0; --i) {
+	for (i = NIST_BLOCK_OUTLEN_INTS - 1; i >= 0; --i) {
 		x = NIST_NTOHL(V[i]) + 1;
 		V[i] = NIST_HTONL(x);
 		if (x)	/* There was only a carry if we are zero */
@@ -107,8 +76,7 @@ nist_increment_block(unsigned long *V)
  * 10.4.3 BCC Function
  */
 static void
-nist_ctr_drbg_bcc_update(const NIST_Key *ctx, const unsigned int *data,
-			 int n, unsigned int *chaining_value)
+nist_ctr_drbg_bcc_update(const NIST_Key* ctx, const unsigned int* data, int n, unsigned int *chaining_value)
 {
 	int i, j;
 	unsigned int input_block[NIST_BLOCK_OUTLEN_INTS];
@@ -129,10 +97,9 @@ nist_ctr_drbg_bcc_update(const NIST_Key *ctx, const unsigned int *data,
 }
 
 static void
-nist_ctr_drbg_bcc(NIST_Key *ctx, const unsigned int *data,
-		  int n, unsigned int *output_block)
+nist_ctr_drbg_bcc(NIST_Key* ctx, const unsigned int* data, int n, unsigned int *output_block)
 {
-	unsigned int *chaining_value = output_block;
+	unsigned int* chaining_value = output_block;
 
 	/* [1] chaining_value = 0^outlen */
 	memset(&chaining_value[0], 0, NIST_BLOCK_OUTLEN_BYTES);
@@ -150,10 +117,14 @@ typedef struct {
 	unsigned char S[NIST_BLOCK_OUTLEN_BYTES];
 } NIST_CTR_DRBG_DF_BCC_CTX;
 
-static inline int
-check_int_alignment(const void *p)
+static __inline int
+check_int_alignment(const void* p)
 {
-	intptr_t ip = (const char *)p - (const char *)0;
+	/*
+	 * It would be great if "intptr_t" could be found in
+	 * some standard place.
+	 */
+	ptrdiff_t ip = (const char *)p - (const char *)0;
 
 	if (ip & (sizeof(int) - 1))
 		return 0;
@@ -162,9 +133,9 @@ check_int_alignment(const void *p)
 }
 
 static void
-nist_ctr_drbg_df_bcc_init(NIST_CTR_DRBG_DF_BCC_CTX *ctx, int L, int N)
+nist_ctr_drbg_df_bcc_init(NIST_CTR_DRBG_DF_BCC_CTX* ctx, int L, int N)
 {
-	unsigned int *S = (unsigned int *)ctx->S;
+	unsigned int* S = (unsigned int *)ctx->S;
 
 	/* [4] S = L || N || input_string || 0x80 */
 	S[0] = NIST_HTONL(L);
@@ -173,16 +144,14 @@ nist_ctr_drbg_df_bcc_init(NIST_CTR_DRBG_DF_BCC_CTX *ctx, int L, int N)
 }
 
 static void
-nist_ctr_drbg_df_bcc_update(NIST_CTR_DRBG_DF_BCC_CTX *ctx,
-			    const char *input_string,
-			    int input_string_length, unsigned int *temp)
+nist_ctr_drbg_df_bcc_update(NIST_CTR_DRBG_DF_BCC_CTX* ctx, const char* input_string, int input_string_length, unsigned int* temp)
 {
 	int i, len;
 	int index = ctx->index;
-	unsigned char *S = ctx->S;
+	unsigned char* S = ctx->S;
 
 	if (index) {
-/*		KASSERT(index < NIST_BLOCK_OUTLEN_BYTES); */
+		assert(index < NIST_BLOCK_OUTLEN_BYTES);
 		len = NIST_BLOCK_OUTLEN_BYTES - index;
 		if (input_string_length < len)
 			len = input_string_length;
@@ -201,8 +170,7 @@ nist_ctr_drbg_df_bcc_update(NIST_CTR_DRBG_DF_BCC_CTX *ctx,
 
 		/* We have a full block in S, so let's process it */
 		/* [9.2] BCC */
-		nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx,
-				         (unsigned int *)&S[0], 1, temp);
+		nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx, (unsigned int *)&S[0], 1, temp);
 		index = 0;
 	}
 
@@ -211,21 +179,16 @@ nist_ctr_drbg_df_bcc_update(NIST_CTR_DRBG_DF_BCC_CTX *ctx,
 	if (len > 0) {
 		if (check_int_alignment(input_string)) {
 			/* [9.2] BCC */
-			nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx,
-						 (const unsigned int *)
-						 input_string, len, temp);
+			nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx, (const unsigned int *)input_string, len, temp);
 
 			input_string += len * NIST_BLOCK_OUTLEN_BYTES;
 			input_string_length -= len * NIST_BLOCK_OUTLEN_BYTES;
 		} else {
 			for (i = 0; i < len; ++i) {
-				memcpy(&S[0], input_string,
-				       NIST_BLOCK_OUTLEN_BYTES);
+				memcpy(&S[0], input_string, NIST_BLOCK_OUTLEN_BYTES);
 
 				/* [9.2] BCC */
-				nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx,
-						         (unsigned int *)
-							 &S[0], 1, temp);
+				nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx, (unsigned int *)&S[0], 1, temp);
 
 				input_string += NIST_BLOCK_OUTLEN_BYTES;
 				input_string_length -= NIST_BLOCK_OUTLEN_BYTES;
@@ -233,7 +196,7 @@ nist_ctr_drbg_df_bcc_update(NIST_CTR_DRBG_DF_BCC_CTX *ctx,
 		}
 	}
 
-/*	KASSERT(input_string_length < NIST_BLOCK_OUTLEN_BYTES); */
+	assert(input_string_length < NIST_BLOCK_OUTLEN_BYTES);
 
 	if (input_string_length) {
 		memcpy(&S[0], input_string, input_string_length);
@@ -244,7 +207,7 @@ nist_ctr_drbg_df_bcc_update(NIST_CTR_DRBG_DF_BCC_CTX *ctx,
 }
 
 static void
-nist_ctr_drbg_df_bcc_final(NIST_CTR_DRBG_DF_BCC_CTX *ctx, unsigned int *temp)
+nist_ctr_drbg_df_bcc_final(NIST_CTR_DRBG_DF_BCC_CTX* ctx, unsigned int* temp)
 {
 	int index;
 	unsigned char* S = ctx->S;
@@ -257,15 +220,13 @@ nist_ctr_drbg_df_bcc_final(NIST_CTR_DRBG_DF_BCC_CTX *ctx, unsigned int *temp)
 		memset(&S[index], 0, NIST_BLOCK_OUTLEN_BYTES - index);
 
 		/* [9.2] BCC */
-		nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx,
-					 (unsigned int *)&S[0], 1, temp);
+		nist_ctr_drbg_bcc_update(&nist_cipher_df_ctx, (unsigned int *)&S[0], 1, temp);
 	}
 }
 
 static int
-nist_ctr_drbg_block_cipher_df(const char *input_string[], unsigned int L[],
-			      int input_string_count,
-			      unsigned char *output_string, unsigned int N)
+nist_ctr_drbg_block_cipher_df(const char* input_string[], unsigned int L[],
+    int input_string_count, unsigned char* output_string, unsigned int N)
 {
 	int j, k, blocks, sum_L;
 	unsigned int *temp;
@@ -280,7 +241,7 @@ nist_ctr_drbg_block_cipher_df(const char *input_string[], unsigned int L[],
 	unsigned int output_buffer[512 / 8 / sizeof(unsigned int)];
 
 	if (N > sizeof(output_buffer) || N < 1)
-		return 0;
+		return 1;
 
 	sum_L = 0;
 	for (j = 0; j < input_string_count; ++j)
@@ -294,16 +255,13 @@ nist_ctr_drbg_block_cipher_df(const char *input_string[], unsigned int L[],
 		/* [9.2] temp = temp || BCC(K, (IV || S)) */
 
 		/* Since we have precomputed BCC(K, IV), we start with that... */ 
-		memcpy(&temp[0], &nist_cipher_df_encrypted_iv[j][0],
-		       NIST_BLOCK_OUTLEN_BYTES);
+		memcpy(&temp[0], &nist_cipher_df_encrypted_iv[j][0], NIST_BLOCK_OUTLEN_BYTES);
 
 		nist_ctr_drbg_df_bcc_init(&df_bcc_ctx, sum_L, N);
 
 		/* Compute the rest of BCC(K, (IV || S)) */
 		for (k = 0; k < input_string_count; ++k)
-			nist_ctr_drbg_df_bcc_update(&df_bcc_ctx,
-						    input_string[k],
-						    L[k], temp);
+			nist_ctr_drbg_df_bcc_update(&df_bcc_ctx, input_string[k], L[k], temp);
 
 		nist_ctr_drbg_df_bcc_final(&df_bcc_ctx, temp);
 
@@ -345,7 +303,7 @@ nist_ctr_drbg_block_cipher_df(const char *input_string[], unsigned int L[],
 
 
 static int
-nist_ctr_drbg_block_cipher_df_initialize(void)
+nist_ctr_drbg_block_cipher_df_initialize()
 {
 	int i, err;
 	unsigned char K[NIST_BLOCK_KEYLEN_BYTES];
@@ -374,13 +332,8 @@ nist_ctr_drbg_block_cipher_df_initialize(void)
 		/* [9.1] IV = i || 0^(outlen - len(i)) */
 		IV[0] = NIST_HTONL(i);
 
-		/*
-		 * [9.2] temp = temp || BCC(K, (IV || S))
-		 *	 (the IV part, at least)
-		 */
-		nist_ctr_drbg_bcc(&nist_cipher_df_ctx, &IV[0], 1,
-				  (unsigned int *)
-				  &nist_cipher_df_encrypted_iv[i][0]); 
+		/* [9.2] temp = temp || BCC(K, (IV || S))  (the IV part, at least) */
+		nist_ctr_drbg_bcc(&nist_cipher_df_ctx, &IV[0], 1, (unsigned int *)&nist_cipher_df_encrypted_iv[i][0]); 
 	}
 
 	return 0;
@@ -391,19 +344,18 @@ nist_ctr_drbg_block_cipher_df_initialize(void)
  * 10.2.1.2 The Update Function
  */
 static void
-nist_ctr_drbg_update(NIST_CTR_DRBG *drbg, const unsigned int *provided_data)
+nist_ctr_drbg_update(NIST_CTR_DRBG* drbg, const unsigned int* provided_data)
 {
 	int i;
 	unsigned int temp[NIST_BLOCK_SEEDLEN_INTS];
 	unsigned int* output_block;
 
 	/* 2. while (len(temp) < seedlen) do */
-	for (output_block = temp;
-	     output_block < &temp[NIST_BLOCK_SEEDLEN_INTS];
-	     output_block += NIST_BLOCK_OUTLEN_INTS) {
+	for (output_block = temp; output_block < &temp[NIST_BLOCK_SEEDLEN_INTS];
+		output_block += NIST_BLOCK_OUTLEN_INTS) {
 
 		/* 2.1 V = (V + 1) mod 2^outlen */
-		nist_increment_block((unsigned long *)&drbg->V[0]);
+		nist_increment_block(&drbg->V[0]);
 
 		/* 2.2 output_block = Block_Encrypt(K, V) */
 		Block_Encrypt(&drbg->ctx, drbg->V, output_block);
@@ -420,8 +372,7 @@ nist_ctr_drbg_update(NIST_CTR_DRBG *drbg, const unsigned int *provided_data)
 
 	/* 4 (part 2) combined with 6 V = rightmost outlen bits of temp */
 	for (i = 0; i < (int)NIST_BLOCK_OUTLEN_INTS; ++i)
-		drbg->V[i] =
-		    temp[NIST_BLOCK_KEYLEN_INTS + i] ^ *provided_data++;
+		drbg->V[i] = temp[NIST_BLOCK_KEYLEN_INTS + i] ^ *provided_data++;
 }
 
 /*
@@ -431,18 +382,16 @@ nist_ctr_drbg_update(NIST_CTR_DRBG *drbg, const unsigned int *provided_data)
  */
 int
 nist_ctr_drbg_instantiate(NIST_CTR_DRBG* drbg,
-	const void *entropy_input, int entropy_input_length,
-	const void *nonce, int nonce_length,
-	const void *personalization_string, int personalization_string_length)
+	const void* entropy_input, int entropy_input_length,
+	const void* nonce, int nonce_length,
+	const void* personalization_string, int personalization_string_length)
 {
 	int err, count;
 	unsigned int seed_material[NIST_BLOCK_SEEDLEN_INTS];
 	unsigned int length[3];
 	const char *input_string[3];
 
-	/* [1] seed_material = entropy_input ||
-	 *     nonce || personalization_string
-	 */
+	/* [1] seed_material = entropy_input || nonce || personalization_string */
 	
 	input_string[0] = entropy_input;
 	length[0] = entropy_input_length;
@@ -458,8 +407,7 @@ nist_ctr_drbg_instantiate(NIST_CTR_DRBG* drbg,
 	}
 	/* [2] seed_material = Block_Cipher_df(seed_material, seedlen) */
 	err = nist_ctr_drbg_block_cipher_df(input_string, length, count,
-					    (unsigned char *)seed_material,
-					    sizeof(seed_material));
+			(unsigned char *)seed_material, sizeof(seed_material));
 	if (err)
 		return err;
 
@@ -479,7 +427,7 @@ nist_ctr_drbg_instantiate(NIST_CTR_DRBG* drbg,
 }
 
 static int
-nist_ctr_drbg_instantiate_initialize(void)
+nist_ctr_drbg_instantiate_initialize()
 {
 	int err;
 	unsigned char K[NIST_BLOCK_KEYLEN_BYTES];
@@ -497,10 +445,9 @@ nist_ctr_drbg_instantiate_initialize(void)
  *            Function is Used
  */
 int
-nist_ctr_drbg_reseed(NIST_CTR_DRBG *drbg,
-		     const void *entropy_input, int entropy_input_length,
-		     const void *additional_input,
-		     int additional_input_length)
+nist_ctr_drbg_reseed(NIST_CTR_DRBG* drbg,
+	const void* entropy_input, int entropy_input_length,
+	const void* additional_input, int additional_input_length)
 {
 	int err, count;
 	const char *input_string[2];
@@ -520,8 +467,7 @@ nist_ctr_drbg_reseed(NIST_CTR_DRBG *drbg,
 	}
 	/* [2] seed_material = Block_Cipher_df(seed_material, seedlen) */
 	err = nist_ctr_drbg_block_cipher_df(input_string, length, count,
-					    (unsigned char *)seed_material,
-					    sizeof(seed_material));
+			(unsigned char *)seed_material, sizeof(seed_material));
 	if (err)
 		return err;
 
@@ -540,22 +486,19 @@ nist_ctr_drbg_reseed(NIST_CTR_DRBG *drbg,
  *            Derivation Function is Used for the DRBG Implementation
  */
 static void
-nist_ctr_drbg_generate_block(NIST_CTR_DRBG *drbg, unsigned int *output_block)
+nist_ctr_drbg_generate_block(NIST_CTR_DRBG* drbg, unsigned int* output_block)
 {
-
 	/* [4.1] V = (V + 1) mod 2^outlen */
-	nist_increment_block((unsigned long *)&drbg->V[0]);
+	nist_increment_block(&drbg->V[0]);
 
 	/* [4.2] output_block = Block_Encrypt(Key, V) */
 	Block_Encrypt(&drbg->ctx, &drbg->V[0], output_block);
-
 }
 
 int
-nist_ctr_drbg_generate(NIST_CTR_DRBG * drbg,
-		       void *output_string, int output_string_length,
-		       const void *additional_input,
-		       int additional_input_length)
+nist_ctr_drbg_generate(NIST_CTR_DRBG* drbg,
+	void* output_string, int output_string_length,
+	const void* additional_input, int additional_input_length)
 {
 	int i, len, err;
 	int blocks = output_string_length / NIST_BLOCK_OUTLEN_BYTES;
@@ -565,32 +508,23 @@ nist_ctr_drbg_generate(NIST_CTR_DRBG * drbg,
 	unsigned int length[1];
 	unsigned int buffer[NIST_BLOCK_OUTLEN_BYTES];
 	unsigned int additional_input_buffer[NIST_BLOCK_SEEDLEN_INTS];
-	int ret = 0;
 
 	if (output_string_length < 1)
 		return 1;
 
 	/* [1] If reseed_counter > reseed_interval ... */
-	if (drbg->reseed_counter >= NIST_CTR_DRBG_RESEED_INTERVAL) {
-		ret = 1;
-		goto out;
-	}
+	if (drbg->reseed_counter >= NIST_CTR_DRBG_RESEED_INTERVAL)
+		return 1;
 
 	/* [2] If (addional_input != Null), then */
 	if (additional_input) {
 		input_string[0] = additional_input;
 		length[0] = additional_input_length;
-		/*
-		 * [2.1] additional_input =
-		 * 		Block_Cipher_df(additional_input, seedlen)
-		 */
+		/* [2.1] additional_input = Block_Cipher_df(additional_input, seedlen) */
 		err = nist_ctr_drbg_block_cipher_df(input_string, length, 1,
-		    (unsigned char *)additional_input_buffer,
-		    sizeof(additional_input_buffer));
-		if (err) {
-			ret = err;
-			goto out;
-		}
+				(unsigned char *)additional_input_buffer, sizeof(additional_input_buffer));
+		if (err)
+			return err;
 
 		/* [2.2] (Key, V) = Update(additional_input, Key, V) */
 		nist_ctr_drbg_update(drbg, additional_input_buffer);
@@ -636,12 +570,11 @@ nist_ctr_drbg_generate(NIST_CTR_DRBG * drbg,
 	/* [7] reseed_counter = reseed_counter + 1 */
 	++drbg->reseed_counter;
 
-out:
-	return ret;
+	return 0;
 }
 
 int
-nist_ctr_initialize(void)
+nist_ctr_initialize()
 {
 	int err;
 
@@ -660,5 +593,6 @@ nist_ctr_drbg_destroy(NIST_CTR_DRBG* drbg)
 {
 	nist_zeroize(drbg, sizeof(*drbg));
 	drbg->reseed_counter = ~0U;
+
 	return 1;
 }

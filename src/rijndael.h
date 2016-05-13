@@ -1,5 +1,4 @@
-/*	$NetBSD: rijndael.h,v 1.10 2005/12/11 12:20:52 christos Exp $	*/
-/*	$KAME: rijndael.h,v 1.3 2003/07/15 10:47:16 itojun Exp $	*/
+/*	$OpenBSD: rijndael.h,v 1.12 2007/05/27 05:43:17 tedu Exp $ */
 
 /**
  * rijndael-alg-fst.h
@@ -26,22 +25,34 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef __RIJNDAEL_H
-#define	__RIJNDAEL_H
+#define __RIJNDAEL_H
 
-#include <stdint.h>
-#include "rijndael-alg-fst.h"
+#define AES_MAXKEYBITS	(256)
+#define AES_MAXKEYBYTES	(AES_MAXKEYBITS/8)
+/* for 256-bit keys, fewer for less */
+#define AES_MAXROUNDS	14
 
+typedef unsigned char	u8;
+typedef unsigned short	u16;
+typedef unsigned int	u32;
+
+/*  The structure for key information */
 typedef struct {
-	int	decrypt;
-	int	Nr;		/* key-length-dependent number of rounds */
-	uint32_t ek[4 * (RIJNDAEL_MAXNR + 1)];	/* encrypt key schedule */
-	uint32_t dk[4 * (RIJNDAEL_MAXNR + 1)];	/* decrypt key schedule */
+	int	enc_only;		/* context contains only encrypt schedule */
+	int	Nr;			/* key-length-dependent number of rounds */
+	u32	ek[4*(AES_MAXROUNDS + 1)];	/* encrypt key schedule */
+	u32	dk[4*(AES_MAXROUNDS + 1)];	/* decrypt key schedule */
 } rijndael_ctx;
 
-void	rijndael_set_key(rijndael_ctx *, const unsigned char *, int);
-void	rijndael_decrypt(const rijndael_ctx *, const unsigned char *, unsigned char *);
-void	rijndael_encrypt(const rijndael_ctx *, const unsigned char *, unsigned char *);
+/*int	 rijndael_set_key(rijndael_ctx *, const u_char *, int);
+int	 rijndael_set_key_enc_only(rijndael_ctx *, const u_char *, int);
+void	 rijndael_decrypt(const rijndael_ctx *, const u_char *src, u_char *dst);
+void	 rijndael_encrypt(const rijndael_ctx *, const u_char *src, u_char *dst);
+*/
+int	rijndaelKeySetupEnc(unsigned int [], const unsigned char [], int);
+int	rijndaelKeySetupDec(unsigned int [], const unsigned char [], int);
+void	rijndaelEncrypt(const unsigned int [], int, const unsigned char [],
+	    unsigned char []);
 
 #endif /* __RIJNDAEL_H */
