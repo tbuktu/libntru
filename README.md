@@ -4,7 +4,7 @@ An implementation of the public-key encryption scheme NTRUEncrypt in C, followin
 
 NTRU's main strengths are high performance and resistance to quantum computer
 attacks. Its main drawback is that it is patent encumbered. The patents expire
-in 2020; when built with the NTRU_AVOID_HAMMING_WT_PATENT flag, libntru becomes
+in 2021; when built with the NTRU_AVOID_HAMMING_WT_PATENT flag, libntru becomes
 patent-free in 2017.
 
 Benchmark results:
@@ -25,12 +25,14 @@ or disables it (```SSE=no```).
 Default on Linux, BSD, and MacOS is to autodetect SSSE3 on the build host,
 Windows default is no SSSE3.
 
+The ```AVX2``` environment variable controls AVX2 support and works just like the ```SSE``` variable.
+
 ## Usage
 
     #include "ntru.h"
 
     /* key generation */
-    struct NtruEncParams params = NTRU_DEFAULT_PARAMS_128_BITS; /*see encparams.h for more*/
+    struct NtruEncParams params = NTRU_DEFAULT_PARAMS_128_BITS; /*see section "Parameter Sets" below*/
     NtruRandGen rng_def = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx_def;
     if (ntru_rand_init(&rand_ctx_def, &rng_def) != NTRU_SUCCESS)
@@ -83,6 +85,45 @@ Windows default is no SSSE3.
 
 For encryption of messages longer than `ntru_max_msg_len(...)`, see `src/hybrid.c`
 (requires OpenSSL lib+headers, use `make hybrid` to build).
+
+## Parameter Sets
+| Name                           | Strength  | Sizes (CText/Pub/Priv) | Enc / Dec Time (Rel.) | Pat. Until   |
+|:------------------------------ |:--------- |:---------------------- |:--------------------- |:------------ |
+| EES401EP1                      | 112 bits  | 552 / 556 / 264        | 2.9 / 3.7             | Aug 19, 2017 |
+| EES541EP1                      | 112 bits  | 744 / 748 / 132        | 1.7 / 2.5             | Aug 19, 2017 |
+| EES659EP1                      | 112 bits  | 907 / 911 / 104        | 1.6 / 2.4             | Aug 19, 2017 |
+| EES401EP2                      | 112 bits  | 552 / 556 / 67         | 1.0 / 1.4             | Aug 24, 2021 |
+| NTRU_DEFAULT_PARAMS_112_BITS   | 112 bits  | Synonym for EES401EP2 or EES401EP1, dep. on NTRU_AVOID_HAMMING_WT_PATENT  |
+| EES449EP1                      | 128 bits  | 618 / 622 / 311        | 3.2 / 4.5             | Aug 19, 2017 |
+| EES613EP1                      | 128 bits  | 843 / 847 / 147        | 1.9 / 2.8             | Aug 19, 2017 |
+| EES761EP1                      | 128 bits  | 1047 / 1051 / 114      | 1.8 / 2.7             | Aug 19, 2017 |
+| EES439EP1                      | 128 bits  | 604 / 608 / 68         | 1.2 / 1.6             | Aug 24, 2021 |
+| EES443EP1                      | 128 bits  | 610 / 614 / 68         | 1.2 / 1.6             | Aug 24, 2021 |
+| NTRU_DEFAULT_PARAMS_128_BITS   | 128 bits  | Synonym for EES443EP1 or EES449EP1, dep. on NTRU_AVOID_HAMMING_WT_PATENT  |
+| EES677EP1                      | 192 bits  | 931 / 935 / 402        | 5.4 / 7.5             | Aug 19, 2017 |
+| EES887EP1                      | 192 bits  | 1220 / 1224 / 212      | 3.5 / 5.1             | Aug 19, 2017 |
+| EES1087EP1                     | 192 bits  | 1495 / 1499 / 183      | 3.5 / 5.1             | Aug 19, 2017 |
+| EES593EP1                      | 192 bits  | 816 / 820 / 87         | 1.8 / 2.5             | Aug 24, 2021 |
+| EES587EP1                      | 192 bits  | 808 / 812 / 87         | 2.1 / 2.7             | Aug 24, 2021 |
+| NTRU_DEFAULT_PARAMS_192_BITS   | 192 bits  | Synonym for EES587EP1 or EES677EP1, dep. on NTRU_AVOID_HAMMING_WT_PATENT  |
+| EES1087EP2                     | 256 bits  | 1495 / 1499 / 339      | 5.8 / 8.5             | Aug 19, 2017 |
+| EES1171EP1                     | 256 bits  | 1611 / 1615 / 301      | 5.4 / 8.0             | Aug 19, 2017 |
+| EES1499EP1                     | 256 bits  | 2062 / 2066 / 227      | 5.4 / 8.1             | Aug 19, 2017 |
+| EES743EP1                      | 256 bits  | 1022 / 1026 / 111      | 2.4 / 3.4             | Aug 24, 2021 |
+| NTRU_DEFAULT_PARAMS_256_BITS   | 256 bits  | Synonym for EES743EP1 or EES1087EP2, dep. on NTRU_AVOID_HAMMING_WT_PATENT |
+
+## Random Number Generators
+* Use NTRU_RNG_DEFAULT for non-deterministic keys and non-deterministic encryption
+* Use NTRU_RNG_CTR_DRBG for deterministic keys and deterministic encryption
+
+Other RNGs are NTRU_RNG_WINCRYPT, NTRU_RNG_DEVURANDOM, and NTRU_RNG_DEVRANDOM but these may be removed in a future release.
+
+To use your own RNG, make an array of 3 function pointers: ```{init, generate, release}``` with the following signatures:
+  * ```uint8_t init(NtruRandContext *rand_ctx, NtruRandGen *rand_gen);```
+  * ```uint8_t generate(uint8_t rand_data[], uint16_t len, NtruRandContext *rand_ctx);```
+  * ```uint8_t release(NtruRandContext *rand_ctx);```
+
+Ignore ```rand_ctx->seed``` in ```init()``` if your RNG is non-deterministic.
 
 ## Supported Platforms
   libntru has been tested on Linux, FreeBSD, OpenBSD, Mac OS X, and Windows (MingW).
