@@ -4,7 +4,7 @@ An implementation of the public-key encryption scheme NTRUEncrypt in C, followin
 
 NTRU's main strengths are high performance and resistance to quantum computer
 attacks. Its main drawback is that it is patent encumbered. The patents expire
-in 2021; when built with the NTRU_AVOID_HAMMING_WT_PATENT flag, libntru becomes
+in 2021; when built with the NTRU_AVOID_HAMMING_WT_PATENT flag (see below), libntru becomes
 patent-free in 2017.
 
 Benchmark results:
@@ -26,6 +26,10 @@ Default on Linux, BSD, and MacOS is to autodetect SSSE3 on the build host,
 Windows default is no SSSE3.
 
 The ```AVX2``` environment variable controls AVX2 support and works just like the ```SSE``` variable.
+
+If the ```NTRU_AVOID_HAMMING_WT_PATENT``` preprocessor flag is supplied, the library won't support
+parameter sets that will be patent encumbered after Aug 19, 2017. See the *Parameter Sets* section
+for information on patent expiration dates.
 
 ## Usage
 
