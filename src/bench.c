@@ -56,13 +56,6 @@ the_time->tv_nsec = mts.tv_nsec;
 
 #define CLOCK_REALTIME 0
 
-/* POSIX.1b structure for a time value. This is like a `struct timeval' but
-has nanoseconds instead of microseconds. */
-struct timespec {
-  uint32_t tv_sec;    /* Seconds. */
-  uint32_t tv_nsec;   /* Nanoseconds. */
-};
-
 LARGE_INTEGER getFILETIMEoffset()
 {
     SYSTEMTIME s;

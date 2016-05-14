@@ -11,7 +11,6 @@ endif
 ifeq ($(SSE), yes)
     CFLAGS+=-mssse3
 endif
-LIBS+=-lrt
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o nist_ctr_drbg.o rijndael.o
@@ -96,12 +95,12 @@ test:
 
 testham: clean lib $(TEST_OBJS_PATHS)
 	@echo CFLAGS=$(CFLAGS)
-	$(CC) $(CFLAGS) -o testham.exe $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -llibntru -lm
+	$(CC) $(CFLAGS) -o testham.exe $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -llibntru -lm -lws2_32
 
 testnoham: CFLAGS += -DNTRU_AVOID_HAMMING_WT_PATENT
 testnoham: clean lib $(TEST_OBJS_PATHS)
 	@echo CFLAGS=$(CFLAGS)
-	$(CC) $(CFLAGS) -o testnoham.exe $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -llibntru -lm
+	$(CC) $(CFLAGS) -o testnoham.exe $(TEST_OBJS_PATHS) $(LDFLAGS) -L. -llibntru -lm -lws2_32
 
 bench: lib
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o bench $(SRCDIR)/bench.c $(LDFLAGS) -L. -llibntru
