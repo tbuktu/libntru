@@ -1,3 +1,24 @@
+0.5 (5/14/2016)
+ * RNGs: NTRU_RNG_DEFAULT uses CTR_DRBG now, NTRU_RNG_CTR_DRBG replaces NTRU_RNG_IGF2
+   This change breaks the API!
+ * Denser encoding of private keys
+   This change breaks binary compatibility!
+ * new API feature: multiple public keys for the same private key
+ * new parameter sets: EES443EP1 and EES587EP1
+ * new #defines for referencing param sets by strength: NTRU_DEFAULT_PARAMS_xxx_BITS
+ * BSD support
+ * bugfixes:
+  o fixed deterministic encryption on big-endian machines
+  o fixed some incorrect error codes when key generation failed
+  o fixed generation of polynomial g which deviated from the standard
+  o fixed SSE detection on BSD
+  o fixed buffer overruns (thanks Jeffrey Quesnelle)
+  o fixed a resource leak
+  o fixed tests on ARMv6
+  o fixed calculation of M_len
+ * AVX2 optimizations (thanks Shay Gueron and Fabian Schlieker)
+ * minor optimizations
+
 0.4.1 (5/11/2015)
  * Experimental support for OS/2 (thanks Elbert Pol)
  * Fixed build when the CC environment variable is set
