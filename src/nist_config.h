@@ -21,7 +21,13 @@
 #ifndef NIST_CONFIG_H
 #define NIST_CONFIG_H
 
-#define NIST_IS_LITTLE_ENDIAN 1
+/* #define NIST_IS_LITTLE_ENDIAN 1 */
+#ifdef WIN32
+#include <Winsock2.h>
+#else
+#include <netinet/in.h>
+#endif
+#define NIST_HTONL(x) htonl(x)
 
 /* #define NIST_ZEROIZE 1 */
 
