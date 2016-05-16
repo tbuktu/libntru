@@ -91,30 +91,36 @@ For encryption of messages longer than `ntru_max_msg_len(...)`, see `src/hybrid.
 (requires OpenSSL lib+headers, use `make hybrid` to build).
 
 ## Parameter Sets
-| Name                           | Strength  | Sizes (CText/Pub/Priv) | Enc / Dec Time (Rel.) | Pat. Until   |
+| Name | Strength | Sizes (CText/Pub/Priv)<sup>[1](#footnote1)</sup> | Enc / Dec Time<sup>[2](#footnote2)</sup> | Pat. Until |
 |:------------------------------ |:--------- |:---------------------- |:--------------------- |:------------ |
-| EES401EP1                      | 112 bits  | 552 / 556 / 264        | 2.9 / 3.7             | Aug 19, 2017 |
-| EES541EP1                      | 112 bits  | 744 / 748 / 132        | 1.7 / 2.5             | Aug 19, 2017 |
-| EES659EP1                      | 112 bits  | 907 / 911 / 104        | 1.6 / 2.4             | Aug 19, 2017 |
-| EES401EP2                      | 112 bits  | 552 / 556 / 67         | 1.0 / 1.4             | Aug 24, 2021 |
-| NTRU_DEFAULT_PARAMS_112_BITS   | 112 bits  | Synonym for EES401EP2 or EES401EP1, dep. on NTRU_AVOID_HAMMING_WT_PATENT  |
-| EES449EP1                      | 128 bits  | 618 / 622 / 311        | 3.2 / 4.5             | Aug 19, 2017 |
-| EES613EP1                      | 128 bits  | 843 / 847 / 147        | 1.9 / 2.8             | Aug 19, 2017 |
-| EES761EP1                      | 128 bits  | 1047 / 1051 / 114      | 1.8 / 2.7             | Aug 19, 2017 |
-| EES439EP1                      | 128 bits  | 604 / 608 / 68         | 1.2 / 1.6             | Aug 24, 2021 |
-| EES443EP1                      | 128 bits  | 610 / 614 / 68         | 1.2 / 1.6             | Aug 24, 2021 |
-| NTRU_DEFAULT_PARAMS_128_BITS   | 128 bits  | Synonym for EES443EP1 or EES449EP1, dep. on NTRU_AVOID_HAMMING_WT_PATENT  |
-| EES677EP1                      | 192 bits  | 931 / 935 / 402        | 5.4 / 7.5             | Aug 19, 2017 |
-| EES887EP1                      | 192 bits  | 1220 / 1224 / 212      | 3.5 / 5.1             | Aug 19, 2017 |
-| EES1087EP1                     | 192 bits  | 1495 / 1499 / 183      | 3.5 / 5.1             | Aug 19, 2017 |
-| EES593EP1                      | 192 bits  | 816 / 820 / 87         | 1.8 / 2.5             | Aug 24, 2021 |
-| EES587EP1                      | 192 bits  | 808 / 812 / 87         | 2.1 / 2.7             | Aug 24, 2021 |
-| NTRU_DEFAULT_PARAMS_192_BITS   | 192 bits  | Synonym for EES587EP1 or EES677EP1, dep. on NTRU_AVOID_HAMMING_WT_PATENT  |
-| EES1087EP2                     | 256 bits  | 1495 / 1499 / 339      | 5.8 / 8.5             | Aug 19, 2017 |
-| EES1171EP1                     | 256 bits  | 1611 / 1615 / 301      | 5.4 / 8.0             | Aug 19, 2017 |
-| EES1499EP1                     | 256 bits  | 2062 / 2066 / 227      | 5.4 / 8.1             | Aug 19, 2017 |
-| EES743EP1                      | 256 bits  | 1022 / 1026 / 111      | 2.4 / 3.4             | Aug 24, 2021 |
-| NTRU_DEFAULT_PARAMS_256_BITS   | 256 bits  | Synonym for EES743EP1 or EES1087EP2, dep. on NTRU_AVOID_HAMMING_WT_PATENT |
+| EES401EP1                      | 112 bits  | 552 / 556 / 264        | 2.5 / 2.7             | 8/19/2017    |
+| EES541EP1                      | 112 bits  | 744 / 748 / 132        | 1.5 / 1.9             | 8/19/2017    |
+| EES659EP1                      | 112 bits  | 907 / 911 / 104        | 1.5 / 2.0             | 8/19/2017    |
+| EES401EP2                      | 112 bits  | 552 / 556 / 67         | 1.0 / 1.2             | 8/24/2021    |
+| NTRU_DEFAULT_PARAMS_112_BITS   | 112 bits  | Synonym for EES401EP2 or EES401EP1<sup>[3](#footnote3)</sup>  |
+| EES449EP1                      | 128 bits  | 618 / 622 / 311        | 2.7 / 3.4             | 8/19/2017    |
+| EES613EP1                      | 128 bits  | 843 / 847 / 147        | 1.6 / 2.2             | 8/19/2017    |
+| EES761EP1                      | 128 bits  | 1047 / 1051 / 114      | 1.6 / 2.2             | 8/19/2017    |
+| EES439EP1                      | 128 bits  | 604 / 608 / 68         | 1.1 / 1.4             | 8/24/2021    |
+| EES443EP1                      | 128 bits  | 610 / 614 / 68         | 1.1 / 1.3             | 8/24/2021    |
+| NTRU_DEFAULT_PARAMS_128_BITS   | 128 bits  | Synonym for EES443EP1 or EES449EP1<sup>[3](#footnote3)</sup>  |
+| EES677EP1                      | 192 bits  | 931 / 935 / 402        | 4.4 / 5.5             | 8/19/2017    |
+| EES887EP1                      | 192 bits  | 1220 / 1224 / 212      | 2.8 / 3.9             | 8/19/2017    |
+| EES1087EP1                     | 192 bits  | 1495 / 1499 / 183      | 3.0 / 4.0             | 8/19/2017    |
+| EES593EP1                      | 192 bits  | 816 / 820 / 87         | 1.7 / 2.1             | 8/24/2021    |
+| EES587EP1                      | 192 bits  | 808 / 812 / 87         | 1.9 / 2.3             | 8/24/2021    |
+| NTRU_DEFAULT_PARAMS_192_BITS   | 192 bits  | Synonym for EES587EP1 or EES677EP1<sup>[3](#footnote3)</sup>  |
+| EES1087EP2                     | 256 bits  | 1495 / 1499 / 339      | 4.5 / 6.1             | 8/19/2017    |
+| EES1171EP1                     | 256 bits  | 1611 / 1615 / 301      | 4.3 / 6.0             | 8/19/2017    |
+| EES1499EP1                     | 256 bits  | 2062 / 2066 / 227      | 4.3 / 6.0             | 8/19/2017    |
+| EES743EP1                      | 256 bits  | 1022 / 1026 / 111      | 2.2 / 2.9             | 8/24/2021    |
+| NTRU_DEFAULT_PARAMS_256_BITS   | 256 bits  | Synonym for EES743EP1 or EES1087EP2<sup>[3](#footnote3)</sup> |
+
+<a name="footnote1"><sup>1</sup></a> in bytes
+<br>
+<a name="footnote2"><sup>2</sup></a> relative to EES401EP2 encryption on a 1.6 GHz Intel Xeon
+<br>
+<a name="footnote3"><sup>3</sup></a> depending on the NTRU_AVOID_HAMMING_WT_PATENT flag
 
 ## Random Number Generators
 * Use NTRU_RNG_DEFAULT for non-deterministic keys and non-deterministic encryption
