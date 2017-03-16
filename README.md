@@ -88,7 +88,7 @@ for information on patent expiration dates.
     ntru_import_pub(pub_arr, &pub);
 
 For encryption of messages longer than `ntru_max_msg_len(...)`, see `src/hybrid.c`
-(requires OpenSSL lib+headers, use `make hybrid` to build).
+(requires libsodium+headers, use `make hybrid` to build).
 
 ## Parameter Sets
 | Name | Strength | Sizes (CText/Pub/Priv)<sup>[1](#footnote1)</sup> | Enc / Dec Time<sup>[2](#footnote2)</sup> | Pat. Until |
