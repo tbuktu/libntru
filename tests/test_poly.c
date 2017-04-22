@@ -2,6 +2,7 @@
 #include <string.h>
 #include "poly.h"
 #include "ntru.h"
+#include "poly_ssse3.h"
 #include "test_util.h"
 #include "test_poly.h"
 

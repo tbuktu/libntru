@@ -7,8 +7,11 @@
 #include "test_key.h"
 #include "test_hash.h"
 
+void ntru_set_optimized_impl();
+
 int main(int argc, char** argv) {
     printf("Running tests...\n");
+    ntru_set_optimized_impl();   /* normally called by the functions in ntru.h */
     uint8_t pass = test_poly();
     pass &= test_ntru();
     pass &= test_idxgen();

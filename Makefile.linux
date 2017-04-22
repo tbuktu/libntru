@@ -2,43 +2,44 @@ CC?=gcc
 AS=$(CC) -c
 AR?=ar
 
-CFLAGS?=-g
-CFLAGS+=-Wall -Wextra -Wno-unused-parameter
-SSSE3_FLAG = $(shell /bin/grep -m 1 -o ssse3 /proc/cpuinfo)
-ifneq ($(SSE), no)
-    ifeq ($(SSSE3_FLAG), ssse3)
-        SSE=yes
-    endif
+# are we running on an X86 machine?
+X86_ARCH=no
+MACHINE=$(shell uname -m | sed 's/i.86/i386/g')
+ifeq ($(MACHINE), i386)
+    X86_ARCH=yes
 endif
-AVX2_FLAG = $(shell /bin/grep -m 1 -o avx2 /proc/cpuinfo)
-ifneq ($(AVX2), no)
-    ifeq ($(AVX2_FLAG), avx2)
-        AVX2=yes
-    endif
-endif
-ifeq ($(AVX2), yes)
-    SSE=yes
-endif
-ifeq ($(SSE), no)
-    AVX2=no
-endif
-ifeq ($(SSE), yes)
-    CFLAGS+=-mssse3
-endif
-ifeq ($(AVX2), yes)
-    CFLAGS+=-mavx2
+ifeq ($(MACHINE), x86_64)
+    X86_ARCH=yes
 endif
 
-# use -march=native if we're compiling for x86
+# SIMD is only supported on X86
+ifeq ($(X86_ARCH), no)
+    SIMD=none
+endif
+
+ifeq ($(SIMD), sse)
+    SIMD=ssse3
+endif
+
+# set CFLAGS depending on SIMD
+CFLAGS?=-g
+CFLAGS+=-Wall -Wextra -Wno-unused-parameter
+ifeq ($(SIMD), ssse3)
+    CFLAGS+=-mssse3
+else ifeq ($(SIMD), avx2)
+    CFLAGS+=-mssse3 -mavx2
+else ifneq ($(SIMD), none)
+    SIMD=auto
+    CFLAGS+=-DNTRU_DETECT_SIMD
+endif
+
+# use -march=native if we're compiling 'bench' for x86 and SIMD={auto,avx2}
 BENCH_ARCH_OPTION=
-MACHINE=$(shell uname -m | sed 's/i.86/i386/g')
-ifeq ($(SSE), yes)
-    ifeq ($(MACHINE), i386)
-        BENCH_ARCH_OPTION=-march=native
-    endif
-    ifeq ($(MACHINE), x86_64)
-        BENCH_ARCH_OPTION=-march=native
-    endif
+ifeq ($(SIMD), auto)
+    BENCH_ARCH_OPTION=-march=native
+endif
+ifeq ($(SIMD), avx2)
+    BENCH_ARCH_OPTION=-march=native
 endif
 OPTFLAGS=-O2
 bench: OPTFLAGS=-O3 $(BENCH_ARCH_OPTION)
@@ -48,9 +49,10 @@ LIBS+=-lrt
 SRCDIR=src
 TESTDIR=tests
 LIB_OBJS=bitstring.o encparams.o hash.o idxgen.o key.o mgf.o ntru.o poly.o rand.o arith.o sha1.o sha2.o nist_ctr_drbg.o rijndael.o
-ifeq ($(SSE), yes)
-    ifeq ($(MACHINE), x86_64)
-        LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o
+ifneq ($(SIMD), none)
+    LIB_OBJS+=sha1-mb-x86_64.o sha256-mb-x86_64.o hash_simd.o poly_ssse3.o
+    ifneq ($(SIMD), ssse3)
+        LIB_OBJS+=poly_avx2.o
     endif
 endif
 TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
@@ -160,6 +162,15 @@ hybrid: static-lib
 
 $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -fPIC $< -o $@
+
+$(SRCDIR)/poly_ssse3.o: $(SRCDIR)/poly_ssse3.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -mssse3 -c -fPIC $(SRCDIR)/poly_ssse3.c -o $(SRCDIR)/poly_ssse3.o
+
+$(SRCDIR)/poly_avx2.o: $(SRCDIR)/poly_avx2.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -mavx2 -c -fPIC $(SRCDIR)/poly_avx2.c -o $(SRCDIR)/poly_avx2.o
+
+$(SRCDIR)/hash_simd.o: $(SRCDIR)/hash_simd.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -mssse3 -c -fPIC $(SRCDIR)/hash_simd.c -o $(SRCDIR)/hash_simd.o
 
 $(SRCDIR)/sha1-mb-x86_64.s: $(SRCDIR)/sha1-mb-x86_64.pl; CC=$(CC) ASM="$(AS)" $(PERL) $(SRCDIR)/sha1-mb-x86_64.pl $(PERLASM_SCHEME) > $@
 $(SRCDIR)/sha1-mb-x86_64.o: $(SRCDIR)/sha1-mb-x86_64.s

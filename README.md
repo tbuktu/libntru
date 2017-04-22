@@ -20,12 +20,9 @@ page at https://tbuktu.github.com/ntru/.
 Run ```make``` to build the library, or ```make test``` to run unit tests. ```make bench``` builds a benchmark program.
 On *BSD, use ```gmake``` instead of ```make```.
 
-The ```SSE``` environment variable enables SSSE3 support (```SSE=yes```)
-or disables it (```SSE=no```).
-Default on Linux, BSD, and MacOS is to autodetect SSSE3 on the build host,
-Windows default is no SSSE3.
-
-The ```AVX2``` environment variable controls AVX2 support and works just like the ```SSE``` variable.
+The ```SIMD``` environment variable controls SSSE3 and AVX2 support.
+The default is ```auto``` which means SSSE3 and AVX2 are detected at runtime.
+Other values are ```none```, ```ssse3```, and ```avx2```.
 
 If the ```NTRU_AVOID_HAMMING_WT_PATENT``` preprocessor flag is supplied, the library won't support
 parameter sets that will be patent encumbered after Aug 19, 2017. See the *Parameter Sets* section
