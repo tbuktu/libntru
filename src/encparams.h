@@ -4,6 +4,18 @@
 #include <stdint.h>
 #include "hash.h"
 
+/***************************************
+ *           NTRU Prime                *
+ ***************************************/
+
+#define NTRUPRIME_P 739
+#define NTRUPRIME_Q 9829
+#define NTRUPRIME_T 204
+
+/***************************************
+ *           NTRUEncrypt               *
+ ***************************************/
+
 /* max hash output length in bytes */
 #define NTRU_MAX_HASH_LEN 64
 

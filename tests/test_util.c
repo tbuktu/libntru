@@ -7,7 +7,23 @@
 /** For equals_hash_func() */
 #define HASH_INPUT_LEN 100
 
-uint8_t equals_int(NtruIntPoly *a, NtruIntPoly *b) {
+void rand_poly(NtruIntPoly *a, uint16_t N, uint16_t modulus) {
+    uint16_t i;
+    a->N = N;
+    for (i=0; i<N; i++)
+        a->coeffs[i] = random() % modulus;
+}
+
+uint8_t equals_one(NtruIntPoly *a) {
+    uint16_t i;
+    for (i=1; i<a->N; i++)
+        if (a->coeffs[i] != 0)
+            return 0;
+
+    return a->coeffs[0] == 1;
+}
+
+uint8_t equals_poly(NtruIntPoly *a, NtruIntPoly *b) {
     if (a->N != b->N)
         return 0;
 
@@ -19,7 +35,7 @@ uint8_t equals_int(NtruIntPoly *a, NtruIntPoly *b) {
     return 1;
 }
 
-uint8_t equals_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
+uint8_t equals_poly_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
     if (a->N != b->N)
         return 0;
 
@@ -67,7 +83,7 @@ uint8_t equals_key_pair(NtruEncKeyPair *kp1, NtruEncKeyPair *kp2) {
         return 0;
     if (kp1->pub.q != kp2->pub.q)
         return 0;
-    if (!equals_int(&kp1->pub.h, &kp2->pub.h))
+    if (!equals_poly(&kp1->pub.h, &kp2->pub.h))
         return 0;
     return 1;
 }
@@ -123,7 +139,7 @@ uint8_t equals_params(NtruEncParams *params1, NtruEncParams *params2) {
     return equal;
 }
 
-uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, NtruRandContext *rand_ctx) {
+uint8_t rand_poly_pow2(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, NtruRandContext *rand_ctx) {
     uint16_t rand_data[N];
     if (!rand_ctx->rand_gen->generate((uint8_t*)rand_data, N*2, rand_ctx))
         return 0;
@@ -185,8 +201,8 @@ void str_to_uint8(char *in, uint8_t *out) {
 
 void print_result(char *test_name, uint8_t valid) {
 #ifdef WIN32
-    printf("  %-17s%s\n", test_name, valid?"OK":"FAIL");
+    printf("  %-25s%s\n", test_name, valid?"OK":"FAIL");
 #else
-    printf("  %-17s%s\n", test_name, valid?"✓":"FAIL");
+    printf("  %-25s%s\n", test_name, valid?"✓":"FAIL");
 #endif
 }

@@ -4,9 +4,13 @@
 #include <stdint.h>
 #include "ntru.h"
 
-uint8_t equals_int(NtruIntPoly *a, NtruIntPoly *b);
+void rand_poly(NtruIntPoly *a, uint16_t N, uint16_t modulus);
 
-uint8_t equals_int_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
+uint8_t equals_one(NtruIntPoly *a);
+
+uint8_t equals_poly(NtruIntPoly *a, NtruIntPoly *b);
+
+uint8_t equals_poly_mod(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
 
 uint8_t equals_key_pair(NtruEncKeyPair *kp1, NtruEncKeyPair *kp2);
 
@@ -14,7 +18,8 @@ uint8_t equals_arr(uint8_t *arr1, uint8_t *arr2, uint16_t len);
 
 uint8_t equals_params(NtruEncParams *params1, NtruEncParams *params2);
 
-uint8_t rand_int(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, NtruRandContext *rand_ctx);
+/* Generates a random NtruIntPoly with coefficients between 0 and 2^pow2q-1 */
+uint8_t rand_poly_pow2(uint16_t N, uint16_t pow2q, NtruIntPoly *poly, NtruRandContext *rand_ctx);
 
 /**
  * @brief Ternary to general integer polynomial

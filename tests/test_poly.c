@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "poly.h"
@@ -5,6 +6,41 @@
 #include "poly_ssse3.h"
 #include "test_util.h"
 #include "test_poly.h"
+
+/** tests ntruprime_inv_int() */
+uint8_t test_ntruprime_inv_int() {
+    uint16_t i;
+    uint8_t valid = 1;
+    for (i=0; i<10; i++) {
+        uint16_t a = random() % NTRUPRIME_Q;
+        uint16_t inv = ntruprime_inv_int(a, NTRUPRIME_Q);
+        valid &= (a*inv) % NTRUPRIME_Q == 1;
+    }
+    print_result("test_ntruprime_inv_int", valid);
+    return valid;
+}
+
+uint8_t test_ntruprime_inv_poly_modulus(uint16_t modulus) {
+    uint16_t i;
+    uint8_t valid = 1;
+    for (i=0; i<10; i++) {
+        NtruIntPoly a, c;
+        rand_poly(&a, NTRUPRIME_P, modulus);
+        while (!ntruprime_inv_poly(&a, &c, modulus));
+        NtruIntPoly prod;
+        ntruprime_mult_poly(&a, &c, &prod, modulus);
+        valid &= equals_one(&prod);
+    }
+    return valid;
+}
+
+/** tests ntruprime_inv_poly() */
+uint8_t test_ntruprime_inv_poly() {
+    uint8_t valid = test_ntruprime_inv_poly_modulus(3);
+    valid &= test_ntruprime_inv_poly_modulus(NTRUPRIME_Q);
+    print_result("test_ntruprime_inv_poly", valid);
+    return valid;
+}
 
 /**
  * @brief Multiplication of two general polynomials
@@ -44,7 +80,7 @@ uint8_t test_mult_int() {
     NtruIntPoly c1;
     ntru_mult_int(&a1, &b1, &c1, 32-1);
     NtruIntPoly c1_exp = {11, {3, 25, -10, 21, 10, 7, 6, 7, 5, 29, -7}};
-    valid &= equals_int_mod(&c1_exp, &c1, 32);
+    valid &= equals_poly_mod(&c1_exp, &c1, 32);
 
     /* ntru_mult_mod should give the same result as ntru_mult_int_nomod followed by ntru_mod_mask */
     NtruIntPoly a2 = {5, {1278, 1451, 850, 1071, 942}};
@@ -53,7 +89,7 @@ uint8_t test_mult_int() {
     valid &= ntru_mult_int(&a2, &b2, &c2, 2048-1);
     valid &= ntru_mult_int_nomod(&a2, &b2, &c2_exp);
     ntru_mod_mask(&c2_exp, 2048-1);
-    valid &= equals_int_mod(&c2_exp, &c2, 2048);
+    valid &= equals_poly_mod(&c2_exp, &c2, 2048);
 
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
@@ -64,15 +100,15 @@ uint8_t test_mult_int() {
         valid &= rand_ctx.rand_gen->generate((uint8_t*)&N, sizeof N, &rand_ctx);
         N = 100 + (N%(NTRU_MAX_DEGREE-100));
         NtruIntPoly a3, b3, c3, c3_exp;
-        valid &= rand_int(N, 11, &a3, &rand_ctx);
-        valid &= rand_int(N, 11, &b3, &rand_ctx);
+        valid &= rand_poly_pow2(N, 11, &a3, &rand_ctx);
+        valid &= rand_poly_pow2(N, 11, &b3, &rand_ctx);
         valid &= ntru_mult_int_nomod(&a3, &b3, &c3_exp);
         ntru_mod_mask(&c3_exp, 2048-1);
         valid &= ntru_mult_int_16(&a3, &b3, &c3, 2048-1);
-        valid &= equals_int_mod(&c3_exp, &c3, 2048);
+        valid &= equals_poly_mod(&c3_exp, &c3, 2048);
 #ifndef __ARMEL__
         valid &= ntru_mult_int_64(&a3, &b3, &c3, 2048-1);
-        valid &= equals_int_mod(&c3_exp, &c3, 2048);
+        valid &= equals_poly_mod(&c3_exp, &c3, 2048);
 #endif
     }
 
@@ -90,21 +126,21 @@ uint8_t test_mult_tern() {
     NtruTernPoly a;
     valid &= ntru_rand_tern(11, 3, 3, &a, &rand_ctx);
     NtruIntPoly b;
-    valid &= rand_int(11, 5, &b, &rand_ctx);
+    valid &= rand_poly_pow2(11, 5, &b, &rand_ctx);
     NtruIntPoly a_int;
     ntru_tern_to_int(&a, &a_int);
     NtruIntPoly c_int;
     ntru_mult_int(&a_int, &b, &c_int, 32-1);
     NtruIntPoly c_tern;
     ntru_mult_tern_32(&b, &a, &c_tern, 32-1);
-    valid &= equals_int_mod(&c_tern, &c_int, 32);
+    valid &= equals_poly_mod(&c_tern, &c_int, 32);
 #ifndef __ARMEL__
     ntru_mult_tern_64(&b, &a, &c_tern, 32-1);
-    valid &= equals_int_mod(&c_tern, &c_int, 32);
+    valid &= equals_poly_mod(&c_tern, &c_int, 32);
 #endif
 #ifdef __SSSE3__
     ntru_mult_tern_sse(&b, &a, &c_tern, 32-1);
-    valid &= equals_int_mod(&c_tern, &c_int, 32);
+    valid &= equals_poly_mod(&c_tern, &c_int, 32);
 #endif
 
     int i;
@@ -121,18 +157,18 @@ uint8_t test_mult_tern() {
         num_neg_ones %= N/2;
         num_neg_ones %= NTRU_MAX_ONES;
         valid &= ntru_rand_tern(N, num_ones, num_neg_ones, &a, &rand_ctx);
-        valid &= rand_int(N, 11, &b, &rand_ctx);
+        valid &= rand_poly_pow2(N, 11, &b, &rand_ctx);
         ntru_tern_to_int(&a, &a_int);
         ntru_mult_int_nomod(&a_int, &b, &c_int);
         ntru_mult_tern_32(&b, &a, &c_tern, 2048-1);
-        valid &= equals_int_mod(&c_tern, &c_int, 2048);
+        valid &= equals_poly_mod(&c_tern, &c_int, 2048);
 #ifndef __ARMEL__
         ntru_mult_tern_64(&b, &a, &c_tern, 2048-1);
-        valid &= equals_int_mod(&c_tern, &c_int, 2048);
+        valid &= equals_poly_mod(&c_tern, &c_int, 2048);
 #endif
 #ifdef __SSSE3__
         ntru_mult_tern_sse(&b, &a, &c_tern, 2048-1);
-        valid &= equals_int_mod(&c_tern, &c_int, 2048);
+        valid &= equals_poly_mod(&c_tern, &c_int, 2048);
 #endif
     }
 
@@ -156,14 +192,14 @@ uint8_t test_mult_prod() {
         NtruProdPoly a;
         valid &= ntru_rand_prod(853, 8, 8, 8, 9, &a, &rand_ctx);
         NtruIntPoly b;
-        valid &= rand_int(853, 1<<log_modulus, &b, &rand_ctx);
+        valid &= rand_poly_pow2(853, 1<<log_modulus, &b, &rand_ctx);
         NtruIntPoly c_prod;
         ntru_mult_prod(&b, &a, &c_prod, modulus-1);
         NtruIntPoly a_int;
         ntru_prod_to_int(&a, &a_int, modulus);
         NtruIntPoly c_int;
         ntru_mult_int(&a_int, &b, &c_int, modulus-1);
-        valid &= equals_int_mod(&c_prod, &c_int, log_modulus);
+        valid &= equals_poly_mod(&c_prod, &c_int, log_modulus);
     }
     valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
 
@@ -181,7 +217,7 @@ uint8_t verify_inverse(NtruPrivPoly *a, NtruIntPoly *b, uint16_t modulus) {
 
     ntru_mult_int(&a_int, b, &c, modulus-1);
     ntru_mod_mask(&c, modulus-1);
-    return ntru_equals1(&c);
+    return equals_one(&c);
 }
 
 /* tests ntru_invert() */
@@ -249,12 +285,12 @@ uint8_t test_arr() {
     NtruRandGen rng = NTRU_RNG_DEFAULT;
     NtruRandContext rand_ctx;
     uint8_t valid = ntru_rand_init(&rand_ctx, &rng) == NTRU_SUCCESS;
-    valid &= rand_int(params.N, 11, &p1, &rand_ctx);
+    valid &= rand_poly_pow2(params.N, 11, &p1, &rand_ctx);
     ntru_to_arr_32(&p1, params.q, a);
     valid &= ntru_rand_release(&rand_ctx) == NTRU_SUCCESS;
     NtruIntPoly p2;
     ntru_from_arr(a, params.N, params.q, &p2);
-    valid &= equals_int(&p1, &p2);
+    valid &= equals_poly(&p1, &p2);
 
     uint8_t b[sizeof(a)];
     ntru_to_arr_64(&p1, params.q, b);
@@ -271,6 +307,8 @@ uint8_t test_arr() {
 
 uint8_t test_poly() {
     uint8_t valid = 1;
+    valid &= test_ntruprime_inv_int();
+    valid &= test_ntruprime_inv_poly();
     valid &= test_mult_int();
     valid &= test_mult_tern();
 #ifndef NTRU_AVOID_HAMMING_WT_PATENT

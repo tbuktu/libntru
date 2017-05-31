@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <alloca.h>
 #include "poly.h"
 #include "poly_ssse3.h"
 #include "poly_avx2.h"
@@ -11,6 +12,209 @@
 
 #define NTRU_KARATSUBA_THRESH_16 40
 #define NTRU_KARATSUBA_THRESH_64 120
+
+/***************************************
+ *          NTRU Prime                 *
+ ***************************************/
+
+uint8_t ntruprime_mult_poly(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus) {
+    uint16_t N = a->N;
+    if (N != b->N)
+        return 0;
+    c->N = N;
+
+    memset(&c->coeffs, 0, N * sizeof c->coeffs[0]);
+    uint16_t k;
+    for (k=0; k<N; k++) {
+        uint64_t ck1 = 0;
+        uint64_t i;
+        for (i=0; i<=k; i++)
+            ck1 += ((uint64_t)a->coeffs[i]) * b->coeffs[k-i];
+        uint64_t ck2 = 0;
+        for (i=k+1; i<N; i++)
+            ck2 += ((uint64_t)a->coeffs[i]) * b->coeffs[k+N-i];
+        uint64_t ck = c->coeffs[k] + ck1 + ck2;
+        c->coeffs[k] = ck % modulus;
+        if (k < N) {
+            uint64_t ck = c->coeffs[k+1] + ck2;
+            c->coeffs[k+1] = ck % modulus;
+        }
+    }
+
+    return 1;
+}
+
+/* Zeros a polynomial and sets the number of coefficients */
+void ntruprime_zero(NtruIntPoly *a, uint16_t N) {
+    a->N = N;
+    memset(&a->coeffs, 0, N * sizeof a->coeffs[0]);
+}
+
+/* Reduces a NtruIntPoly modulo x^N-x-1, where N = a->N. */
+void ntruprime_reduce(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus) {
+    uint16_t N = a->N - 1;
+    memcpy(&b->coeffs, &a->coeffs, N * sizeof a->coeffs[0]);
+    b->coeffs[0] = (((uint64_t)b->coeffs[0]) + a->coeffs[N]) % modulus;
+    b->coeffs[1] = (((uint64_t)b->coeffs[1]) + a->coeffs[N]) % modulus;
+    b->N = N;
+}
+
+/* Copies a NtruIntPoly to another NtruIntPoly */
+void ntruprime_copy(NtruIntPoly *a, NtruIntPoly *b) {
+    memcpy(&b->coeffs, &a->coeffs, a->N * sizeof a->coeffs[0]);
+    b->N = a->N;
+}
+
+/* Tests whether a polynomial has all zero coefficients */
+uint8_t ntruprime_equals0(NtruIntPoly *a) {
+    uint16_t i;
+    for (i=0; i<a->N; i++)
+        if (a->coeffs[i] != 0)
+            return 0;
+    return 1;
+}
+
+/* Returns the degree of a polynomial. Returns 0 if the polynomial equals 0. */
+uint16_t ntruprime_deg(NtruIntPoly *a) {
+    uint16_t i;
+    for (i=a->N-1; i>0; i--)
+        if (a->coeffs[i] != 0)
+            return i;
+    return 0;
+}
+
+/* Multiplies a polynomial by an integer */
+void ntruprime_mult_mod_q(NtruIntPoly *a, uint16_t factor, uint16_t modulus) {
+    uint16_t i;
+    for (i=0; i<a->N; i++)
+        a->coeffs[i] = (((uint64_t)a->coeffs[i]) * factor) % modulus;
+}
+
+/** Subtracts b*u from a; a and b are assumed to be reduced mod modulus. */
+void ntruprime_subtract_multiple(NtruIntPoly *a, NtruIntPoly *b, uint16_t u, uint16_t modulus) {
+    uint16_t N = a->N;
+    if (b->N > N)
+        N = b->N;
+
+    uint16_t i;
+    for (i=0; i<N; i++) {
+        uint64_t ai = a->coeffs[i];
+        ai += ((uint64_t)u) * (modulus-b->coeffs[i]);
+        a->coeffs[i] = ai % modulus;
+    }
+}
+
+/* Multiplies a polynomial by x^(-1) in (Z/qZ)[x][x^p-x-1] where p=a->N, q=modulus */
+void ntruprime_div_x(NtruIntPoly *a, uint16_t modulus) {
+    uint16_t N = a->N;
+    uint64_t a0 = a->coeffs[0];
+    memmove(&a->coeffs[0], &a->coeffs[1], (N-1) * sizeof a->coeffs[0]);
+    a->coeffs[N-1] = a0;
+    a->coeffs[0] = (((uint64_t)a->coeffs[0])-a0+modulus) % modulus;
+}
+
+/* Calculates the multiplicative inverse of a mod modulus
+   using the extended Euclidean algorithm. */
+uint16_t ntruprime_inv_int(uint16_t a, uint16_t modulus) {
+    int16_t x = 0;
+    int16_t lastx = 1;
+    int16_t y = 1;
+    int16_t lasty = 0;
+    int16_t b = modulus;
+    while (b != 0) {
+        int16_t quotient = a / b;
+
+        int16_t temp = a;
+        a = b;
+        b = temp % b;
+
+        temp = x;
+        x = lastx - quotient*x;
+        lastx = temp;
+
+        temp = y;
+        y = lasty - quotient*y;
+        lasty = temp;
+    }
+    if (lastx < 0)
+        lastx += modulus;
+    return lastx;
+}
+
+/* not constant time! */
+uint8_t ntruprime_inv_poly(NtruIntPoly *a, NtruIntPoly *inv, uint16_t modulus) {
+    uint16_t N = a->N;
+    uint16_t k = 0;
+    NtruIntPoly *b = alloca(sizeof *b);
+    ntruprime_zero(b, N+1);
+    b->coeffs[0] = 1;
+    NtruIntPoly *c = alloca(sizeof *c);
+    ntruprime_zero(c, N+1);
+
+    /* f = a */
+    NtruIntPoly *f = alloca(sizeof *f);
+    f->N = N + 1;
+    ntruprime_copy(a, f);
+    f->coeffs[N] = 0;
+
+    /* g = x^p - x - 1 */
+    NtruIntPoly *g = alloca(sizeof *g);
+    ntruprime_zero(g, N+1);
+    g->coeffs[0] = modulus - 1;
+    g->coeffs[1] = modulus - 1;
+    g->coeffs[N] = 1;
+
+    for (;;) {
+        while (f->coeffs[0] == 0) {
+            uint16_t i;
+
+            /* f(x) = f(x) / x */
+            for (i=1; i<=N; i++)
+                f->coeffs[i-1] = f->coeffs[i];
+            f->coeffs[N] = 0;
+
+            /* c(x) = c(x) * x */
+            for (i=N-1; i>0; i--)
+                c->coeffs[i] = c->coeffs[i-1];
+            c->coeffs[0] = 0;
+
+            k++;
+            if (ntruprime_equals0(f))   /* not invertible */
+                return 0;
+        }
+        if (ntruprime_deg(f) == 0) {
+            uint16_t f0_inv = ntruprime_inv_int(f->coeffs[0], modulus);
+            ntruprime_mult_mod_q(b, f0_inv, modulus);   /* b = b * f[0]^(-1) */
+            ntruprime_reduce(b, inv, modulus);
+            uint16_t i;
+
+            /* b = b * x^(-k) */
+            for (i=0; i<k; i++)
+                ntruprime_div_x(inv, modulus);
+
+            return 1;
+        }
+        if (ntruprime_deg(f) < ntruprime_deg(g)) {
+            /* exchange f and g */
+            NtruIntPoly *temp = f;
+            f = g;
+            g = temp;
+            /* exchange b and c */
+            temp = b;
+            b = c;
+            c = temp;
+        }
+        /* u = f[0] * g[0]^(-1) */
+        uint16_t g0_inv = ntruprime_inv_int(g->coeffs[0], modulus);
+        uint16_t u = (f->coeffs[0] * (uint64_t)g0_inv) % modulus;
+        ntruprime_subtract_multiple(f, g, u, modulus);   /*  f = f - u * g */
+        ntruprime_subtract_multiple(b, c, u, modulus);   /*  b = b - u * c */
+    }
+}
+
+/***************************************
+ *          NTRUEncrypt                *
+ ***************************************/
 
 uint8_t ntru_num_bits(uint16_t n) {
     uint8_t b = 1;
@@ -861,14 +1065,6 @@ void ntru_mod_center(NtruIntPoly *p, uint16_t modulus) {
             c -= modulus;
         p->coeffs[i] = c;
     }
-}
-
-uint8_t ntru_equals1(NtruIntPoly *p) {
-    uint16_t i;
-    for (i=1; i<p->N; i++)
-        if (p->coeffs[i] != 0)
-            return 0;
-    return p->coeffs[0] == 1;
 }
 
 uint8_t ntru_equals_int(NtruIntPoly *a, NtruIntPoly *b) {

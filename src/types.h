@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define NTRU_MAX_DEGREE (1499+1)   /* max N value for all param sets; +1 for ntru_invert_...() */
+#define NTRU_MAX_DEGREE (1499+1)   /* max N value for all param sets; +1 for ntru_invert_...() and ntruprime_inv_poly() */
 #define NTRU_INT_POLY_SIZE ((NTRU_MAX_DEGREE+16+7)&0xFFF8)   /* (max #coefficients + 16) rounded to a multiple of 8 */
 #define NTRU_MAX_ONES 499   /* max(df1, df2, df3, dg) */
 
-/** A polynomial with integer coefficients. */
+/** A polynomial with 16-bit integer coefficients. */
 typedef struct NtruIntPoly {
     uint16_t N;
     int16_t coeffs[NTRU_INT_POLY_SIZE];

@@ -6,6 +6,42 @@
 #include "types.h"
 
 /**
+ * @brief NTRU Prime multiplication
+ *
+ * Multiplies two NtruIntPolys modulo q. Both are assumed to be reduced mod q.
+ *
+ * @param a a polynomial
+ * @param b a polynomial
+ * @param c output parameter; a pointer to store the new polynomial
+ * @param modulus
+ */
+uint8_t ntruprime_mult_poly(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
+
+/**
+ * @brief Modular inverse
+ *
+ * Computes the multiplicative inverse of a number using the extended Euclidean algorithm.
+ *
+ * @param a the input value
+ * @param modulus
+ * @return the inverse of a
+ */
+uint16_t ntruprime_inv_int(uint16_t a, uint16_t modulus);
+
+/**
+ * @brief Polynomial inverse
+ *
+ * Computes the multiplicative inverse of a polynomial in (Z/q)[x]/[x^p-x-1],
+ * where p is given by a->N and q is given by modulus.
+ *
+ * @param a the input value
+ * @param b output parameter; a pointer to store the inverse polynomial
+ * @param modulus
+ * @return 1 if a is invertible, 0 otherwise
+ */
+uint8_t ntruprime_inv_poly(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
+
+/**
  * @brief Random ternary polynomial
  *
  * Generates a random ternary polynomial.
@@ -271,16 +307,6 @@ void ntru_mod3(NtruIntPoly *p);
  * @param modulus the modulus to apply to the coefficients of p
  */
 void ntru_mod_center(NtruIntPoly *p, uint16_t modulus);
-
-/**
- * @brief Equality with one
- *
- * Tests if p(x) = 1
- *
- * @param p a polynomial
- * @return 1 iff all coefficients are equal to zero, except for the lowest coefficient which must equal 1
- */
-uint8_t ntru_equals1(NtruIntPoly *p);
 
 /**
  * @brief Equality of two polynomials
