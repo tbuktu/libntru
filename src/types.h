@@ -33,7 +33,7 @@ typedef struct NtruProdPoly {
 } NtruProdPoly;
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
 
-/** Private polynomial, can be ternary or product-form */
+/** Private NtruEncrypt polynomial, can be ternary or product-form */
 typedef struct {
     uint8_t prod_flag;   /* whether the polynomial is in product form */
     union {
@@ -43,6 +43,31 @@ typedef struct {
 #endif   /* NTRU_AVOID_HAMMING_WT_PATENT */
     } poly;
 } NtruPrivPoly;
+
+/**
+ * NTRU Prime public key
+ */
+typedef struct NtruPrimePubKey {
+    uint16_t p;
+    NtruIntPoly h;
+} NtruPrimePubKey;
+
+/**
+ * NTRU Prime private key
+ */
+typedef struct NtruPrimePrivKey {
+    uint16_t p;
+    NtruIntPoly f;
+    NtruIntPoly g_inv;
+} NtruPrimePrivKey;
+
+/**
+ * NTRU Prime key pair
+ */
+typedef struct NtruPrimeKeyPair {
+    NtruPrimePrivKey priv;
+    NtruPrimePubKey pub;
+} NtruPrimeKeyPair;
 
 /**
  * NtruEncrypt private key

@@ -12,7 +12,21 @@ extern "C" {
 #include "err.h"
 
 /**
- * @brief Key generation
+ * @brief NTRU Prime key generation
+ *
+ * Generates a NTRU Prime key pair.
+ * If a deterministic RNG is used, the key pair will be deterministic for a given random seed;
+ * otherwise, the key pair will be completely random.
+ *
+ * @param params the NTRU Prime parameters to use
+ * @param kp pointer to write the key pair to (output parameter)
+ * @param rand_ctx an initialized random number generator. See ntru_rand_init() in rand.h.
+ * @return NTRU_SUCCESS for success, or a NTRU_ERR_ code for failure
+ */
+uint8_t ntruprime_gen_key_pair(const NtruPrimeParams *params, NtruPrimeKeyPair *kp, NtruRandContext *rand_ctx);
+
+/**
+ * @brief NtruEncrypt key generation
  *
  * Generates a NtruEncrypt key pair.
  * If a deterministic RNG is used, the key pair will be deterministic for a given random seed;
@@ -26,7 +40,7 @@ extern "C" {
 uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruRandContext *rand_ctx);
 
 /**
- * @brief Key generation with multiple public keys
+ * @brief NtruEncrypt key generation with multiple public keys
  *
  * Generates num_pub NtruEncrypt key pairs. They all share a private key but their public keys
  * differ. The private key decrypts messages encrypted for any of the public keys.
@@ -45,7 +59,7 @@ uint8_t ntru_gen_key_pair(const NtruEncParams *params, NtruEncKeyPair *kp, NtruR
 uint8_t ntru_gen_key_pair_multi(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncPubKey *pub, NtruRandContext *rand_ctx, uint32_t num_pub);
 
 /**
- * @brief New public key
+ * @brief New NtruEncrypt public key
  *
  * Generates a new public key for an existing private key. The new public key can be used
  * interchangeably with the existing public key(s).
@@ -67,7 +81,7 @@ uint8_t ntru_gen_key_pair_multi(const NtruEncParams *params, NtruEncPrivKey *pri
 uint8_t ntru_gen_pub(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncPubKey *pub, NtruRandContext *rand_ctx);
 
 /**
- * @brief Encryption
+ * @brief NtruEncrypt Encryption
  *
  * Encrypts a message.
  * If a deterministic RNG is used, the encrypted message will also be deterministic for a given
@@ -87,7 +101,7 @@ uint8_t ntru_gen_pub(const NtruEncParams *params, NtruEncPrivKey *priv, NtruEncP
 uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const NtruEncParams *params, NtruRandContext *rand_ctx, uint8_t *enc);
 
 /**
- * @brief Decryption
+ * @brief NtruEncrypt Decryption
  *
  * Decrypts a message.
  * See P1363.1 section 9.2.3.
@@ -104,7 +118,7 @@ uint8_t ntru_encrypt(uint8_t *msg, uint16_t msg_len, NtruEncPubKey *pub, const N
 uint8_t ntru_decrypt(uint8_t *enc, NtruEncKeyPair *kp, const NtruEncParams *params, uint8_t *dec, uint16_t *dec_len);
 
 /**
- * @brief Maximum message length
+ * @brief Maximum NtruEncrypt message length
  *
  * Returns the maximum length a plaintext message can be.
  * Depending on the parameter set, the maximum lengths for the predefined

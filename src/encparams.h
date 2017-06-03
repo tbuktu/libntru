@@ -8,9 +8,25 @@
  *           NTRU Prime                *
  ***************************************/
 
-#define NTRUPRIME_P 739
-#define NTRUPRIME_Q 9829
-#define NTRUPRIME_T 204
+/* A set of parameters for NTRU Prime */
+typedef struct NtruPrimeParams {
+    /* name of the parameter set */
+    char name[11];
+
+    /* number of polynomial coefficients */
+    uint16_t p;
+
+    /* modulus */
+    uint16_t q;
+
+    /* number of ones + number of negative ones in f */
+    uint16_t t;
+
+    /* 3^(-1) mod q */
+    uint16_t inv_3;
+} NtruPrimeParams;
+
+extern const NtruPrimeParams NTRUPRIME_739;
 
 /***************************************
  *           NTRUEncrypt               *

@@ -42,7 +42,7 @@ uint8_t gen_key_pair(char *seed, NtruEncParams *params, NtruEncKeyPair *kp) {
     return result;
 }
 
-uint8_t test_keygen() {
+uint8_t test_ntru_keygen() {
     NtruEncParams param_arr[] = ALL_PARAM_SETS;
     uint8_t valid = 1;
 
@@ -87,7 +87,7 @@ uint8_t test_keygen() {
         valid &= equals_key_pair(&kp, &kp2);
     }
 
-    print_result("test_keygen", valid);
+    print_result("test_ntru_keygen", valid);
     return valid;
 }
 
@@ -281,7 +281,7 @@ uint8_t test_encr_decr() {
 }
 
 uint8_t test_ntru() {
-    uint8_t valid = test_keygen();
+    uint8_t valid = test_ntru_keygen();
     valid &= test_encr_decr();
     return valid;
 }

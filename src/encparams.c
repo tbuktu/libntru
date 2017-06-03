@@ -1,6 +1,14 @@
 #include "encparams.h"
 #include "arith.h"
 
+const NtruPrimeParams NTRUPRIME_739 = {\
+    "NTRUPRM_739",   /* name */\
+    739,             /* p */\
+    9829,            /* q */\
+    204,             /* t */\
+    6553             /* inv_3 */
+};
+
 const NtruEncParams EES401EP1 = {\
     "EES401EP1",   /* name */\
     401,           /* N */\

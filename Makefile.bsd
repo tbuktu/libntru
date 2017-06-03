@@ -54,7 +54,7 @@ ifneq ($(SIMD), none)
         LIB_OBJS+=poly_avx2.o
     endif
 endif
-TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntru.o test.o test_poly.o test_util.o
+TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntruprime.o test_ntru.o test.o test_poly.o test_util.o
 VERSION=0.5
 INST_PFX=/usr
 INST_LIBDIR=$(INST_PFX)/lib

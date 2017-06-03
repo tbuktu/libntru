@@ -44,6 +44,45 @@ uint8_t ntruprime_mult_poly(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint
     return 1;
 }
 
+uint8_t ntruprime_rand_tern(uint16_t N, NtruIntPoly *poly, NtruRandContext *rand_ctx) {
+    poly->N = N;
+    uint16_t i;
+    uint32_t arr[N];
+    if (ntru_rand_generate((uint8_t*)arr, N*sizeof(arr[0]), rand_ctx) != NTRU_SUCCESS)
+        return 0;
+    for (i=0; i<N; i++)
+        /* produces almost uniform output, there is a 1 in 2^32 chance of it being biased */
+        poly->coeffs[i] = arr[i] % 3;
+    return 1;
+}
+
+int ntru_cmp_uint32(const void *a, const void *b) {
+    uint32_t a_int = *(uint32_t*)a;
+    uint32_t b_int = *(uint32_t*)b;
+    return a_int<b_int ? -1 : 1;
+}
+
+/* not constant time! */
+uint8_t ntruprime_rand_tern_t(uint16_t N, uint16_t t, NtruIntPoly *poly, NtruRandContext *rand_ctx) {
+    poly->N = N;
+
+    uint32_t arr[N];
+    if (ntru_rand_generate((uint8_t*)arr, N*sizeof(arr[0]), rand_ctx) != NTRU_SUCCESS)
+        return 0;
+
+    uint16_t i;
+    for (i=0; i<t; i++)
+        arr[i] &= arr[i]%2==0 ? 0xFFFFFFFC : 0xFFFFFFFE;
+    for (; i<N; i++)
+        arr[i] &= 0xFFFFFFFB;
+
+    qsort(arr, N, sizeof arr[0], &ntru_cmp_uint32);
+
+    for (i=0; i<N; i++)
+        poly->coeffs[i] = arr[i] % 4;
+    return 1;
+}
+
 /* Zeros a polynomial and sets the number of coefficients */
 void ntruprime_zero(NtruIntPoly *a, uint16_t N) {
     a->N = N;
@@ -84,7 +123,7 @@ uint16_t ntruprime_deg(NtruIntPoly *a) {
 }
 
 /* Multiplies a polynomial by an integer */
-void ntruprime_mult_mod_q(NtruIntPoly *a, uint16_t factor, uint16_t modulus) {
+void ntruprime_mult_mod(NtruIntPoly *a, uint16_t factor, uint16_t modulus) {
     uint16_t i;
     for (i=0; i<a->N; i++)
         a->coeffs[i] = (((uint64_t)a->coeffs[i]) * factor) % modulus;
@@ -184,7 +223,7 @@ uint8_t ntruprime_inv_poly(NtruIntPoly *a, NtruIntPoly *inv, uint16_t modulus) {
         }
         if (ntruprime_deg(f) == 0) {
             uint16_t f0_inv = ntruprime_inv_int(f->coeffs[0], modulus);
-            ntruprime_mult_mod_q(b, f0_inv, modulus);   /* b = b * f[0]^(-1) */
+            ntruprime_mult_mod(b, f0_inv, modulus);   /* b = b * f[0]^(-1) */
             ntruprime_reduce(b, inv, modulus);
             uint16_t i;
 

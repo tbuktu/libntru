@@ -11,10 +11,11 @@
 uint8_t test_ntruprime_inv_int() {
     uint16_t i;
     uint8_t valid = 1;
+    uint16_t q = NTRUPRIME_739.q;
     for (i=0; i<10; i++) {
-        uint16_t a = random() % NTRUPRIME_Q;
-        uint16_t inv = ntruprime_inv_int(a, NTRUPRIME_Q);
-        valid &= (a*inv) % NTRUPRIME_Q == 1;
+        uint16_t a = random() % q;
+        uint16_t inv = ntruprime_inv_int(a, q);
+        valid &= (a*inv) % q == 1;
     }
     print_result("test_ntruprime_inv_int", valid);
     return valid;
@@ -25,7 +26,7 @@ uint8_t test_ntruprime_inv_poly_modulus(uint16_t modulus) {
     uint8_t valid = 1;
     for (i=0; i<10; i++) {
         NtruIntPoly a, c;
-        rand_poly(&a, NTRUPRIME_P, modulus);
+        rand_poly(&a, NTRUPRIME_739.p, modulus);
         while (!ntruprime_inv_poly(&a, &c, modulus));
         NtruIntPoly prod;
         ntruprime_mult_poly(&a, &c, &prod, modulus);
@@ -37,7 +38,7 @@ uint8_t test_ntruprime_inv_poly_modulus(uint16_t modulus) {
 /** tests ntruprime_inv_poly() */
 uint8_t test_ntruprime_inv_poly() {
     uint8_t valid = test_ntruprime_inv_poly_modulus(3);
-    valid &= test_ntruprime_inv_poly_modulus(NTRUPRIME_Q);
+    valid &= test_ntruprime_inv_poly_modulus(NTRUPRIME_739.q);
     print_result("test_ntruprime_inv_poly", valid);
     return valid;
 }

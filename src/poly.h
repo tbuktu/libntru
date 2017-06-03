@@ -18,6 +18,34 @@
 uint8_t ntruprime_mult_poly(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t modulus);
 
 /**
+ * @brief Random small polynomial
+ *
+ * Generates a random ternary polynomial for NTRU Prime.
+ *
+ * @param N the number of coefficients; must be NTRU_MAX_DEGREE or less
+ * @param poly output parameter; a pointer to store the new polynomial
+ * @param rand_ctx a random number generator
+ * @return 1 for success, 0 for failure
+ */
+uint8_t ntruprime_rand_tern(uint16_t N, NtruIntPoly *poly, NtruRandContext *rand_ctx);
+
+/**
+ * @brief Random t-small polynomial
+ *
+ * Generates a random ternary polynomial for NTRU Prime with t nonzero coefficients.
+ *
+ * @param N the number of coefficients; must be NTRU_MAX_DEGREE or less
+ * @param t number of ones + number of negative ones
+ * @param poly output parameter; a pointer to store the new polynomial
+ * @param rand_ctx a random number generator
+ * @return 1 for success, 0 for failure
+ */
+uint8_t ntruprime_rand_tern_t(uint16_t N, uint16_t t, NtruIntPoly *poly, NtruRandContext *rand_ctx);
+
+/* Multiplies a polynomial by an integer, modulo another integer */
+void ntruprime_mult_mod(NtruIntPoly *a, uint16_t factor, uint16_t modulus);
+
+/**
  * @brief Modular inverse
  *
  * Computes the multiplicative inverse of a number using the extended Euclidean algorithm.
@@ -44,7 +72,7 @@ uint8_t ntruprime_inv_poly(NtruIntPoly *a, NtruIntPoly *b, uint16_t modulus);
 /**
  * @brief Random ternary polynomial
  *
- * Generates a random ternary polynomial.
+ * Generates a random ternary polynomial for NTRUEncrypt.
  *
  * @param N the number of coefficients; must be NTRU_MAX_DEGREE or less
  * @param num_ones number of ones

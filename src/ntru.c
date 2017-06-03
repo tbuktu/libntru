@@ -7,7 +7,40 @@
 #include "idxgen.h"
 #include "mgf.h"
 
-/** Whether to ensure g is invertible when generating a key */
+/***************************************
+ *          NTRU Prime                 *
+ ***************************************/
+
+uint8_t ntruprime_gen_key_pair(const NtruPrimeParams *params, NtruPrimeKeyPair *kp, NtruRandContext *rand_ctx) {
+    NtruIntPoly g;
+    NtruIntPoly *g_inv = &kp->priv.g_inv;
+    uint8_t invertible;
+    do {
+        if (!ntruprime_rand_tern(params->p, &g, rand_ctx))
+            return NTRU_ERR_PRNG;
+        invertible = ntruprime_inv_poly(&g, g_inv, params->q);
+    } while (!invertible);
+
+    NtruIntPoly *f = &kp->priv.f;
+    if (!ntruprime_rand_tern_t(params->p, params->t, f, rand_ctx))
+        return NTRU_ERR_PRNG;
+    NtruIntPoly f_inv;
+    if (!ntruprime_inv_poly(f, &f_inv, params->q))
+        return NTRU_ERR_INVALID_PARAM;
+
+    NtruIntPoly *h = &kp->pub.h;
+    if (!ntruprime_mult_poly(&g, &f_inv, h, params->q))
+        return NTRU_ERR_INVALID_PARAM;
+    ntruprime_mult_mod(h, params->inv_3, params->q);
+
+    return NTRU_SUCCESS;
+}
+
+/***************************************
+ *          NTRUEncrypt                *
+ ***************************************/
+
+/** whether to ensure g is invertible when generating a key */
 #define NTRU_CHECK_INVERTIBILITY_G 0
 
 const int8_t NTRU_COEFF1_TABLE[] = {0, 0, 0, 1, 1, 1, -1, -1};
