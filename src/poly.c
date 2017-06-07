@@ -56,30 +56,34 @@ uint8_t ntruprime_rand_tern(uint16_t N, NtruIntPoly *poly, NtruRandContext *rand
     return 1;
 }
 
-int ntru_cmp_uint32(const void *a, const void *b) {
-    uint32_t a_int = *(uint32_t*)a;
-    uint32_t b_int = *(uint32_t*)b;
-    return a_int<b_int ? -1 : 1;
-}
-
-/* not constant time! */
 uint8_t ntruprime_rand_tern_t(uint16_t N, uint16_t t, NtruIntPoly *poly, NtruRandContext *rand_ctx) {
     poly->N = N;
 
-    uint32_t arr[N];
-    if (ntru_rand_generate((uint8_t*)arr, N*sizeof(arr[0]), rand_ctx) != NTRU_SUCCESS)
+    uint8_t rand_bits[(2*t+7)/8];
+    if (ntru_rand_generate((uint8_t*)rand_bits, sizeof rand_bits, rand_ctx) != NTRU_SUCCESS)
+        return 0;
+    uint16_t i;
+    for (i=0; i<2*t; i++) {
+        uint8_t r = (rand_bits[i/8] >> (i%8)) & 1;
+        poly->coeffs[i] = r ? 1 : 2;
+    }
+    for (; i<N; i++)
+        poly->coeffs[i] = 0;
+
+    uint32_t rand_indices[N];
+    if (ntru_rand_generate((uint8_t*)rand_indices, N*sizeof(rand_indices[0]), rand_ctx) != NTRU_SUCCESS)
         return 0;
 
-    uint16_t i;
-    for (i=0; i<t; i++)
-        arr[i] &= arr[i]%2==0 ? 0xFFFFFFFC : 0xFFFFFFFE;
-    for (; i<N; i++)
-        arr[i] &= 0xFFFFFFFB;
-
-    qsort(arr, N, sizeof arr[0], &ntru_cmp_uint32);
-
-    for (i=0; i<N; i++)
-        poly->coeffs[i] = arr[i] % 4;
+    /* Fisher-Yates shuffle */
+    uint32_t rand_idx = 0;
+    for (i=N-1; i>0; i--) {
+        /* slightly biased; for N=739, P(poly contains a biased coeff) = 1/10798 */
+        uint32_t j = rand_indices[rand_idx] % (i+1);
+        uint16_t temp = poly->coeffs[i];
+        poly->coeffs[i] = poly->coeffs[j];
+        poly->coeffs[j] = temp;
+        rand_idx++;
+    }
     return 1;
 }
 
