@@ -35,6 +35,8 @@ Build as follows:
 export SIMD=ssse3; make all
 ```
 
+### Flag to account for encumbered patent
+
 If the ```NTRU_AVOID_HAMMING_WT_PATENT``` preprocessor flag is supplied, the library won't support
 parameter sets that will be patent encumbered after Aug 19, 2017. See the *Parameter Sets* section
 for information on patent expiration dates.
