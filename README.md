@@ -24,6 +24,15 @@ The ```SIMD``` environment variable controls SSSE3 and AVX2 support.
 The default is ```auto``` which means SSSE3 and AVX2 are detected at runtime.
 Other values are ```none```, ```ssse3```, and ```avx2```.
 
+**Note** On macOS Sierra Version 10.12.5/Apple LLVM version 8.1.0 (clang-802.0.42) You
+must set the SIMD environment to ssse3 (export SIMD=ssse3) before running make as
+or make will break due to **error: use of unknown builtin '__builtin_cpu_init'** 
+message. Build as follows:
+
+```
+export SIMD=ssse3; make all
+```
+
 If the ```NTRU_AVOID_HAMMING_WT_PATENT``` preprocessor flag is supplied, the library won't support
 parameter sets that will be patent encumbered after Aug 19, 2017. See the *Parameter Sets* section
 for information on patent expiration dates.
