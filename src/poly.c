@@ -10,6 +10,17 @@
 #include "encparams.h"
 #include "ntru_endian.h"
 
+/*
+Declare global function pointers that are extern'ed in poly.h
+Fix for Issue #37 - core dump running "make test" on mac.
+*/
+
+uint8_t (*ntru_mult_int)(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
+uint8_t (*ntru_mult_tern)(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
+void (*ntru_to_arr)(NtruIntPoly *p, uint16_t q, uint8_t *a);
+void (*ntru_mod_mask)(NtruIntPoly *p, uint16_t mod_mask);
+uint8_t (*ntru_invert)(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
+
 #define NTRU_KARATSUBA_THRESH_16 40
 #define NTRU_KARATSUBA_THRESH_64 120
 
@@ -1081,11 +1092,14 @@ void ntru_mod3_standard(NtruIntPoly *p) {
 
 void ntru_mod3(NtruIntPoly *p) {
 #ifdef NTRU_DETECT_SIMD
+#ifdef __clang__
+#else
     if (__builtin_cpu_supports("avx2"))
         return ntru_mod3_avx2(p);
     else if (__builtin_cpu_supports("ssse3"))
         return ntru_mod3_sse(p);
     else
+#endif
         return ntru_mod3_standard(p);
 #else
 #ifdef __AVX2__
@@ -1428,6 +1442,8 @@ uint8_t (*ntru_invert)(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
 void ntru_set_optimized_impl_poly() {
 #ifdef NTRU_DETECT_SIMD
+#ifdef __clang__
+#else
     if (__builtin_cpu_supports("avx2")) {
         ntru_mult_int = ntru_mult_int_avx2;
         ntru_mult_tern = ntru_mult_tern_avx2;
@@ -1440,7 +1456,9 @@ void ntru_set_optimized_impl_poly() {
         ntru_to_arr = ntru_to_arr_sse;
         ntru_mod_mask = ntru_mod_sse;
     }
-    else if (sizeof(void*) >= 8) {   /* 64-bit arch */
+    else
+#endif
+	if (sizeof(void*) >= 8) {   /* 64-bit arch */
         ntru_mult_int = ntru_mult_int_64;
         ntru_mult_tern = ntru_mult_tern_64;
         ntru_to_arr = ntru_to_arr_64;

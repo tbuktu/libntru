@@ -48,7 +48,10 @@ const int8_t NTRU_COEFF2_TABLE[] = {0, 1, -1, 0, 1, -1, 0, 1};
 
 void ntru_set_optimized_impl() {
 #ifdef NTRU_DETECT_SIMD
+#ifdef __clang__
+#else
     __builtin_cpu_init();
+#endif
 #endif
     ntru_set_optimized_impl_poly();
     ntru_set_optimized_impl_hash();
