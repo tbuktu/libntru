@@ -80,6 +80,8 @@ void ntru_sha256_8way_nosimd(uint8_t *input[8], uint16_t input_len, uint8_t *dig
 
 void ntru_set_optimized_impl_hash() {
 #ifdef NTRU_DETECT_SIMD
+#ifdef __clang__
+#else
     if (__builtin_cpu_supports("ssse3") || __builtin_cpu_supports("avx2")) {
         ntru_sha1_4way_ptr = ntru_sha1_4way_simd;
         ntru_sha256_4way_ptr = ntru_sha256_4way_simd;
@@ -90,7 +92,9 @@ void ntru_set_optimized_impl_hash() {
             OPENSSL_ia32cap_P[2] = 1<<5;
         }
     }
-    else {
+    else
+#endif
+	{
         ntru_sha1_4way_ptr = ntru_sha1_4way_nosimd;
         ntru_sha256_4way_ptr = ntru_sha256_4way_nosimd;
         ntru_sha1_8way_ptr = ntru_sha1_8way_nosimd;
