@@ -1,6 +1,14 @@
 #ifndef NTRU_ENDIAN_H
 #define NTRU_ENDIAN_H
 
+#ifdef __ANDROID__
+# include <android/api-level.h>
+#endif
+
+#ifdef __ANDROID_API__
+#include <sys/endian.h>
+#endif
+
 #ifdef __APPLE__
 #include <libkern/OSByteOrder.h>
 #define htole64(x) OSSwapHostToLittleInt64(x)
