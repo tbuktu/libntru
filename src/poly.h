@@ -135,7 +135,7 @@ void ntru_sub(NtruIntPoly *a, NtruIntPoly *b);
  * @param mod_mask an AND mask to apply; must be a power of two minus one
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t (*ntru_mult_tern)(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
+extern uint8_t (*ntru_mult_tern)(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief General polynomial by ternary polynomial multiplication, 32 bit version
@@ -236,7 +236,7 @@ void ntru_to_arr_64(NtruIntPoly *p, uint16_t q, uint8_t *a);
  * @param q the modulus; must be a power of two
  * @param a output parameter; a pointer to store the encoded polynomial
  */
-void (*ntru_to_arr)(NtruIntPoly *p, uint16_t q, uint8_t *a);
+extern void (*ntru_to_arr)(NtruIntPoly *p, uint16_t q, uint8_t *a);
 
 /**
  * @brief Polynomial to binary modulo 4
@@ -273,7 +273,7 @@ void ntru_mult_fac(NtruIntPoly *a, int16_t factor);
  * @param mod_mask an AND mask to apply to the coefficients of c
  * @return 0 if the number of coefficients differ, 1 otherwise
  */
-uint8_t (*ntru_mult_int)(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
+extern uint8_t (*ntru_mult_int)(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
 
 /**
  * @brief Multiplication of two general polynomials with a modulus
@@ -313,7 +313,7 @@ uint8_t ntru_mult_int_64(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_
  * @param p input and output parameter; coefficients are overwritten
  * @param mod_mask an AND mask to apply to the coefficients of c
  */
-void (*ntru_mod_mask)(NtruIntPoly *p, uint16_t mod_mask);
+extern void (*ntru_mod_mask)(NtruIntPoly *p, uint16_t mod_mask);
 
 /**
  * @brief Reduction modulo 3
@@ -379,7 +379,7 @@ void ntru_clear_int(NtruIntPoly *p);
  * @param Fq output parameter; a pointer to store the new polynomial
  * @return 1 if a is invertible, 0 otherwise
  */
-uint8_t (*ntru_invert)(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
+extern uint8_t (*ntru_invert)(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
 /**
  * @brief Inverse modulo q
