@@ -60,14 +60,14 @@ install: lib
 	test -d "$(DESTDIR)$(INST_LIBDIR)" || mkdir "$(DESTDIR)$(INST_LIBDIR)"
 	test -d "$(DESTDIR)$(INST_INCLUDE)" || mkdir -p "$(DESTDIR)$(INST_INCLUDE)"
 	test -d "$(DESTDIR)$(INST_DOCDIR)" || mkdir -p "$(DESTDIR)$(INST_DOCDIR)"
-	install -m 0755 libntru.so "$(DESTDIR)$(INST_LIBDIR)/libntru.so"
+	install -m 0755 libntru.dylib "$(DESTDIR)$(INST_LIBDIR)/libntru.dylib"
 	install -m 0644 README.md "$(DESTDIR)$(INST_DOCDIR)/README.md"
 	for header in $(INST_HEADERS) ; do \
 	    install -m 0644 "$(SRCDIR)/$$header" "$(DESTDIR)$(INST_INCLUDE)/" ; \
 	done
 
 uninstall:
-	rm -f "$(DESTDIR)$(INST_LIBDIR)/libntru.so"
+	rm -f "$(DESTDIR)$(INST_LIBDIR)/libntru.dylib"
 	rm -f "$(DESTDIR)$(INST_DOCDIR)/README.md"
 	rmdir "$(DESTDIR)$(INST_DOCDIR)/"
 	for header in $(INST_HEADERS) ; do \
