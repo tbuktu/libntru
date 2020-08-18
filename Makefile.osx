@@ -35,7 +35,7 @@ ifneq ($(SIMD), none)
 endif
 TEST_OBJS=test_bitstring.o test_hash.o test_idxgen.o test_key.o test_ntruprime.o test_ntru.o test.o test_poly.o test_util.o
 VERSION=0.5
-INST_PFX=/usr
+INST_PFX=/opt/local
 INST_LIBDIR=$(INST_PFX)/lib
 INST_INCLUDE=$(INST_PFX)/include/libntru
 INST_DOCDIR=$(INST_PFX)/share/doc/libntru
