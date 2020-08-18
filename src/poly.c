@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <alloca.h>
@@ -12,6 +13,12 @@
 
 #define NTRU_KARATSUBA_THRESH_16 40
 #define NTRU_KARATSUBA_THRESH_64 120
+
+void (*ntru_to_arr)(NtruIntPoly *p, uint16_t q, uint8_t *a);
+uint8_t (*ntru_mult_tern)(NtruIntPoly *a, NtruTernPoly *b, NtruIntPoly *c, uint16_t mod_mask);
+uint8_t (*ntru_mult_int)(NtruIntPoly *a, NtruIntPoly *b, NtruIntPoly *c, uint16_t mod_mask);
+void (*ntru_mod_mask)(NtruIntPoly *p, uint16_t mod_mask);
+uint8_t (*ntru_invert)(NtruPrivPoly *a, uint16_t mod_mask, NtruIntPoly *Fq);
 
 /***************************************
  *          NTRU Prime                 *

@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include "ntru.h"
+#if defined(__APPLE__)
+#include <Availability.h>
+#include <AvailabilityMacros.h>
+#endif /* __APPLE__ */
 
 #define NUM_ITER_KEYGEN 50
 #define NUM_ITER_ENCDEC 10000
@@ -14,11 +18,13 @@
 #ifdef __MACH__
 
 /*
- * Mac OS X does not have clock_gettime for some reason
+ * Mac OS X prior to 10.12 does not have clock_gettime for some reason
  *
  * Use solution from here to fix it:
  * http://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x
  */
+
+#if !(defined(__APPLE__) && defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && (__MAC_OS_X_VERSION_MIN_REQUIRED >= 101200))
 
 #define CLOCK_REALTIME 0
 
@@ -38,6 +44,7 @@ the_time->tv_sec = mts.tv_sec;
 the_time->tv_nsec = mts.tv_nsec;
 }
 
+#endif /* not ( __APPLE__ and macOS is 10.12 or newer) */
 #endif /* __MACH__ */
 
 #ifdef __MINGW32__
