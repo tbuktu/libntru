@@ -28,7 +28,8 @@ If the ```NTRU_AVOID_HAMMING_WT_PATENT``` preprocessor flag is supplied, the lib
 parameter sets that will be patent encumbered after Aug 19, 2017. See the *Parameter Sets* section
 for information on patent expiration dates.
 
-## Usage
+## C Code to implement NTRUEncrypt
+## ~Usage
 
     #include "ntru.h"
 
