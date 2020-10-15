@@ -117,7 +117,7 @@ For encryption of messages longer than `ntru_max_msg_len(...)`, see `src/hybrid.
 <br>
 <a name="footnote2"><sup>2</sup></a> relative to EES401EP2 encryption on a 1.6 GHz Intel Xeon
 <br>
-<a name="footnote3"><sup>3</sup></a> depending on the NTRU_AVOID_HAMMING_WT_PATENT flag
+<a name="footnote3"><sup>3</sup></a> depending on the NTRU_AVOID_HAMMING_WT_PATENT flag.
 
 ## Random Number Generators
 * Use NTRU_RNG_DEFAULT for non-deterministic keys and non-deterministic encryption
@@ -142,4 +142,4 @@ Ignore ```rand_ctx->seed``` in ```init()``` if your RNG is non-deterministic.
   * Follow-up NTRUEncrypt paper: https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.64.6834&rep=rep1&type=pdf
   * NTRU articles (technical and mathematical): https://www.securityinnovation.com/products/encryption-libraries/ntru-crypto/ntru-resources.html
   * EESS: http://grouper.ieee.org/groups/1363/lattPK/submissions/EESS1v2.pdf
-  * Jeffrey Hoffstein et al: An Introduction to Mathematical Cryptography, Springer-Verlag, ISBN 978-0-387-77993-5
+  * Jeffrey Hoffstein et al: An Introduction to Mathematical Cryptography, Springer-Verlag, ISBN 978-0-387-77993-5.
