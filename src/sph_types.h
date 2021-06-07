@@ -1058,6 +1058,13 @@ typedef long long sph_s64;
 #define SPH_DETECT_LITTLE_ENDIAN     1
 
 /*
+ * LoongArch, little-endian.
+ */
+#elif __loongarch__
+
+#define SPH_DETECT_LITTLE_ENDIAN     1
+
+/*
  * MIPS, little-endian.
  */
 #elif MIPSEL || _MIPSEL || __MIPSEL || __MIPSEL__
@@ -1070,14 +1077,6 @@ typedef long long sph_s64;
 #elif MIPSEB || _MIPSEB || __MIPSEB || __MIPSEB__
 
 #define SPH_DETECT_BIG_ENDIAN        1
-
-/*
- * LOONGARCH, little-endian.
- */
-
-#elif __loongarch__
-
-#define SPH_DETECT_LITTLE_ENDIAN     1
 
 /*
  * PowerPC.
