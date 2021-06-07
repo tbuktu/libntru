@@ -1058,7 +1058,7 @@ typedef long long sph_s64;
 #define SPH_DETECT_LITTLE_ENDIAN     1
 
 /*
- * LoongArch, little-endian.
+ * LoongArch.
  */
 #elif __loongarch__
 
