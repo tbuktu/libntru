@@ -1072,6 +1072,14 @@ typedef long long sph_s64;
 #define SPH_DETECT_BIG_ENDIAN        1
 
 /*
+ * LoongArch.
+ */
+
+#elif __loongarch__
+
+#define SPH_DETECT_LITTLE_ENDIAN     1
+
+/*
  * PowerPC.
  */
 #elif defined __powerpc__ || defined __POWERPC__ || defined __ppc__ \
